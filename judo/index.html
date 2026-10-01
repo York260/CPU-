@@ -135,20 +135,19 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sk.t-def { border-color: rgba(127, 168, 255, .7); }
 .sk.empty { visibility: hidden; }
 
-/* 抓把中技術面板：綠＝後方技，金＝前方技 */
-.tech { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 14px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); width: 246px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.tb { position: relative; height: 58px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, .22); background: rgba(20, 26, 38, .88); display: grid; place-content: center; text-align: center; line-height: 1.15; touch-action: none; transition: transform .08s, opacity .15s; padding: 0; }
-.tb b { font-size: 15px; font-weight: 900; }
-.tb small { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 1px; }
-.tb kbd { position: absolute; top: 2px; right: 5px; font-family: var(--f-body); font-size: 9px; color: var(--muted); opacity: .6; }
+/* 抓把中技術面板：2×2，綠＝後方技，金＝前方技 */
+.tech { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 14px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); width: 196px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tb { position: relative; height: 70px; min-width: 0; border-radius: 14px; border: 2px solid rgba(255, 255, 255, .22); background: rgba(20, 26, 38, .88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; line-height: 1.1; touch-action: none; transition: transform .08s, opacity .15s; padding: 0 4px; overflow: hidden; }
+.tb b { font-size: 17px; font-weight: 900; white-space: nowrap; }
+.tb small { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tb kbd { position: absolute; top: 3px; right: 7px; font-family: var(--f-body); font-size: 9px; color: var(--muted); opacity: .6; }
 .tb.back { border-color: rgba(61, 190, 122, .6); }
 .tb.fwd { border-color: rgba(227, 179, 65, .55); }
 .tb.back.hot { border-color: var(--green); box-shadow: 0 0 16px rgba(61, 190, 122, .6); }
 .tb.back.hot small { color: #8FE3B5; }
 .tb.fwd.hot { border-color: var(--gold); box-shadow: 0 0 16px rgba(227, 179, 65, .6); }
 .tb.fwd.hot small { color: #F2CF7A; }
-.tb.brace { grid-column: 1 / -1; height: 44px; border-color: rgba(127, 168, 255, .7); display: flex; gap: 8px; align-items: center; justify-content: center; }
-.tb.brace small { margin: 0; }
+.tb.brace { border-color: rgba(127, 168, 255, .7); }
 .tb.brace.hot { border-color: #7FA8FF; background: rgba(40, 60, 110, .9); animation: glow .3s infinite alternate; }
 @keyframes glow { from { box-shadow: 0 0 6px rgba(127, 168, 255, .5); } to { box-shadow: 0 0 22px rgba(127, 168, 255, 1); } }
 .tb.off { opacity: .35; }
@@ -158,7 +157,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .mash { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: min(520px, calc(100vw - 32px)); height: 110px; border-radius: 20px; border: 2px solid var(--gold); background: rgba(40, 30, 10, .82); color: #fff; display: grid; place-content: center; gap: 4px; touch-action: manipulation; box-shadow: 0 0 26px rgba(227, 179, 65, .45); transition: transform .06s; }
 .mash b { font-size: 28px; font-weight: 900; letter-spacing: .1em; }
 .mash small { font-size: 12px; color: var(--muted); }
-.mash.pulse { transform: translateX(-50%) scale(.95); background: rgba(80, 60, 15, .9); }
+.mash.hit { animation: mashHit .14s ease-out; }
+@keyframes mashHit { 0% { transform: translateX(-50%) scale(.93); background: rgba(120, 90, 20, .95); } 100% { transform: translateX(-50%) scale(1); } }
+.mash .combo { position: absolute; top: 8px; right: 14px; font-size: 14px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.mash .fire { position: absolute; left: 0; bottom: 0; height: 6px; width: 0; background: linear-gradient(90deg, var(--gold), #FF7A3D); transition: width .1s; }
+.pop { position: fixed; pointer-events: none; font-family: var(--f-display); font-weight: 900; font-size: 30px; color: #FFE08A; text-shadow: 0 2px 10px rgba(0, 0, 0, .7), 0 0 14px rgba(255, 190, 60, .8); animation: popUp .55s ease-out forwards; }
+.pop.hold { color: #9FC0FF; text-shadow: 0 2px 10px rgba(0, 0, 0, .7), 0 0 14px rgba(127, 168, 255, .8); }
+@keyframes popUp { 0% { transform: translate(-50%, 0) scale(.6); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(-50%, -70px) scale(1.15); opacity: 0; } }
+.nw-track.esc.flash i { box-shadow: 0 0 10px #fff; background: #FF8A6B; }
 
 .quit { position: fixed; left: calc(env(safe-area-inset-left, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 10px); width: 32px; height: 32px; background: var(--panel); border: 1px solid var(--line); border-radius: 50%; padding: 0; font-size: 14px; color: var(--muted); }
 .quit.confirm { width: auto; border-radius: 16px; padding: 0 10px; color: var(--ink); font-size: 12px; }
@@ -181,6 +187,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { background: transparent; border: 0; padding: 8px 14px; font-size: 14px; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 700; }
+.loadout { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 8px; }
+.lo { text-align: left; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; }
+.lo-top { display: flex; align-items: center; gap: 8px; }
+.lo-top b { font-size: 16px; }
+.lo-tag { font-size: 11px; padding: 0 6px; border-radius: 4px; }
+.lo-tag.back { background: rgba(61, 190, 122, .2); color: #8FE3B5; }
+.lo-tag.fwd { background: rgba(227, 179, 65, .2); color: #F2CF7A; }
+.lo-check { margin-left: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 900; }
+.lo p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+.lo[aria-pressed="true"] { border-color: var(--gold); background: rgba(227, 179, 65, .08); }
+.lo[aria-pressed="true"] .lo-check { background: var(--gold); border-color: var(--gold); color: #1a1406; }
+.lo:disabled { opacity: .4; cursor: not-allowed; }
+#loadCount { margin-left: 8px; color: var(--gold); font-weight: 700; }
+.go:disabled { opacity: .4; cursor: not-allowed; }
 .go { justify-self: start; background: var(--gold); color: #1a1406; border: 0; border-radius: 10px; padding: 12px 34px; font-size: 18px; font-weight: 900; letter-spacing: .2em; }
 .go.line { background: transparent; color: var(--ink); border: 1px solid var(--line); letter-spacing: .05em; font-weight: 700; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -208,7 +228,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .pad button { height: 76px; }
   .joy { width: 120px; height: 120px; }
   .skills { transform: scale(.88); transform-origin: right bottom; }
-  .tech { transform: scale(.92); transform-origin: right bottom; }
+  .tech { width: 180px; }
+  .tb { height: 64px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -252,15 +273,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
   <button type="button" class="sk s2" data-slot="2"><kbd>L</kbd><b></b><small></small></button>
 </div>
 <div class="tech" id="tech" hidden>
-  <button type="button" class="tb brace" data-tech="brace"><b>防禦</b><small>對手出招時按</small><kbd>K</kbd></button>
-  <button type="button" class="tb back" data-tech="kouchi"><b>小內割</b><small>0%</small><kbd>1</kbd></button>
-  <button type="button" class="tb back" data-tech="osoto"><b>大外割</b><small>0%</small><kbd>2</kbd></button>
-  <button type="button" class="tb fwd" data-tech="taiotoshi"><b>丟體</b><small>0%</small><kbd>3</kbd></button>
-  <button type="button" class="tb fwd" data-tech="seoi"><b>過肩摔</b><small>0%</small><kbd>4</kbd></button>
-  <button type="button" class="tb fwd" data-tech="ogoshi"><b>大腰</b><small>0%</small><kbd>5</kbd></button>
-  <button type="button" class="tb fwd" data-tech="kubinage"><b>抱頭摔</b><small>0%</small><kbd>6</kbd></button>
+  <button type="button" class="tb brace" data-tech="brace"><b>防禦</b><small>擋招</small><kbd>K</kbd></button>
+  <button type="button" class="tb" data-slot="0"><b></b><small></small><kbd>1</kbd></button>
+  <button type="button" class="tb" data-slot="1"><b></b><small></small><kbd>2</kbd></button>
+  <button type="button" class="tb" data-slot="2"><b></b><small></small><kbd>3</kbd></button>
 </div>
-<button type="button" class="mash" id="mash" hidden><b>連打掙脫！</b><small>也可以用力搖手機</small></button>
+<button type="button" class="mash" id="mash" hidden><b>連打掙脫！</b><small>也可以用力搖手機</small><span class="combo" id="mashCombo"></span><span class="fire" id="mashFire"></span></button>
 <button type="button" class="quit" id="quit" aria-label="離開比賽" hidden>✕</button>
 
 <div class="overlay ov" id="title" hidden>
@@ -272,7 +290,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
     <div class="opts">
       <div><div class="opt-label">對手</div><div class="seg" id="optDiff"><button type="button" data-v="0">新手</button><button type="button" data-v="1" aria-pressed="true">國手</button><button type="button" data-v="2">世界冠軍</button></div></div>
       <div><div class="opt-label">震動</div><div class="seg" id="optVib"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
+      <div><div class="opt-label">重心計</div><div class="seg" id="optKz"><button type="button" data-v="1" aria-pressed="true">顯示</button><button type="button" data-v="0">隱藏</button></div></div>
       <div><div class="opt-label">比賽時間</div><div class="seg" id="optTime"><button type="button" data-v="90" aria-pressed="true">1:30 練習</button><button type="button" data-v="240">4:00 正式</button></div></div>
+    </div>
+    <div>
+      <div class="opt-label">帶上場的招式（選 3 招，前方技、後方技都帶比較好打）<span id="loadCount"></span></div>
+      <div class="loadout" id="loadout"></div>
     </div>
     <button type="button" class="go" id="startBtn">上場</button>
     <div class="ov-grid">
@@ -282,7 +305,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
           <li><b>移動</b>：左下搖桿（電腦：WASD／方向鍵）。</li>
           <li><b>抓把</b>：靠近對手按「抓把」(J)。對手伸手時按「閃避」(K)，他會撲空露出破綻。</li>
           <li><b>崩し</b>：抓把後用搖桿推拉。<span class="g">往前推</span> → 對手後傾 → <span class="g">綠色後方技</span>。<span class="y">推一陣子後突然放開或往回拉</span>，對手會被自己的反抗力帶向前 → <span class="y">金色前方技</span>。按鈕上會即時顯示成功率。</li>
-          <li><span class="g">小內割</span>輕微後傾就能用、多半只拿有效，失敗自己會倒地；<span class="g">大外割</span>要明顯後傾。<span class="y">丟體</span>抓把時繞圈移動會加成；<span class="y">過肩摔</span>要明顯前傾、容易一本；<span class="y">大腰</span>成功率極低但最容易一本；<span class="y">抱頭摔</span>對手越用力往前頂越好用，失敗很容易被反摔。</li>
+          <li>上場前從六招裡<b>挑三招</b>帶著，各招特性見上方說明。電腦用 1、2、3 出招，K 防禦。</li>
           <li><b>對手頭上出現紅色「!」</b>代表他要出招，按「防禦」(K) 擋下，接著 1 秒內出招成功率大增。</li>
           <li><b>壓制</b>：摔倒對手後立刻選壓制技。<b>袈裟固</b>是連打比拚，被壓時拚命連打（或用力搖手機）掙脫；<b>上四方固</b>是方向攻防，按亮起的方向。</li>
         </ol>
@@ -593,6 +616,19 @@ const TECHS = {
     base: (k, a, d) => Math.min(0.42, 0.03 + Math.max(0, Math.max(d.pushS, k) - 0.5) * 0.55), ideal: (k, a, d) => clamp(Math.max(d.pushS, k) - 0.5, 0, 1) },
 };
 const TECH_ORDER = ["kouchi", "osoto", "taiotoshi", "seoi", "ogoshi", "kubinage"];
+const TECH_DESC = {
+  kouchi: "對手稍微後傾就能用，最容易成功，但多半只拿有效。失敗自己會倒地，可能被壓制。",
+  osoto: "把對手推到後傾再用，成功率高也穩定，是最主要的得分招。",
+  taiotoshi: "對手稍微前傾就能用。抓把時搖桿往左右繞圈，成功率會再提高。",
+  seoi: "對手明顯前傾時用，成功時容易拿一本。",
+  ogoshi: "成功率極低，但成功時最容易拿一本。",
+  kubinage: "對手用力往前頂時最好用，一本率高；失敗很容易被反摔。",
+};
+const PREF_KEY = "judo-prefs-v1";
+function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } }
+function savePrefs(p) { try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch (e) {} }
+const prefs = Object.assign({ loadout: ["osoto", "taiotoshi", "seoi"], kz: 1 }, loadPrefs());
+if (!Array.isArray(prefs.loadout) || prefs.loadout.length !== 3 || !prefs.loadout.every((t) => TECH_ORDER.includes(t))) prefs.loadout = ["osoto", "taiotoshi", "seoi"];
 const TECH = { gaeshi: "大外返", ura: "後腰" };
 for (const k in TECHS) TECH[k] = TECHS[k].name;
 const HOLD_NAME = { kesa: "袈裟固", kami: "上四方固" };
@@ -648,11 +684,11 @@ window.addEventListener("keydown", (e) => {
   input.keys.add(k);
   if (G.state === "osaekomi" && G.hold && G.hold.type === "kesa") { if ("jkl ".includes(k)) mash(); return; }
   if (G.state === "fight" && G.gripped) {
-    const n = "123456".indexOf(k);
-    if (n >= 0) pressTech(TECH_ORDER[n]);
+    const n = "123".indexOf(k);
+    if (n >= 0) pressTech(W.loadout[n]);
     else if (k === "k" || k === " ") pressTech("brace");
-    else if (k === "j") pressTech("osoto");
-    else if (k === "l") pressTech("ogoshi");
+    else if (k === "j") pressTech(W.loadout[0]);
+    else if (k === "l") pressTech(W.loadout[1]);
     return;
   }
   if (k === "j" || k === " ") pressSlot(0);
@@ -953,9 +989,28 @@ function mash() {
   if (G.state !== "osaekomi" || !h || h.phase !== "on" || h.type !== "kesa") return;
   if (h.held === W) h.esc += DIFF.mashGain;
   else h.esc = Math.max(0, h.esc - 2.6);
-  h.taps++; h.pulse = 0.12;
+  h.taps++; h.pulse = 0.12; if (!h.combo) h.combo = 0;
   h.jolt = h.held === W ? 1 : -0.6;
+  // 連擊計數：0.45 秒內接著點就累加
+  const now = G.time;
+  h.combo = now - (h.lastTap || -9) < 0.45 ? (h.combo || 0) + 1 : 1;
+  h.lastTap = now;
   haptic("tap");
+  tick2(h.combo);
+  const m = $("mash");
+  m.classList.remove("hit"); void m.offsetWidth; m.classList.add("hit");
+  const r = m.getBoundingClientRect();
+  const el = document.createElement("span");
+  el.className = "pop" + (h.held === W ? "" : " hold");
+  el.textContent = h.held === W ? ["掙！", "推！", "翻！"][h.taps % 3] : ["壓！", "按住！", "穩！"][h.taps % 3];
+  el.style.left = (r.left + r.width * (0.2 + Math.random() * 0.6)) + "px";
+  el.style.top = (r.top - 10 + Math.random() * 20) + "px";
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 600);
+  const esc = $("nwEsc").parentElement;
+  esc.classList.remove("flash"); void esc.offsetWidth; esc.classList.add("flash");
+  setTimeout(() => esc.classList.remove("flash"), 120);
+  shake = Math.max(shake, 0.05);
 }
 function newPrompt() {
   const h = G.hold;
@@ -1106,6 +1161,16 @@ function giveShido(f, why) {
 function startMatch() {
   DIFF = DIFFS[+document.querySelector("#optDiff [aria-pressed='true']").dataset.v];
   MATCH_TIME = +document.querySelector("#optTime [aria-pressed='true']").dataset.v;
+  prefs.kz = +document.querySelector("#optKz [aria-pressed='true']").dataset.v;
+  savePrefs(prefs);
+  W.loadout = prefs.loadout.slice();
+  // AI 隨機帶三招，至少一招前方技、一招後方技
+  const backs = TECH_ORDER.filter((t) => TECHS[t].dir === "back"), fwds = TECH_ORDER.filter((t) => TECHS[t].dir === "fwd");
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const aiSet = [pick(backs), pick(fwds)];
+  while (aiSet.length < 3) { const t = pick(TECH_ORDER); if (!aiSet.includes(t)) aiSet.push(t); }
+  B.loadout = aiSet;
+  setupTechButtons();
   for (const f of [W, B]) {
     f.sc = { ippon: 0, waza: 0, yuko: 0, shido: 0 };
     f.stamina = 100; f.act = null; f.cool = 0; f.push = f.pushS = f.lean = 0; f.lastAttack = 0; f.counterT = 0;
@@ -1133,7 +1198,7 @@ function stepIntro(dt) {
     else if (t < 3.6) { f.tgt = POSE.STAND; f.rate = 6; }
     else { f.tgt = POSE.READY; f.rate = 6; }
   }
-  if (!G.introBow && t > 1.9) { G.introBow = true; call("礼", "敬禮", "", 1.1); }
+  if (!G.introBow && t > 1.9) { G.introBow = true; call("礼", "敬禮", "", 1.1); toast("對手的招式：" + B.loadout.map((x) => TECH[x]).join("、"), "", 2.4); }
   if (t > 4.1) {
     G.introBow = false;
     call("始め", "開始", "", 0.9);
@@ -1257,14 +1322,25 @@ function pressSlot(i) {
   }
 }
 
-/* 抓把中的技術面板 */
-const techBtns = [...document.querySelectorAll("#tech [data-tech]")];
+/* 抓把中的技術面板：防禦＋帶上場的三招 */
+const techBtns = [...document.querySelectorAll("#tech .tb")];
+function setupTechButtons() {
+  techBtns.forEach((b) => {
+    if (b.dataset.slot == null) return;
+    const id = W.loadout[+b.dataset.slot];
+    b.dataset.tech = id;
+    b.className = "tb " + TECHS[id].dir;
+    b.querySelector("b").textContent = TECHS[id].short;
+  });
+  techSig = "";
+}
 techBtns.forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); b.classList.add("down"); pressTech(b.dataset.tech); }));
 techBtns.forEach((b) => { const up = () => b.classList.remove("down"); b.addEventListener("pointerup", up); b.addEventListener("pointerleave", up); b.addEventListener("pointercancel", up); });
 function pressTech(id) {
-  if (G.state !== "fight" || !G.gripped) return;
+  if (G.state !== "fight" || !G.gripped || !id) return;
   ensureAudio();
   if (id === "brace") { tryBrace(W); return; }
+  if (!W.loadout.includes(id)) return;
   if (!busy(W) && W.cool <= 0) haptic("press");
   tryThrow(W, id);
 }
@@ -1273,6 +1349,7 @@ function renderTech() {
   const ready = !busy(W) && W.cool <= 0;
   const parts = techBtns.map((b) => {
     const id = b.dataset.tech;
+    if (!id) return {};
     if (id === "brace") return { id, on: !busy(W), hot: !!(B.act && B.act.type === "throwWind") };
     const c = Math.round(throwChance(W, B, id) * 100);
     const hotAt = id === "ogoshi" ? 18 : id === "kubinage" ? 25 : 40;
@@ -1283,11 +1360,13 @@ function renderTech() {
   techSig = sig;
   parts.forEach((d, i) => {
     const b = techBtns[i];
+    if (!d.id) return;
     b.classList.toggle("off", !d.on);
     b.classList.toggle("hot", d.hot);
     if (d.c != null) b.querySelector("small").textContent = d.c + "%";
   });
 }
+$("mash").addEventListener("pointerdown", (e) => { e.preventDefault(); ensureAudio(); mash(); });
 // 搖手機也算連打（部分手機或瀏覽器不提供動作感測）
 let lastShake = 0;
 window.addEventListener("devicemotion", (e) => {
@@ -1335,11 +1414,11 @@ function aiGrip(dt) {
   f.push = clamp(target, -1, 1);
   if (ai.braceAt != null) { ai.braceAt -= dt; if (ai.braceAt <= 0) { ai.braceAt = null; if (!f.act) tryBrace(f); } }
   if (busy(f) || f.cool > 0) return;
-  let best = "osoto", bc = 0;
-  for (const t of TECH_ORDER) { const c = throwChance(f, o, t); if (c > bc) { bc = c; best = t; } }
+  let best = f.loadout[0], bc = 0;
+  for (const t of f.loadout) { const c = throwChance(f, o, t); if (c > bc) { bc = c; best = t; } }
   const pass = f.lastAttack > 20 ? 0.35 : 0;
   if (bc > 0.32 && Math.random() < dt * 2.6 * DIFF.aggr) tryThrow(f, best);
-  else if (Math.random() < dt * (0.07 + pass) * DIFF.aggr) tryThrow(f, TECH_ORDER[Math.floor(Math.random() * TECH_ORDER.length)]);
+  else if (Math.random() < dt * (0.07 + pass) * DIFF.aggr) tryThrow(f, f.loadout[Math.floor(Math.random() * f.loadout.length)]);
   else if (Math.random() < dt * 0.05) { G.gripped = false; toast("對手切開了抓把"); }
 }
 
@@ -1556,6 +1635,16 @@ function clack() {
     o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.1);
   } catch (e) {}
 }
+// 連打音：連擊越高音越高
+function tick2(combo) {
+  if (!actx) return;
+  try {
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = "triangle"; o.frequency.value = 330 + Math.min(combo, 20) * 22;
+    g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.08);
+  } catch (e) {}
+}
 function thud() {
   if (!actx) return;
   try {
@@ -1576,7 +1665,7 @@ function updateHUD(dt) {
   if (callTimer > 0) { callTimer -= dt; if (callTimer <= 0) $("call").hidden = true; }
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $("toast").hidden = true; }
   const inMatch = G.state !== "title";
-  const showKz = G.state === "fight" && G.gripped;
+  const showKz = G.state === "fight" && G.gripped && prefs.kz === 1;
   $("kz").hidden = !showKz;
   if (showKz) {
     const bb = $("board").getBoundingClientRect();
@@ -1628,7 +1717,9 @@ function updateHUD(dt) {
       const m = $("mash");
       m.querySelector("b").textContent = h.held === W ? "連打掙脫！" : "連打壓緊！";
       m.querySelector("small").textContent = h.held === W ? "也可以用力搖手機" : "對手正在掙扎";
-      m.classList.toggle("pulse", h.pulse > 0);
+      const live = G.time - (h.lastTap || -9) < 0.45 && h.combo > 1;
+      $("mashCombo").textContent = live ? "連打 ×" + h.combo : "";
+      $("mashFire").style.width = live ? Math.min(100, h.combo * 6) + "%" : "0%";
     }
     $("nwTime").textContent = h.t.toFixed(1) + " 秒";
     $("nwTimeBar").style.width = clamp(h.t / 20, 0, 1) * 100 + "%";
@@ -1692,7 +1783,25 @@ function tick(dt) {
 }
 
 /* ---------- 封面、結果按鈕 ---------- */
-for (const id of ["optDiff", "optTime", "optVib"]) {
+function renderLoadout() {
+  const box = $("loadout");
+  box.innerHTML = TECH_ORDER.map((id) => {
+    const T = TECHS[id], on = prefs.loadout.includes(id), full = prefs.loadout.length >= 3 && !on;
+    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "後方技" : "前方技"}</span><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><p>${TECH_DESC[id]}</p></button>`;
+  }).join("");
+  $("loadCount").textContent = prefs.loadout.length + " / 3";
+  $("startBtn").disabled = prefs.loadout.length !== 3;
+}
+$("loadout").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-lo]"); if (!b || b.disabled) return;
+  const id = b.dataset.lo, i = prefs.loadout.indexOf(id);
+  if (i >= 0) prefs.loadout.splice(i, 1); else if (prefs.loadout.length < 3) prefs.loadout.push(id);
+  if (prefs.loadout.length === 3) savePrefs(prefs);
+  renderLoadout();
+});
+renderLoadout();
+document.querySelectorAll("#optKz button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.v === prefs.kz)));
+for (const id of ["optDiff", "optTime", "optVib", "optKz"]) {
   $(id).addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
     $(id).querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
