@@ -122,6 +122,36 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .kb-tele.l { left: 4px; } .kb-tele.r { right: 4px; }
 .kb-ch { width: 160px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .1); overflow: hidden; }
 @media (max-height: 520px) { .kb { zoom: .62; } .pad button { height: 62px; } }
+/* 雙人寢技：上下兩區，上方轉 180 度給對面的人 */
+.duo { position: fixed; left: 0; right: 0; height: 31%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr; gap: 6px; padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 12px); pointer-events: none; z-index: 5;
+  background: linear-gradient(to top, rgba(6, 9, 15, .9) 0%, rgba(6, 9, 15, .62) 72%, rgba(6, 9, 15, 0) 100%); }
+.duo.p1 { bottom: 0; }
+.duo.p2 { top: 0; transform: rotate(180deg); padding-bottom: calc(env(safe-area-inset-top, 0px) + 12px); }
+.duo-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+.duo-chip { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.duo.p1 .duo-chip { background: #f3f0e7; } .duo.p2 .duo-chip { background: #2a63d6; }
+.duo-role { flex: 1; min-width: 0; font-size: 12px; line-height: 1.35; }
+.duo-sc { font-variant-numeric: tabular-nums; color: var(--gold); white-space: nowrap; }
+.duo-mid { position: relative; display: grid; gap: 4px; justify-items: center; min-height: 54px; }
+.duo-time { width: 100%; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.duo-time i { display: block; height: 100%; width: 0; background: var(--gold); }
+.duo-kg { width: 100%; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.duo-kg .bar { position: relative; flex: 1; height: 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .16); background: linear-gradient(90deg, var(--l) 0%, rgba(255, 255, 255, .06) 30%, rgba(255, 255, 255, .06) 70%, var(--r) 100%); }
+.duo-kg .bar::after { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, .3); }
+.duo-kg .mk { position: absolute; left: 50%; top: -4px; width: 9px; height: 22px; margin-left: -4.5px; border-radius: 3px; background: #fff; box-shadow: 0 0 8px rgba(255, 255, 255, .8); }
+.duo .kb { zoom: .72; }
+.duo-big { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; font-family: var(--f-display); font-size: 30px; font-weight: 900; text-shadow: 0 2px 10px #000; pointer-events: none; }
+.duo-big small { display: block; font-family: var(--f-body); font-size: 13px; font-weight: 700; color: var(--gold); }
+.duo-btns { display: grid; gap: 12px; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); align-self: end; }
+.duo-btns button { min-width: 0; pointer-events: auto; touch-action: none; height: min(84px, 11vh); border-radius: 16px; border: 2px solid rgba(255, 255, 255, .22); background: rgba(20, 26, 38, .88); color: var(--ink); font-size: 26px; font-weight: 900; display: grid; place-content: center; gap: 2px; position: relative; overflow: hidden; transition: transform .06s; }
+.duo-btns button small { font-size: 11px; font-weight: 700; color: var(--muted); }
+.duo-btns button i { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: #FF8A6B; }
+.duo-btns button.down, .duo-btns button.hit { border-color: #fff; background: rgba(60, 80, 120, .95); transform: scale(.96); }
+.duo-btns button.tele { border-color: #FF8A6B; box-shadow: 0 0 20px rgba(255, 138, 107, .6); }
+.duo-btns button.mash { border-color: var(--gold); color: var(--gold); }
+.duo-btns button.menu { font-size: 15px; height: 48px; }
+.duo-msg { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(0, 0, 0, .9); white-space: nowrap; opacity: 0; transition: opacity .15s; }
+.duo-msg.on { opacity: 1; }
 .kb-ch i { display: block; height: 100%; width: 0; background: #FF8A6B; }
 .pad button:active { transform: scale(.95); }
 
@@ -292,6 +322,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #loadCount { margin-left: 8px; color: var(--gold); font-weight: 700; }
 .go:disabled { opacity: .4; cursor: not-allowed; }
 .go { justify-self: start; background: var(--gold); color: #1a1406; border: 0; border-radius: 10px; padding: 12px 34px; font-size: 18px; font-weight: 900; letter-spacing: .2em; }
+.go-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .go.line { background: transparent; color: var(--ink); border: 1px solid var(--line); letter-spacing: .05em; font-weight: 700; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .res-big { font-family: var(--f-display); font-weight: 900; font-size: clamp(40px, 9vw, 64px); margin: 0; line-height: 1.1; }
@@ -374,6 +405,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 </div>
 <button type="button" class="mash" id="mash" hidden><b>連打掙脫！</b><small>也可以用力搖手機</small><span class="combo" id="mashCombo"></span><span class="fire" id="mashFire"></span></button>
 <button type="button" class="quit" id="quit" aria-label="離開比賽" hidden>✕</button>
+<div class="duo p2" id="duoB" hidden></div>
+<div class="duo p1" id="duoW" hidden></div>
 
 <div class="overlay ov" id="title" hidden>
   <div class="ov-in">
@@ -391,7 +424,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <div><div class="opt-label">重心計</div><div class="seg" id="optKz"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
       <div><div class="opt-label">震動</div><div class="seg" id="optVib"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
     </div>
-    <button type="button" class="go" id="startBtn">上場</button>
+    <div class="go-row"><button type="button" class="go" id="startBtn">上場</button><button type="button" class="go line" id="duoBtn">雙人寢技（同一支手機）</button></div>
     <details class="help">
       <summary>玩法說明</summary>
       <ul>
@@ -401,6 +434,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>被丟體、過肩摔、大腰摔成<b>有效</b>時，有時會出現<b>前迴轉</b>的機會：畫面稍微變慢、頭上出現藍色提示時按下，滾翻後不算分，對手也不能壓制。半勝以上來不及滾。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打比快，把計量器的標推到底（被壓時推到底就掙脫）；<b>上四方固</b>比重心：被壓時按住◀或▶蓄力、放開往那邊頂（可以按著一邊再按另一邊換邊騙對手），把重心頂到邊緣就翻開；壓人時按住◀▶把指針拉回綠區，看到對手要頂就先往反方向壓。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
+        <li><b>雙人寢技</b>：手機平放在兩人中間，白方用下半、藍方用上半（上半是倒過來給對面看的）。輪流壓制共 4 回合（袈裟固、上四方固各輪一次），比誰壓得久。電腦：白 A／D、S 連打；藍 ←／→、↓ 連打。</li>
         <li>太久不出招、超過 15 秒沒抓把、抓把後 12 秒只防守不進攻、出界，都會被判指導，3 次判負。</li>
         <li>電腦：WASD 移動，J 抓把、K 閃避／防禦，抓把後 1、2、3 出招。</li>
       </ul>
@@ -765,6 +799,7 @@ window.addEventListener("keydown", (e) => {
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
   if (e.repeat) return;
   input.keys.add(k);
+  if (G.duo) { if (k === "s" || k === "w") mashBy(W); if (k === "arrowdown" || k === "arrowup") mashBy(B); return; }
   if (G.state === "throw") { if ("jkl ".includes(k)) tryRoll(); return; }
   if (G.state === "osaekomi" && G.hold && G.hold.type === "kesa") { if ("jkl ".includes(k)) mash(); return; }
   if (G.state === "fight" && G.gripped) {
@@ -1197,6 +1232,7 @@ function kesaPush(h, byHeld) {
   h.jolt = byHeld ? 1 : -0.6;
 }
 function mash() {
+  if (G.duo) return;
   const h = G.hold;
   if (G.state !== "osaekomi" || !h || h.phase !== "on" || h.type !== "kesa") return;
   kesaPush(h, h.held === W);
@@ -1235,16 +1271,20 @@ function kamiFire(h, dir, ch) {
   h.jolt = h.held === W ? 1 : -1;
   h.fired = 0.25; h.cool = 0.35;
   const blocked = k < 1;
-  if (h.held === W) { haptic(blocked ? "block" : "hit"); if (blocked) toast("被擋住了！換邊頂", "bad", 0.9); else if (ch > 0.6) toast(k > 1 ? "騙到了！" : "頂起來了！", "good", 0.8); }
+  if (G.duo) {
+    duoMsg(h.held, blocked ? "被擋住！換邊" : k > 1 ? "騙到了！" : "頂！");
+    duoMsg(h.holder, blocked ? "擋住了！" : k > 1 ? "被騙了！" : "被頂了！");
+    if (!blocked) haptic("hit");
+  } else if (h.held === W) { haptic(blocked ? "block" : "hit"); if (blocked) toast("被擋住了！換邊頂", "bad", 0.9); else if (ch > 0.6) toast(k > 1 ? "騙到了！" : "頂起來了！", "good", 0.8); }
   else { haptic(blocked ? "hit" : "miss"); if (blocked) toast("擋住了！", "good", 0.8); else if (k > 1) toast("被騙了！", "bad", 0.8); }
   clack();
 }
 function stepKami(h, dt) {
-  const pd = kamiDir();
+  const human = (f) => G.duo || f === W, dirOf = (f) => (G.duo ? duoDir(f) : kamiDir());
   h.cool = Math.max(0, h.cool - dt); h.fired = Math.max(0, h.fired - dt);
   // ---- 被壓者：蓄力與放開 ----
   let held = 0;   // 被壓者正在按的方向
-  if (h.held === W) held = h.cool > 0 ? 0 : pd;
+  if (human(h.held)) held = h.cool > 0 ? 0 : dirOf(h.held);
   else {
     // AI：等一下 → 選邊蓄力 → （難度高時中途換邊）→ 放開
     if (h.aiDir === 0) { h.aiT -= dt; if (h.aiT <= 0 && h.cool <= 0) { h.aiDir = Math.random() < 0.5 ? -1 : 1; h.aiCh = rand(0.25, 0.95); h.aiFeint = Math.random() < DIFF.kFeint ? rand(0.6, 0.9) : 0; } }
@@ -1257,7 +1297,7 @@ function stepKami(h, dt) {
   if (held) { if (h.cdir && held !== h.cdir) h.ch *= 0.45; h.cdir = held; h.ch = Math.min(1, h.ch + dt / 0.9); }
   else if (h.cdir) { if (h.ch > 0.08) kamiFire(h, h.cdir, h.ch); h.ch = 0; h.cdir = 0; }
   // ---- 壓制者：推重心 ----
-  if (h.holder === W) h.hf = pd;
+  if (human(h.holder)) h.hf = dirOf(h.holder);
   else {
     // AI：看到對手蓄力一段時間後往反方向壓；平常把重心拉回中間
     // 每次蓄力只判斷一次：有時沒注意到、反應時間也會飄
@@ -1276,7 +1316,7 @@ function stepKami(h, dt) {
   else h.esc = Math.max(0, h.esc - dt * 4);
   // ---- 動作：被壓者蓄力時腰拱起；壓制者跟著重心往旁邊歪 ----
   if (!h.base) h.base = { x: h.holder.x, z: h.holder.z };
-  const R = camRelative(1, 0);
+  const R = G.duo ? { x: 1, z: 0 } : camRelative(1, 0);
   h.holder.x = h.base.x + R.x * h.n * 0.32; h.holder.z = h.base.z + R.z * h.n * 0.32;
 }
 function stepHold(dt) {
@@ -1312,8 +1352,10 @@ function stepHold(dt) {
   if (h.type === "kesa") {
     // AI 一陣一陣地點（忽快忽慢），所以標會前後擺盪
     const rate = DIFF.aiTap * (0.55 + 0.9 * Math.pow(Math.sin(h.t * 1.9 + h.ph), 2));
-    h.aiAcc += rate * dt * rand(0.5, 1.5);
-    while (h.aiAcc >= 1) { h.aiAcc -= 1; kesaPush(h, h.held !== W); }
+    if (!G.duo) {
+      h.aiAcc += rate * dt * rand(0.5, 1.5);
+      while (h.aiAcc >= 1) { h.aiAcc -= 1; kesaPush(h, h.held !== W); }
+    }
     h.hr *= Math.exp(-dt / KESA_TAU); h.rr *= Math.exp(-dt / KESA_TAU);
     // 平衡點：雙方連打速度的差慢慢推動
     h.av *= Math.exp(-1.6 * dt);
@@ -1337,6 +1379,7 @@ function stepHold(dt) {
     }
   }
   if (h.type === "kami") stepKami(h, dt);
+  if (G.duo) { if (h.t >= 20 || h.esc >= 100) duoRoundEnd(h); return; }
   const holder = h.holder;
   if (h.t >= 20 || (h.t >= 10 && holder.sc.waza >= 1)) {
     const r = h.t >= 20 ? "ippon" : "awase";
@@ -1414,6 +1457,7 @@ function giveShido(f, why) {
 
 /* ---------- 比賽流程 ---------- */
 function startMatch() {
+  duoStop();
   DIFF = DIFFS[+document.querySelector("#optDiff [aria-pressed='true']").dataset.v];
   MATCH_TIME = +document.querySelector("#optTime [aria-pressed='true']").dataset.v;
   prefs.kz = +document.querySelector("#optKz [aria-pressed='true']").dataset.v;
@@ -1519,6 +1563,7 @@ function showResult() {
 }
 function toTitle() {
   cineEnd(); CAMX.w = 0;
+  duoStop();
   G.state = "title";
   for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast", "pad", "mash", "tech"]) $(id).hidden = true;
   $("title").hidden = false;
@@ -1915,6 +1960,8 @@ function camRelative(ix, iy) {
   return { x: R.x * ix + F.x * iy, z: R.z * ix + F.z * iy };
 }
 function updateCamera(dt) {
+  if (G.duo) { duoCam(dt); return; }
+  camera.up.set(0, 1, 0);
   const aspect = camera.aspect;
   const port = Math.max(1, Math.pow(1.25 / aspect, 0.55));
   if (G.state === "title") {
@@ -2442,6 +2489,7 @@ const vtmp = new THREE.Vector3();
 function updateHUD(dt) {
   if (callTimer > 0) { callTimer -= dt; if (callTimer <= 0) $("call").hidden = true; }
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $("toast").hidden = true; }
+  if (G.duo) { duoHUD(dt); return; }
   const inMatch = G.state !== "title";
   const showKz = G.state === "fight" && G.gripped && prefs.kz === 1;
   $("kz").hidden = !showKz;
@@ -2604,6 +2652,7 @@ function tick(dt) {
     case "osaekomi": G.clock = G.golden ? G.clock + dt : Math.max(0, G.clock - dt); if (!G.golden && G.clock <= 0) G.pendingEnd = true; stepHold(dt); break;
     case "reset": stepReset(dt); break;
     case "end": stepEnd(dt); break;
+    case "duoWait": stepDuoWait(dt); break;
   }
   for (const f of [W, B]) animateFighter(f, dt);
   animateRef(dt);
@@ -2613,6 +2662,201 @@ function tick(dt) {
   banner.visible = false;
   updateCamera(dt);
   updateHUD(dt);
+}
+
+/* ---------- 雙人寢技（同一支手機，面對面） ----------
+   白拿下半、藍拿上半（上半轉 180 度）。共 4 回合，輪流壓制，袈裟固、上四方固各一次；
+   每回合壓制方得到壓住的秒數（被掙脫就停，最多 20 秒），合計多的人贏。鏡頭從正上方看，兩邊都看得懂。 */
+const DUO_ROUNDS = [["W", "kesa"], ["B", "kesa"], ["W", "kami"], ["B", "kami"]];
+const DUO = { round: 0, sc: { W: 0, B: 0 }, T: 0, phase: "", last: null, pad: { W: [], B: [] }, msg: { W: null, B: null }, combo: { W: 0, B: 0 }, lastTap: { W: -9, B: -9 }, cam: null, z: {} };
+const fk = (f) => (f === W ? "W" : "B");
+function duoBuild(key) {
+  const el = $("duo" + key);
+  el.innerHTML = `<div class="duo-head"><i class="duo-chip"></i><span class="duo-role"></span><span class="duo-sc"></span></div>
+    <div class="duo-mid"><div class="duo-time"><i></i></div><div class="duo-kg" hidden><span class="l"></span><div class="bar"><b class="mk"></b></div><span class="r"></span></div>
+    <div class="kb" hidden><div class="kb-dial"><i class="kb-arc"></i><span class="kb-tele l">◀</span><span class="kb-tele r">▶</span><i class="kb-needle"></i><i class="kb-hub"></i></div><div class="kb-ch"><i></i></div></div>
+    <div class="duo-big" hidden></div><span class="duo-msg"></span></div>
+    <div class="duo-btns"></div>`;
+  const q = (c) => el.querySelector(c);
+  DUO.z[key] = { el, role: q(".duo-role"), sc: q(".duo-sc"), time: q(".duo-time i"), kg: q(".duo-kg"), kgL: q(".duo-kg .l"), kgR: q(".duo-kg .r"), kgBar: q(".duo-kg .bar"), kgM: q(".duo-kg .mk"),
+    kb: q(".kb"), kbN: q(".kb-needle"), kbTL: q(".kb-tele.l"), kbTR: q(".kb-tele.r"), kbCh: q(".kb-ch i"), big: q(".duo-big"), msg: q(".duo-msg"), btns: q(".duo-btns"), mode: "" };
+}
+// 依這回合要做的事換按鍵：袈裟固一顆大連打鍵；上四方固左右兩鍵（按住）；結束時的選單
+function duoButtons(key, mode) {
+  const z = DUO.z[key], f = key === "W" ? W : B;
+  if (z.mode === mode) return;
+  z.mode = mode; DUO.pad[key].length = 0;
+  const box = z.btns;
+  if (mode === "kesa") {
+    box.style.setProperty("--n", 1);
+    box.innerHTML = `<button type="button" class="mash">連打！<small>點越快推越多</small></button>`;
+    box.firstChild.addEventListener("pointerdown", (e) => { e.preventDefault(); mashBy(f); });
+  } else if (mode === "kami") {
+    box.style.setProperty("--n", 2);
+    box.innerHTML = `<button type="button" data-d="-1">◀<small></small><i></i></button><button type="button" data-d="1">▶<small></small><i></i></button>`;
+    box.querySelectorAll("button").forEach((b) => {
+      const d = +b.dataset.d, arr = DUO.pad[key];
+      b.addEventListener("pointerdown", (e) => { e.preventDefault(); ensureAudio(); if (!arr.includes(d)) arr.push(d); });
+      const up = () => { const i = arr.indexOf(d); if (i >= 0) arr.splice(i, 1); };
+      b.addEventListener("pointerup", up); b.addEventListener("pointerleave", up); b.addEventListener("pointercancel", up);
+    });
+  } else if (mode === "end") {
+    box.style.setProperty("--n", 2);
+    box.innerHTML = `<button type="button" class="menu" data-a="again">再來一場</button><button type="button" class="menu" data-a="home">回標題</button>`;
+    box.querySelector("[data-a=again]").addEventListener("click", duoStart);
+    box.querySelector("[data-a=home]").addEventListener("click", toTitle);
+  } else box.innerHTML = "";
+}
+function duoDir(f) {
+  const arr = DUO.pad[fk(f)];
+  if (arr.length) return arr[arr.length - 1];
+  const k = input.keys;
+  const l = f === W ? k.has("a") : k.has("arrowleft"), r = f === W ? k.has("d") : k.has("arrowright");
+  return l === r ? 0 : r ? 1 : -1;
+}
+function duoMsg(f, text) { DUO.msg[fk(f)] = { text, t: 0.8 }; }
+function mashBy(f) {
+  const h = G.hold;
+  if (!G.duo || G.state !== "osaekomi" || !h || h.phase !== "on" || h.type !== "kesa") return;
+  kesaPush(h, h.held === f);
+  h.taps++; h.pulse = 0.12;
+  const key = fk(f);
+  DUO.combo[key] = G.time - DUO.lastTap[key] < 0.45 ? DUO.combo[key] + 1 : 1;
+  DUO.lastTap[key] = G.time;
+  tick2(DUO.combo[key]);
+  const b = DUO.z[key].btns.firstChild;
+  if (b && b.classList) { b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); setTimeout(() => b.classList.remove("hit"), 70); }
+  shake = Math.max(shake, 0.04);
+}
+function duoStart() {
+  ensureAudio();
+  cineEnd(); CAMX.w = 0;
+  G.duo = true;
+  if (!DUO.z.W) { duoBuild("W"); duoBuild("B"); }
+  for (const id of ["title", "result", "board", "joy", "skills", "tech", "kz", "nw", "pad", "mash", "warn", "call", "toast", "rollcue"]) $(id).hidden = true;
+  $("quit").hidden = false;
+  $("duoW").hidden = $("duoB").hidden = false;
+  Object.assign(DUO, { round: 0, sc: { W: 0, B: 0 }, last: null, cam: null });
+  for (const f of [W, B]) { f.sc = { ippon: 0, waza: 0, yuko: 0, shido: 0 }; f.act = null; f.stamina = 100; }
+  for (const k of ["W", "B"]) duoButtons(k, "");
+  duoSetup();
+}
+function duoStop() {
+  if (!G.duo) return;
+  G.duo = false; G.hold = null;
+  $("duoW").hidden = $("duoB").hidden = true;
+  for (const k of ["W", "B"]) { DUO.pad[k].length = 0; if (DUO.z[k]) duoButtons(k, ""); }
+  camera.up.set(0, 1, 0); GC.snap = true;
+}
+// 每回合開始：被壓者躺在中間（頭朝畫面左邊），壓制者在自己那一側準備
+function duoSetup() {
+  const [hk, type] = DUO_ROUNDS[DUO.round];
+  const holder = hk === "W" ? W : B, held = other(holder);
+  Object.assign(held, { x: 0, z: 0, yaw: PI / 2, act: null, tgt: POSE.HELD, rate: 8, moveAmt: 0 });
+  held.cur = clonePose(POSE.HELD);
+  const side = holder === W ? 1 : -1; // 白在畫面下方（+z），藍在上方
+  Object.assign(holder, type === "kami" ? { x: -1.6, z: 0.6 * side, yaw: PI / 2 } : { x: -0.3, z: 1.25 * side, yaw: side > 0 ? PI : 0 });
+  Object.assign(holder, { act: null, tgt: POSE.READY, rate: 8, moveAmt: 0 });
+  G.hold = null; G.state = "duoWait";
+  DUO.phase = "ready"; DUO.T = 2.4;
+  for (const k of ["W", "B"]) { duoButtons(k, ""); DUO.msg[k] = null; DUO.combo[k] = 0; }
+}
+function stepDuoWait(dt) {
+  DUO.T -= dt;
+  if (DUO.phase === "ready" && DUO.T <= 0) {
+    const [hk, type] = DUO_ROUNDS[DUO.round];
+    const holder = hk === "W" ? W : B;
+    startHold(holder, other(holder), type);
+    $("call").hidden = true;
+    DUO.phase = "hold";
+    for (const k of ["W", "B"]) duoButtons(k, type);
+    thud();
+  } else if (DUO.phase === "after" && DUO.T <= 0) {
+    DUO.round++;
+    if (DUO.round >= DUO_ROUNDS.length) duoFinish(); else duoSetup();
+  }
+}
+function duoRoundEnd(h) {
+  const esc = h.esc >= 100, secs = esc ? Math.min(20, h.t) : 20;
+  DUO.sc[fk(h.holder)] += secs;
+  DUO.last = { holder: h.holder, secs, esc };
+  G.hold = null; G.state = "duoWait"; DUO.phase = "after"; DUO.T = 2.8;
+  h.held.tgt = POSE.LYING; h.holder.tgt = POSE.READY;
+  for (const k of ["W", "B"]) duoButtons(k, "");
+  refGesture(esc ? "R_TOKETA" : "R_IPPON", 1.6);
+  haptic("land");
+  if (esc) clack(); else { boom(1); crowd("ippon", 2); }
+}
+function duoFinish() {
+  DUO.phase = "end"; G.state = "duoWait"; DUO.T = 1e9;
+  for (const k of ["W", "B"]) duoButtons(k, "end");
+  const w = DUO.sc.W, b = DUO.sc.B;
+  refGesture(Math.abs(w - b) < 0.05 ? "R_STAND" : w > b ? "R_WIN_W" : "R_WIN_B", 99);
+  crowd("ippon", 2);
+}
+function duoHUD(dt) {
+  const h = G.hold;
+  for (const k of ["W", "B"]) {
+    const z = DUO.z[k], me = k === "W" ? W : B, opp = other(me);
+    const [hk, type] = DUO_ROUNDS[Math.min(DUO.round, DUO_ROUNDS.length - 1)];
+    const iHold = hk === k, hn = HOLD_NAME[type];
+    z.sc.textContent = `你 ${DUO.sc[k].toFixed(1)}・對手 ${DUO.sc[fk(opp)].toFixed(1)} 秒`;
+    const live = h && h.phase === "on";
+    z.role.textContent = DUO.phase === "end" ? "比賽結束：比誰壓得久"
+      : `${DUO.round + 1}/4・${hn}・` + (iHold ? "你壓制" : "你被壓") + (live ? (type === "kesa" ? "：連打往右推" : iHold ? "：拉回綠區，看到預兆反壓" : "：按住蓄力，放開往那邊頂") : "");
+    z.time.style.width = (h ? clamp(h.t / 20, 0, 1) * 100 : DUO.phase === "after" ? (DUO.last.secs / 20) * 100 : 0) + "%";
+    // 大字：倒數、回合結果、最終結果
+    let big = "";
+    if (DUO.phase === "ready") big = `${Math.max(1, Math.ceil(DUO.T))}<small>${iHold ? "準備壓制" : "準備掙脫"}</small>`;
+    else if (DUO.phase === "after") { const L = DUO.last, mine = L.holder === me; big = L.esc ? `解けた<small>${mine ? "被掙脫了" : "掙脫成功"}・壓了 ${L.secs.toFixed(1)} 秒</small>` : `一本<small>${mine ? "壓滿 20 秒！" : "被壓滿 20 秒"}</small>`; }
+    else if (DUO.phase === "end") { const a = DUO.sc[k], o = DUO.sc[fk(opp)], sub = `<small>${a.toFixed(1)} 秒對 ${o.toFixed(1)} 秒</small>`; big = (Math.abs(a - o) < 0.05 ? "平手" : a > o ? "你贏了" : "你輸了") + sub; }
+    z.big.hidden = !big; if (big && z.big.innerHTML !== big) z.big.innerHTML = big;
+    const on = live && !big;
+    z.kg.hidden = !(on && h.type === "kesa"); z.kb.hidden = !(on && h.type === "kami");
+    if (on && h.type === "kesa") {
+      // 每個人都往右推：被壓者右端是掙脫；壓制者右端是壓緊、左端是對手掙脫
+      const mine = h.held === me ? h.m : -h.m;
+      z.kgM.style.left = (50 + mine * 50).toFixed(1) + "%";
+      z.kgL.textContent = h.held === me ? "被壓住" : "對手掙脫";
+      z.kgR.textContent = h.held === me ? "掙脫" : "壓緊";
+      z.kgBar.style.setProperty("--l", h.held === me ? "rgba(42,99,214,.55)" : "rgba(229,72,60,.6)");
+      z.kgBar.style.setProperty("--r", h.held === me ? "rgba(61,190,122,.65)" : "rgba(42,99,214,.55)");
+    }
+    if (on && h.type === "kami") {
+      z.kbN.style.transform = `rotate(${(h.n * 90).toFixed(1)}deg)`;
+      z.kbCh.style.width = (h.ch * 100).toFixed(0) + "%";
+      z.kbTL.style.opacity = h.cdir < 0 ? 0.35 + 0.65 * h.ch : 0;
+      z.kbTR.style.opacity = h.cdir > 0 ? 0.35 + 0.65 * h.ch : 0;
+      const pd = duoDir(me);
+      z.btns.querySelectorAll("button").forEach((b) => {
+        const d = +b.dataset.d;
+        const cls = (pd === d ? "down" : "") + (h.holder === me && h.cdir === d ? " tele" : "");
+        if (b.className !== cls) b.className = cls;
+        b.querySelector("i").style.width = h.held === me && h.cdir === d ? h.ch * 100 + "%" : "0%";
+        const t = h.held === me ? "按住蓄力・放開頂" : d < 0 ? "往左壓" : "往右壓";
+        const sm = b.querySelector("small"); if (sm.textContent !== t) sm.textContent = t;
+      });
+    }
+    const m = DUO.msg[k];
+    if (m) { m.t -= dt; if (m.t <= 0) DUO.msg[k] = null; }
+    z.msg.classList.toggle("on", !!DUO.msg[k]);
+    if (DUO.msg[k] && z.msg.textContent !== m.text) z.msg.textContent = m.text;
+  }
+}
+// 正上方的鏡頭：畫面上方是藍方、下方是白方
+function duoCam(dt) {
+  const mx = (W.x + B.x) / 2, mz = (W.z + B.z) / 2;
+  if (!DUO.cam) DUO.cam = { x: mx, z: mz };
+  DUO.cam.x = damp(DUO.cam.x, mx, 3, dt); DUO.cam.z = damp(DUO.cam.z, mz, 3, dt);
+  const fov = 50; if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  const tv = Math.tan((fov * PI) / 360);
+  // 中間約四成的畫面要裝下兩人（約 3 公尺見方）
+  const H = Math.max(1.5 / (tv * 0.4), 1.5 / (tv * camera.aspect));
+  camera.up.set(0, 0, -1);
+  camera.position.set(DUO.cam.x, H, DUO.cam.z);
+  if (shake > 0) { const a = shake * 0.15; camera.position.x += (Math.random() - 0.5) * a; camera.position.z += (Math.random() - 0.5) * a; shake = Math.max(0, shake - dt * 1.4); }
+  camera.lookAt(DUO.cam.x, 0, DUO.cam.z);
+  scene.fog.near = H + 3; scene.fog.far = H + 20;
 }
 
 /* ---------- 封面、結果按鈕 ---------- */
@@ -2641,6 +2885,7 @@ for (const id of ["optDiff", "optTime", "optVib", "optKz"]) {
   });
 }
 $("startBtn").addEventListener("click", () => { askMotion(); startMatch(); });
+$("duoBtn").addEventListener("click", duoStart);
 $("againBtn").addEventListener("click", startMatch);
 $("homeBtn").addEventListener("click", toTitle);
 $("quit").addEventListener("click", () => {
