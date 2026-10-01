@@ -195,13 +195,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .help .y { color: var(--gold); }
 .ov .ov-in { gap: 20px; }
 .loadout { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 8px; }
-.lo { align-content: start; text-align: left; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; }
-.lo-top { display: flex; align-items: center; gap: 8px; }
-.lo-top b { font-size: 16px; white-space: nowrap; }
-.lo-tag { font-size: 11px; padding: 0 6px; border-radius: 4px; }
+.lo { min-width: 0; overflow: hidden; align-content: start; text-align: left; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; }
+.lo-top { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.lo-top b { font-size: 16px; min-width: 0; flex: 1; line-height: 1.3; }
+.lo-chips .lo-tag { font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 999px; border: 0; }
 .lo-tag.back { background: rgba(61, 190, 122, .2); color: #8FE3B5; }
 .lo-tag.fwd { background: rgba(227, 179, 65, .2); color: #F2CF7A; }
-.lo-check { margin-left: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 900; }
+.lo-check { flex: none; margin-left: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 900; }
 .lo-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; align-content: flex-start; }
 .lo-chips span { font-size: 11px; line-height: 18px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; }
 .lo[aria-pressed="true"] { border-color: var(--gold); background: rgba(227, 179, 65, .08); }
@@ -1819,7 +1819,7 @@ function renderLoadout() {
   const box = $("loadout");
   box.innerHTML = TECH_ORDER.map((id) => {
     const T = TECHS[id], on = prefs.loadout.includes(id), full = prefs.loadout.length >= 3 && !on;
-    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "前" : "後"}</span><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips">${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
+    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips"><span class="lo-tag ${T.dir}">${T.dir === "back" ? "前方技" : "後方技"}</span>${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
   }).join("");
   $("loadCount").textContent = prefs.loadout.length + " / 3";
   $("startBtn").disabled = prefs.loadout.length !== 3;
