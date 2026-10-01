@@ -170,11 +170,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .quit.confirm { width: auto; border-radius: 16px; padding: 0 10px; color: var(--ink); font-size: 12px; }
 
 /* 封面與結果 */
-.overlay { position: fixed; inset: 0; background: radial-gradient(120% 90% at 50% 20%, rgba(20, 30, 50, .78), rgba(5, 8, 12, .95)); overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 24px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px); }
+.overlay { position: fixed; inset: 0; background: radial-gradient(120% 90% at 50% 20%, rgba(18, 26, 42, .93), rgba(5, 8, 12, .98)); overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 24px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px); }
 .ov-in { max-width: 760px; margin: 0 auto; display: grid; gap: 18px; }
 .ov h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(44px, 10vw, 76px); line-height: 1.05; margin: 0; letter-spacing: .06em; }
 .ov h1 span { color: var(--gold); }
-.ov .lead { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.ov .lead { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
 .ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; }
 .card { background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
 .card h2 { font-size: 14px; margin: 0 0 8px; color: var(--gold); letter-spacing: .1em; }
@@ -187,15 +187,23 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { background: transparent; border: 0; padding: 8px 14px; font-size: 14px; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 700; }
-.loadout { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 8px; }
-.lo { text-align: left; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; }
+.help { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.help summary { cursor: pointer; color: var(--gold); font-weight: 700; }
+.help ul { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 6px; font-size: 14px; line-height: 1.6; }
+.help b { color: #fff; }
+.help .g { color: var(--green); }
+.help .y { color: var(--gold); }
+.ov .ov-in { gap: 20px; }
+.loadout { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+.lo { align-content: start; text-align: left; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; display: grid; gap: 3px; }
 .lo-top { display: flex; align-items: center; gap: 8px; }
-.lo-top b { font-size: 16px; }
+.lo-top b { font-size: 16px; white-space: nowrap; }
 .lo-tag { font-size: 11px; padding: 0 6px; border-radius: 4px; }
 .lo-tag.back { background: rgba(61, 190, 122, .2); color: #8FE3B5; }
 .lo-tag.fwd { background: rgba(227, 179, 65, .2); color: #F2CF7A; }
 .lo-check { margin-left: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 900; }
-.lo p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+.lo-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; align-content: flex-start; }
+.lo-chips span { font-size: 11px; line-height: 18px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; }
 .lo[aria-pressed="true"] { border-color: var(--gold); background: rgba(227, 179, 65, .08); }
 .lo[aria-pressed="true"] .lo-check { background: var(--gold); border-color: var(--gold); color: #1a1406; }
 .lo:disabled { opacity: .4; cursor: not-allowed; }
@@ -285,43 +293,31 @@ button { font: inherit; color: inherit; cursor: pointer; }
   <div class="ov-in">
     <div>
       <h1>柔道<span>對決</span></h1>
-      <p class="lead">警大柔道隊・3D 柔道戰鬥系統試作。白色道服是你，藍色道服是對手。</p>
+      <p class="lead">白色是你，藍色是對手。挑三招上場。</p>
+    </div>
+    <div>
+      <div class="opt-label">帶上場的招式 <span id="loadCount"></span></div>
+      <div class="loadout" id="loadout"></div>
     </div>
     <div class="opts">
       <div><div class="opt-label">對手</div><div class="seg" id="optDiff"><button type="button" data-v="0">新手</button><button type="button" data-v="1" aria-pressed="true">國手</button><button type="button" data-v="2">世界冠軍</button></div></div>
+      <div><div class="opt-label">時間</div><div class="seg" id="optTime"><button type="button" data-v="90" aria-pressed="true">1:30</button><button type="button" data-v="240">4:00</button></div></div>
+      <div><div class="opt-label">重心計</div><div class="seg" id="optKz"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
       <div><div class="opt-label">震動</div><div class="seg" id="optVib"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
-      <div><div class="opt-label">重心計</div><div class="seg" id="optKz"><button type="button" data-v="1" aria-pressed="true">顯示</button><button type="button" data-v="0">隱藏</button></div></div>
-      <div><div class="opt-label">比賽時間</div><div class="seg" id="optTime"><button type="button" data-v="90" aria-pressed="true">1:30 練習</button><button type="button" data-v="240">4:00 正式</button></div></div>
-    </div>
-    <div>
-      <div class="opt-label">帶上場的招式（選 3 招，前方技、後方技都帶比較好打）<span id="loadCount"></span></div>
-      <div class="loadout" id="loadout"></div>
     </div>
     <button type="button" class="go" id="startBtn">上場</button>
-    <div class="ov-grid">
-      <div class="card">
-        <h2>怎麼打</h2>
-        <ol>
-          <li><b>移動</b>：左下搖桿（電腦：WASD／方向鍵）。</li>
-          <li><b>抓把</b>：靠近對手按「抓把」(J)。對手伸手時按「閃避」(K)，他會撲空露出破綻。</li>
-          <li><b>崩し</b>：抓把後用搖桿推拉。<span class="g">往前推</span> → 對手後傾 → <span class="g">綠色後方技</span>。<span class="y">推一陣子後突然放開或往回拉</span>，對手會被自己的反抗力帶向前 → <span class="y">金色前方技</span>。按鈕上會即時顯示成功率。</li>
-          <li>上場前從六招裡<b>挑三招</b>帶著，各招特性見上方說明。電腦用 1、2、3 出招，K 防禦。</li>
-          <li><b>對手頭上出現紅色「!」</b>代表他要出招，按「防禦」(K) 擋下，接著 1 秒內出招成功率大增。</li>
-          <li><b>壓制</b>：摔倒對手後立刻選壓制技。<b>袈裟固</b>是連打比拚，被壓時拚命連打（或用力搖手機）掙脫；<b>上四方固</b>是方向攻防，按亮起的方向。</li>
-        </ol>
-      </div>
-      <div class="card">
-        <h2>規則</h2>
-        <ul>
-          <li><b>一本（一勝）</b>：立即獲勝。兩次<b>半勝</b>合計為一本。</li>
-          <li><b>有效</b>可以累積，時間到先比半勝數、再比有效數。</li>
-          <li>壓制 <b>5 秒有效、10 秒半勝、20 秒一本</b>。已有半勝時壓滿 10 秒直接一本。</li>
-          <li><b>指導</b>：30 秒沒有出招（消極）或踏出比賽區都會被判指導，累積 3 次判負。</li>
-          <li>時間到平手進入<b>黃金得分</b>，先得分者勝。</li>
-          <li>開始與結束都要向對方敬禮。</li>
-        </ul>
-      </div>
-    </div>
+    <details class="help">
+      <summary>玩法說明</summary>
+      <ul>
+        <li>靠近按<b>抓把</b>；對手伸手時按<b>閃避</b>。</li>
+        <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
+        <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
+        <li>摔倒對手後選壓制：<b>袈裟固</b>連打、<b>上四方固</b>按亮起的方向。</li>
+        <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
+        <li>消極或出界會被判指導，3 次判負。</li>
+        <li>電腦：WASD 移動，J 抓把、K 閃避／防禦，抓把後 1、2、3 出招。</li>
+      </ul>
+    </details>
   </div>
 </div>
 
@@ -617,12 +613,12 @@ const TECHS = {
 };
 const TECH_ORDER = ["kouchi", "osoto", "taiotoshi", "seoi", "ogoshi", "kubinage"];
 const TECH_DESC = {
-  kouchi: "對手稍微後傾就能用，最容易成功，但多半只拿有效。失敗自己會倒地，可能被壓制。",
-  osoto: "把對手推到後傾再用，成功率高也穩定，是最主要的得分招。",
-  taiotoshi: "對手稍微前傾就能用。抓把時搖桿往左右繞圈，成功率會再提高。",
-  seoi: "對手明顯前傾時用，成功時容易拿一本。",
-  ogoshi: "成功率極低，但成功時最容易拿一本。",
-  kubinage: "對手用力往前頂時最好用，一本率高；失敗很容易被反摔。",
+  kouchi: ["好成功", "多半有效", "失敗倒地"],
+  osoto: ["主力", "穩定"],
+  taiotoshi: ["繞圈加成"],
+  seoi: ["易一本"],
+  ogoshi: ["極難", "必殺一本"],
+  kubinage: ["對手前頂時", "高風險"],
 };
 const PREF_KEY = "judo-prefs-v1";
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } }
@@ -1777,7 +1773,7 @@ function tick(dt) {
   }
   for (const f of [W, B]) animateFighter(f, dt);
   animateRef(dt);
-  banner.visible = G.state === "title";
+  banner.visible = false;
   updateCamera(dt);
   updateHUD(dt);
 }
@@ -1787,7 +1783,7 @@ function renderLoadout() {
   const box = $("loadout");
   box.innerHTML = TECH_ORDER.map((id) => {
     const T = TECHS[id], on = prefs.loadout.includes(id), full = prefs.loadout.length >= 3 && !on;
-    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "後方技" : "前方技"}</span><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><p>${TECH_DESC[id]}</p></button>`;
+    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "後" : "前"}</span><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips">${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
   }).join("");
   $("loadCount").textContent = prefs.loadout.length + " / 3";
   $("startBtn").disabled = prefs.loadout.length !== 3;
