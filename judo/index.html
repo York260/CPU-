@@ -74,13 +74,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .kz-cap { text-align: center; font-size: 10px; color: var(--muted); letter-spacing: .15em; margin-bottom: 2px; text-shadow: 0 1px 4px #000; }
 .kz-bar { position: relative; height: 20px; border-radius: 5px; background: rgba(10, 14, 22, .7); border: 1px solid var(--line); overflow: hidden; }
 .kz-zone { position: absolute; top: 0; bottom: 0; }
-.kz-zone.back { left: 0; background: rgba(61, 190, 122, .3); }
-.kz-zone.fwd { right: 0; background: rgba(227, 179, 65, .3); }
+.kz-zone.back { background: rgba(61, 190, 122, .3); }
+.kz-zone.fwd { background: rgba(227, 179, 65, .3); }
 .kz-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .3); }
 .kz-dot { position: absolute; top: 2px; bottom: 2px; width: 6px; margin-left: -3px; border-radius: 2px; background: #fff; box-shadow: 0 0 8px #fff; }
 .kz-lab { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; }
-.kz-lab.l { left: 6px; color: #8FE3B5; }
-.kz-lab.r { right: 6px; color: #F2CF7A; }
+.kz-lab.back { color: #8FE3B5; }
+.kz-lab.fwd { color: #F2CF7A; }
 
 /* 寢技資訊（精簡） */
 .nw { position: fixed; left: 50%; top: 96px; transform: translateX(-50%); width: min(320px, calc(100vw - 32px)); background: rgba(10, 14, 22, .72); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px 7px; pointer-events: none; display: grid; gap: 4px; }
@@ -194,7 +194,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 <div class="kz" id="kz" hidden>
   <div class="kz-cap">對手重心</div>
-  <div class="kz-bar"><span class="kz-zone back" id="kzBack"></span><span class="kz-zone fwd" id="kzFwd"></span><span class="kz-mid"></span><span class="kz-lab l">◀ 大外割</span><span class="kz-lab r">大腰 ▶</span><span class="kz-dot" id="kzDot"></span></div>
+  <div class="kz-bar"><span class="kz-zone back" id="kzBack"></span><span class="kz-zone fwd" id="kzFwd"></span><span class="kz-mid"></span><span class="kz-lab back" id="kzBackLab">大外割</span><span class="kz-lab fwd" id="kzFwdLab">大腰</span><span class="kz-dot" id="kzDot"></span></div>
 </div>
 
 <div class="nw" id="nw" hidden>
@@ -1335,10 +1335,18 @@ function updateHUD(dt) {
   if (showKz) {
     const bb = $("board").getBoundingClientRect();
     $("kz").style.top = Math.round(bb.bottom + 8) + "px";
-    const pos = (k) => 50 + clamp(k, -1.6, 1.6) / 1.6 * 50;
+    // 依畫面上的相對位置決定方向：後傾 = 遠離你的那一側，前傾 = 朝向你的那一側
+    vtmp.set(W.x, 1, W.z).project(camera); const wx = vtmp.x;
+    vtmp.set(B.x, 1, B.z).project(camera); const bx = vtmp.x;
+    if (Math.abs(bx - wx) > 0.04) G.kzSide = bx > wx ? 1 : -1;
+    const side = G.kzSide || 1; // 1：對手在你右邊，後傾往右
+    const pos = (k) => 50 - side * clamp(k, -1.6, 1.6) / 1.6 * 50;
     $("kzDot").style.left = pos(B.lean) + "%";
-    $("kzBack").style.width = (50 - (0.25 / 1.6) * 50) + "%";
-    $("kzFwd").style.width = (50 - (0.45 / 1.6) * 50) + "%";
+    const backW = (50 - (0.25 / 1.6) * 50) + "%", fwdW = (50 - (0.45 / 1.6) * 50) + "%";
+    const place = (el, w, onRight) => { el.style.width = w; el.style.left = onRight ? "auto" : "0"; el.style.right = onRight ? "0" : "auto"; };
+    place($("kzBack"), backW, side > 0); place($("kzFwd"), fwdW, side < 0);
+    const lab = (el, onRight, text) => { el.style.left = onRight ? "auto" : "6px"; el.style.right = onRight ? "6px" : "auto"; el.textContent = onRight ? text + " ▶" : "◀ " + text; };
+    lab($("kzBackLab"), side > 0, "大外割"); lab($("kzFwdLab"), side < 0, "大腰");
   }
   // 攻擊預兆
   const warn = $("warn");
