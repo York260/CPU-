@@ -90,7 +90,15 @@ button { cursor: pointer; }
 .meter-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
 .meter-note.warn { color: var(--stamp); }
 .flags { display: flex; flex-wrap: wrap; gap: 4px; }
-.flag { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; color: var(--muted); }
+.flag { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; color: var(--muted); background: transparent; }
+.flag:hover { border-color: var(--navy); color: var(--ink); }
+.flag[aria-expanded="true"] { background: var(--navy); border-color: var(--navy); color: var(--on-navy); }
+.hint { margin-left: 8px; letter-spacing: 0; color: var(--muted); opacity: .8; }
+.flag-info { margin-top: 8px; background: var(--tint); border-radius: 6px; padding: 8px 10px; font-size: 13px; line-height: 1.6; }
+.flag-info b { font-size: 14px; }
+.flag-info p { margin: 2px 0 0; }
+.flag-info .fx { color: var(--navy); font-weight: 500; }
+.notice { margin: 14px 0 0; font-size: 13px; color: var(--good); }
 
 /* 公文事件卡 */
 .doc { background: var(--card); border: 1px solid var(--line); border-radius: 3px; padding: 26px clamp(18px, 4vw, 36px) 28px; position: relative; animation: rise .35s ease both; }
@@ -200,7 +208,7 @@ button { cursor: pointer; }
 /* ---------- 基本資料 ---------- */
 const STAGES = ["預備教育", "一年級", "二年級", "三年級", "四年級", "特考"];
 const STAT_KEYS = ["fit", "aca", "mor", "men", "soc"];
-const STAT_NAME = { fit: "體能", aca: "學業", mor: "品德", men: "心理", soc: "人緣" };
+const STAT_NAME = { fit: "體能", aca: "課業", mor: "操行", men: "心情", soc: "人緣" };
 const REC_GOOD = ["嘉獎", "小功", "大功"];
 const REC_BAD = ["申誡", "小過", "大過"];
 const REC_PTS = { 嘉獎: 1, 小功: 3, 大功: 9, 申誡: 1, 小過: 3, 大過: 9 };
@@ -233,11 +241,26 @@ const BACKGROUNDS = [
 
 const NAMES = ["陳冠宇", "林品妤", "張承恩", "黃詩涵", "李柏翰", "王郁婷", "吳宗翰", "劉芷晴", "蔡宇軒", "楊于萱", "許家豪", "鄭雅筑"];
 
-const FLAG_NAME = {
-  leader: "區隊幹部", buddy: "室友阿凱", partner: "交往中", injury: "舊傷",
-  cheated: "作弊前科", bribe: "收過紅包", prep: "特考準備", phone: "私藏手機", front: "志在外勤", staff: "志在幕僚",
+/* 狀態詞條：d 介紹，fx 效果說明；mod 判定成功率加減（百分點），men 每階段開始時心情變化，yearMen 學年考核時心情變化 */
+const FLAG_INFO = {
+  family: { name: "警察世家", d: "父母都是警察，從小聽著勤務故事長大，也背著家裡的期待。", fx: "操行判定成功率 +5%", mod: { mor: 5 } },
+  leader: { name: "學生幹部", d: "你擔任區隊或社聯會幹部，責任比別人多，也更常被看見。", fx: "每次學年考核額外嘉獎乙次" },
+  buddy: { name: "室友阿凱", d: "預備教育時教你摺棉被的室友，一路互相罩著。", fx: "人緣判定成功率 +5%；影響結局", mod: { soc: 5 } },
+  partner: { name: "交往中", d: "有個人在校外等你放假，訊息只能在拿回手機時回。", fx: "每次學年考核心情 +4；影響結局", yearMen: 4 },
+  injury: { name: "舊傷", d: "綜合逮捕術課留下的手腕傷，天氣一變就隱隱作痛。", fx: "體能判定成功率 -10%", mod: { fit: -10 } },
+  cheated: { name: "作弊前科", d: "刑法期中考那支原子筆沒有被發現，但你自己記得。", fx: "心情判定成功率 -5%；影響結局", mod: { men: -5 } },
+  bribe: { name: "收過紅包", d: "實習時收下了業者的紅包。這件事還沒結束。", fx: "四年級必定觸發廉政署約談事件" },
+  prep: { name: "特考準備", d: "提早開始準備警察特考，筆記和考古題已經累積了一疊。", fx: "特考總成績 +4" },
+  phone: { name: "私藏手機", d: "報到時藏下的舊手機，熄燈後的小小喘息。", fx: "每個階段開始時心情 +2", men: 2 },
+  front: { name: "志在外勤", d: "你告訴督導，畢業後想去最辛苦的第一線。", fx: "行政警察學系分發改為保安警察大隊" },
+  staff: { name: "志在幕僚", d: "你想走專業幕僚，學會寫簽呈是第一步。", fx: "行政警察學系分發改為警政署" },
+  "club:martial": { name: "國術社", d: "每週三晚上在道館練柔道和跆拳道。", fx: "體能判定成功率 +5%", mod: { fit: 5 } },
+  "club:honor": { name: "儀隊", d: "校慶與典禮的門面，操槍練到手起水泡。", fx: "操行判定成功率 +5%", mod: { mor: 5 } },
+  "club:band": { name: "熱音社", d: "社辦裡的鼓聲是你釋放壓力的地方。", fx: "每個階段開始時心情 +3", men: 3 },
+  "club:service": { name: "慈幼社", d: "放假帶著物資上山陪偏鄉孩子。", fx: "人緣判定成功率 +5%", mod: { soc: 5 } },
 };
 const CLUB_NAME = { martial: "國術社", honor: "儀隊", band: "熱音社", service: "慈幼社" };
+let openFlag = null; // 學生證上目前展開說明的詞條
 
 /* ---------- 事件 ----------
    ch: 選項 { t 文字, e 數值變化, rec 獎懲, set/unset 旗標, r 結果, chk 判定 {s 數值, dc 難度, ok, no}, end 結局, fn 自訂 } */
@@ -439,7 +462,7 @@ const EV = {
       { t: "發長文痛批學校", chk: { s: "men", dc: 60,
         ok: { e: { men: 6, soc: 3 }, r: "文章被轉了上千次，沒人知道是你寫的。" },
         no: { e: { men: -3, mor: -4 }, rec: { 小過: 1 }, r: "文章被截圖，學校查出帳號，你被約談並記小過乙次。" } } },
-      { t: "透過學生自治會理性反映", e: { mor: 4, soc: 3 }, r: "自治會把你的建議帶進會議，晚自習時間真的調整了。" },
+      { t: "透過社聯會理性反映", e: { mor: 4, soc: 3 }, r: "社聯會把你的建議帶進會議，晚自習時間真的調整了。" },
       { t: "滑過就好", e: { men: -1 }, r: "你關掉手機，把那口氣吞了回去。" },
     ] },
   y2e: { when: "二年級・報告前夜", where: "圖書館", title: "犯罪學分組報告",
@@ -470,7 +493,7 @@ const EV = {
       { t: "說先當朋友", e: { soc: 3 }, r: "你們成了最好的讀書夥伴。" },
     ] },
   y2h: { when: "二年級・學生幹部改選", where: "學生活動中心", title: "要不要出來選",
-    text: "學生自治會改選，有學長姐鼓勵你出來競選。",
+    text: "社聯會改選，有學長姐鼓勵你出來競選。",
     ch: [
       { t: "參選並認真跑政見", chk: { s: "soc", dc: 55,
         ok: { e: { soc: 5, mor: 3, men: -3 }, rec: { 嘉獎: 1 }, set: ["leader"], r: "你高票當選，任內推動了寢室冷氣汰換。" },
@@ -690,7 +713,9 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const dept = () => DEPTS.find((d) => d.id === S.dept);
 const netDemerit = (rec) => REC_BAD.reduce((n, k) => n + rec[k] * REC_PTS[k], 0) - REC_GOOD.reduce((n, k) => n + rec[k] * REC_PTS[k], 0);
-const chance = (stat, dc) => clamp(50 + (stat - dc) * 2, 10, 95);
+const activeFlags = () => (S ? [...Object.keys(S.flags), ...(S.club ? ["club:" + S.club] : [])].filter((f) => FLAG_INFO[f]) : []);
+const flagMod = (k) => activeFlags().reduce((n, f) => n + ((FLAG_INFO[f].mod || {})[k] || 0), 0);
+const chance = (k, dc) => clamp(50 + (S.stats[k] - dc) * 2 + flagMod(k), 10, 95);
 const cnNum = (n) => CN_NUM[n] || String(n);
 
 /* ---------- 角色建立 ---------- */
@@ -729,6 +754,14 @@ function beginStage(n) {
   else if (n === 4) q = ["y4s", ...(S.flags.bribe ? ["y4b"] : []), ...draw(4, 4), "yend", "grad"];
   else q = ["x1", "x2", "x3", "x4"];
   S.queue = q;
+  S.notice = null;
+  if (n > 0) {
+    const gains = activeFlags().filter((f) => FLAG_INFO[f].men);
+    if (gains.length) {
+      gains.forEach((f) => (S.stats.men = clamp(S.stats.men + FLAG_INFO[f].men, 0, 100)));
+      S.notice = gains.map((f) => `${FLAG_INFO[f].name}：心情 +${FLAG_INFO[f].men}`).join("・");
+    }
+  }
 }
 
 /* ---------- 選擇 ---------- */
@@ -761,7 +794,7 @@ function choose(i) {
   merge(c);
   if (c.club) S.club = c.club;
   if (c.chk) {
-    const p = chance(S.stats[c.chk.s], c.chk.dc);
+    const p = chance(c.chk.s, c.chk.dc);
     const ok = Math.random() * 100 < p;
     out.roll = { s: c.chk.s, p, ok };
     merge(ok ? c.chk.ok : c.chk.no);
@@ -796,9 +829,13 @@ function yearEnd(out) {
     if (pass) lines.push(`${c.name}：${v}（標準 ${c.thr}）不及格，寒假留校補考後通過`);
     else { S.strikes++; lines.push(`${c.name}：${v}（標準 ${c.thr}）補考仍未通過，列入學籍紀錄`); }
   });
-  if (S.stats.aca >= 80) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 2; lines.push("學業成績名列前茅，獲頒書卷獎，嘉獎兩次"); }
+  if (S.stats.aca >= 80) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 2; lines.push("課業成績名列前茅，獲頒書卷獎，嘉獎兩次"); }
   if (S.stats.fit >= 80) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 1; lines.push("體能測驗成績優異，嘉獎乙次"); }
   if (S.flags.leader) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 1; lines.push("擔任學生幹部盡責，嘉獎乙次"); }
+  activeFlags().filter((f) => FLAG_INFO[f].yearMen).forEach((f) => {
+    out.e.men = (out.e.men || 0) + FLAG_INFO[f].yearMen;
+    lines.push(`${FLAG_INFO[f].name}：心情 +${FLAG_INFO[f].yearMen}`);
+  });
   out.report = lines;
   out.r = S.strikes ? `目前累計未通過紀錄：${S.strikes} 次（達 2 次即退學）。` : "全數通過，順利升級。";
 }
@@ -840,7 +877,7 @@ function finish(kind) {
     p: ["長期的壓力壓垮了你。輔導老師陪你辦了休學手續，建議你先好好休息。", "放下不代表失敗。如果哪天想回來，學校的大門還在。"] };
   else if (kind === "expel") E = { key: "expel", seal: "退學", head: "學生獎懲委員會決議", big: "功過相抵後滿三大過", sub: STAGES[S.stage] + "・依學生獎懲規定退學",
     p: ["獎懲委員會的決議送到寢室時，室友們都低著頭。", `你累積了申誡 ${S.rec.申誡}、小過 ${S.rec.小過}、大過 ${S.rec.大過}，扣除獎勵後仍達三大過。警察的第一課是紀律，你沒有通過這一課。`] };
-  else if (kind === "academic") E = { key: "academic", seal: "退學", head: "教務處通知", big: "學業考核未通過", sub: STAGES[S.stage] + "・累計兩次補考未過",
+  else if (kind === "academic") E = { key: "academic", seal: "退學", head: "教務處通知", big: "課業考核未通過", sub: STAGES[S.stage] + "・累計兩次補考未過",
     p: ["成績單上的紅字比任何訓話都安靜。", "你收拾寢室的時候，在抽屜裡翻到預備教育時寫的那封家書。"] };
   else if (kind === "failExam") E = { key: "failExam", seal: "落榜", head: "考選部榜單", big: "榜單上沒有你的名字", sub: `警察特考三等・${d.cat}・總成績 ${S.examScore}`,
     p: ["你把准考證號碼輸入了三次，結果都一樣。", "警大公費生畢業後必須通過特考才能任官；你決定明年再戰。一起畢業的同學陸續報到，你在群組裡看他們分享第一天上班的照片。", "這一年會很難熬，但你已經撐過四年了。"] };
@@ -884,7 +921,7 @@ const $app = document.getElementById("app");
 const $tl = document.getElementById("timeline");
 const $restart = document.getElementById("restartBtn");
 
-function render() {
+function render(keepScroll) {
   const inGame = S && view !== "title" && view !== "create";
   $tl.hidden = !inGame;
   $restart.hidden = !(S && view !== "title");
@@ -893,7 +930,7 @@ function render() {
   else if (view === "create") $app.innerHTML = createView();
   else $app.innerHTML = `<div class="layout">${idCard()}<section>${mainView()}</section></div>`;
   bind();
-  window.scrollTo(0, 0);
+  if (!keepScroll) window.scrollTo(0, 0);
 }
 
 function renderTimeline() {
@@ -910,7 +947,7 @@ function titleView() {
   return `<div class="cover">
     <div>
       <h1>穿上制服之前，<br>先撐過<em>四年</em>。</h1>
-      <p class="lead">建立你的角色，從預備教育一路走到警察特考。每一個選擇都會改變你的體能、學業、品德、心理與人緣，也會留下嘉獎或記過。三大過，你就得離開。</p>
+      <p class="lead">建立你的角色，從預備教育一路走到警察特考。每一個選擇都會改變你的體能、課業、操行、心情與人緣，也會留下嘉獎或記過。三大過，你就得離開。</p>
       <div class="row">
         <button class="btn" data-act="new" type="button">建立角色</button>
         ${saved ? `<button class="btn line" data-act="continue" type="button">繼續：${esc(saved.name)}・${STAGES[saved.stage]}</button>` : ""}
@@ -970,8 +1007,10 @@ function createView() {
 
 function idCard() {
   const d = dept(), net = netDemerit(S.rec), left = EXPEL_AT - net;
-  const flags = Object.keys(S.flags).filter((f) => FLAG_NAME[f]).map((f) => `<span class="flag">${FLAG_NAME[f]}</span>`);
-  if (S.club) flags.unshift(`<span class="flag">${CLUB_NAME[S.club]}</span>`);
+  const af = activeFlags();
+  if (openFlag && !af.includes(openFlag)) openFlag = null;
+  const flags = af.map((f) => `<button type="button" class="flag" data-flag="${f}" aria-expanded="${openFlag === f}">${FLAG_INFO[f].name}</button>`);
+  const info = openFlag ? FLAG_INFO[openFlag] : null;
   return `<aside class="idcard">
     <div class="id-band"><span>學生證</span><span>CPU</span></div>
     <div class="id-main">
@@ -988,7 +1027,7 @@ function idCard() {
         <div class="recs">${REC_GOOD.map((k) => `<div class="rec ok"><span>${k}</span><b>${S.rec[k]}</b></div>`).join("")}${REC_BAD.map((k) => `<div class="rec bad"><span>${k}</span><b>${S.rec[k]}</b></div>`).join("")}</div>
         <p class="meter-note ${left <= 9 ? "warn" : ""}">${net > 0 ? `功過相抵後仍有 ${net} 點，距離三大過還差 ${left} 點` : "功過相抵後沒有懲處"}${S.strikes ? `・補考未過 ${S.strikes} 次` : ""}</p>
       </div>
-      ${flags.length ? `<div><p class="section-label">狀態</p><div class="flags">${flags.join("")}</div></div>` : ""}
+      ${flags.length ? `<div><p class="section-label">狀態<span class="hint">點擊查看說明</span></p><div class="flags">${flags.join("")}</div>${info ? `<div class="flag-info" role="note"><b>${info.name}</b><p>${info.d}</p><p class="fx">效果：${info.fx}</p></div>` : ""}</div>` : ""}
     </div>
   </aside>`;
 }
@@ -1010,12 +1049,13 @@ function eventView() {
   const n = S.idx + 1, total = S.queue.length;
   return `<article class="doc">
     ${docMeta(ev)}
+    ${S.idx === 0 && S.notice ? `<p class="notice">${esc(S.notice)}</p>` : ""}
     <h2>${esc(ev.title)}</h2>
     <p class="body">${esc(ev.text)}</p>
     <div class="choices">${ev.ch.map((c, i) => {
       let tag = "";
-      if (c.chk) tag = `判定・${STAT_NAME[c.chk.s]} ${chance(S.stats[c.chk.s], c.chk.dc)}%`;
-      if (c.danger) tag = c.danger + (c.chk ? `・${STAT_NAME[c.chk.s]} ${chance(S.stats[c.chk.s], c.chk.dc)}%` : "");
+      if (c.chk) tag = `判定・${STAT_NAME[c.chk.s]} ${chance(c.chk.s, c.chk.dc)}%`;
+      if (c.danger) tag = c.danger + (c.chk ? `・${STAT_NAME[c.chk.s]} ${chance(c.chk.s, c.chk.dc)}%` : "");
       return `<button type="button" class="choice ${c.danger ? "danger" : ""}" data-choice="${i}"><span class="mk">${MARKS[i]}</span><span>${esc(c.t)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
     }).join("")}</div>
     ${logView(`${STAGES[S.stage]}・第 ${n} / ${total} 件`)}
@@ -1084,6 +1124,7 @@ function bind() {
   $app.querySelectorAll("[data-gender]").forEach((b) => b.addEventListener("click", () => { draft.gender = b.dataset.gender; render(); }));
   $app.querySelectorAll("[data-dept]").forEach((b) => b.addEventListener("click", () => { draft.dept = b.dataset.dept; keepName(); render(); }));
   $app.querySelectorAll("[data-bg]").forEach((b) => b.addEventListener("click", () => { draft.bg = b.dataset.bg; keepName(); render(); }));
+  document.querySelectorAll("[data-flag]").forEach((b) => b.addEventListener("click", () => { openFlag = openFlag === b.dataset.flag ? null : b.dataset.flag; render(true); }));
   const nameIn = document.getElementById("nameIn");
   if (nameIn) nameIn.addEventListener("input", () => (draft.name = nameIn.value));
   $app.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => act(b.dataset.act)));
