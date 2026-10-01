@@ -1285,9 +1285,14 @@ function endThrow() {
 }
 
 function giveShido(f, reason) {
-  if (CFG.mode !== 'match' || phase !== 'fight') return;
+  if (CFG.mode === 'tutor' || phase !== 'fight') return;
   f.shido++;
   REF.pose = 'ref_shido'; REF.poseT = 1.6;
+  if (f.shido >= 3 && CFG.mode === 'train') {
+    f.shido = 0;
+    matte('反則負', 'HANSOKU-MAKE · 正式比賽會直接判輸，練習中指導歸零', 'shido');
+    return;
+  }
   if (f.shido >= 3) { call('反則負', 'HANSOKU-MAKE', 'shido', 2); endMatch(opp(f), '反則負（三次指導）：' + reason); return; }
   matte('指導', 'SHIDO · ' + (f === F[0] ? '白' : '藍') + ' · ' + reason, 'shido');
 }
@@ -1360,10 +1365,8 @@ function updateFighter(f, dt) {
   }
   if (phase === 'fight') {
     f.passive += dt;
-    if (CFG.mode === 'match') {
-      if (f.passive > 25) { f.passive = 0; giveShido(f, '消極'); return; }
-      if (f.state === 'guard' && f.guardT > 3.5) { f.guardT = 0; toIdle(f); giveShido(f, '防禦姿勢過久'); return; }
-    }
+    if (CFG.mode === 'match' && f.passive > 25) { f.passive = 0; giveShido(f, '消極'); return; }
+    if (CFG.mode !== 'tutor' && f.state === 'guard' && f.guardT > 3.5) { f.guardT = 0; toIdle(f); giveShido(f, '防禦姿勢過久'); return; }
   }
   if (f.buffer && f.canAct()) { const b = f.buffer; f.buffer = null; if (gclock < b.until) tryAction(f, b.act); }
   axisTo(f, o, AX);
@@ -1803,6 +1806,7 @@ const TIPS = [
   '對手按住防守時，用 {kouchi} 捨身小內割破防',
   '對手身上發光時按 {dodge} 閃避，成功後不用抓把就能反擊',
   '看體力條下方的紫色條：招式用越多，回復越慢',
+  '防守連續超過 3.5 秒會被判指導，擋完就放開',
 ];
 
 /* =========================================================
