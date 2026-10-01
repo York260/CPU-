@@ -1,0 +1,1856 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>IPPON 柔道對決</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700&family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+/* Layout: 全螢幕 3D 場館；上方是 IJF 計分板風格的血條／體力條，下方是招式列（桌機）或虛擬搖桿（手機）。 */
+:root {
+  --bg: #06080c;
+  --panel: rgba(9, 13, 21, 0.84);
+  --panel-solid: #0d131e;
+  --line: rgba(232, 238, 248, 0.14);
+  --fg: #eef1f6;
+  --muted: #97a3b6;
+  --gold: #e8b53a;
+  --gold-hi: #ffe08a;
+  --ijf-blue: #2d6be4;
+  --gi-white: #f4f1e8;
+  --hp: #f2c94c;
+  --chip: #d1402f;
+  --st: #3fd3a6;
+  --st-low: #ff6b47;
+  --violet: #b98cff;
+  --shido: #f5d90a;
+  --f-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --f-num: "Chakra Petch", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); overflow: hidden; -webkit-tap-highlight-color: transparent; }
+body { touch-action: none; user-select: none; -webkit-user-select: none; }
+#app { position: fixed; inset: 0; }
+#c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+button { font-family: inherit; color: inherit; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- HUD ---------- */
+#hud { position: absolute; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 0; pointer-events: none; }
+.bar-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: start; max-width: 1180px; margin: 0 auto; }
+.fp { min-width: 0; display: grid; gap: 5px; overflow: hidden; padding: 0 4px; }
+.fp-top { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.fp.r .fp-top { flex-direction: row-reverse; }
+.tag { font: 700 12px/1 var(--f-body); padding: 5px 7px; border-radius: 3px; letter-spacing: .08em; }
+.tag.w { background: var(--gi-white); color: #10141c; }
+.tag.b { background: var(--ijf-blue); color: #fff; }
+.nm { font: 700 15px/1 var(--f-body); letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; }
+.badge { font: 700 11px/1 var(--f-body); padding: 4px 6px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); opacity: .35; transition: all .15s; }
+.badge.on { opacity: 1; color: #10141c; background: var(--gold); border-color: var(--gold); }
+.badge.ctr.on { background: #7fb8ff; border-color: #7fb8ff; }
+.badge.warn.on { background: var(--st-low); border-color: var(--st-low); color: #fff; }
+.pips { display: flex; gap: 4px; }
+.pip { font: 700 11px/1 var(--f-num); width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); }
+.pip.on { background: var(--gold); color: #10141c; border-color: var(--gold); }
+.cards { display: flex; gap: 3px; }
+.card { width: 11px; height: 16px; border-radius: 2px; background: var(--shido); box-shadow: 0 1px 3px #000; }
+.card.red { background: #e0302a; }
+.spacer { flex: 1; }
+.hp { position: relative; height: 18px; background: rgba(0,0,0,.6); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; transform: skewX(-14deg); }
+.fp.r .hp { transform: skewX(14deg); }
+.hp i { position: absolute; inset: 0; transform-origin: left center; }
+.fp.r .hp i { transform-origin: right center; }
+.hp .chip { background: var(--chip); }
+.hp .fill { background: linear-gradient(180deg, #ffe58a, var(--hp) 55%, #c99a1d); }
+.hp b { position: absolute; top: 0; bottom: 0; right: 8px; display: grid; place-items: center; font: 700 12px/1 var(--f-num); color: #1a1406; mix-blend-mode: normal; text-shadow: 0 0 2px rgba(255,255,255,.4); }
+.fp.r .hp b { right: auto; left: 8px; }
+.st { position: relative; height: 9px; background: rgba(0,0,0,.6); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.st i { position: absolute; inset: 0; transform-origin: left center; background: linear-gradient(90deg, #22a982, var(--st)); }
+.fp.r .st i { transform-origin: right center; background: linear-gradient(270deg, #22a982, var(--st)); }
+.st.low i { background: var(--st-low); }
+.st.flash { animation: stflash .45s; }
+@keyframes stflash { 0%,100% { box-shadow: none; } 30% { box-shadow: 0 0 0 2px var(--st-low), 0 0 14px var(--st-low); } }
+.st .mark { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.35); }
+.rg { display: flex; align-items: center; gap: 6px; font: 500 10.5px/1 var(--f-body); color: var(--muted); letter-spacing: .04em; }
+.fp.r .rg { flex-direction: row-reverse; }
+.rg span { white-space: nowrap; }
+.rg i { flex: 1; height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; display: block; }
+.fp.r .rg i { transform: scaleX(-1); }
+.rg i b { display: block; height: 100%; background: var(--violet); transform-origin: left center; }
+.rg em { font: 600 10.5px/1 var(--f-num); font-style: normal; color: var(--fg); min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.fp.r .rg em { text-align: left; }
+.clock { display: grid; justify-items: center; gap: 3px; padding-top: 2px; }
+#timer { font: 700 30px/1 var(--f-num); letter-spacing: .02em; font-variant-numeric: tabular-nums; padding: 6px 12px 5px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; min-width: 92px; text-align: center; }
+#timer.gs { color: var(--gold-hi); border-color: var(--gold); }
+#timer.low { color: #ff8a6b; }
+.clock small { font: 600 10px/1 var(--f-num); letter-spacing: .18em; color: var(--muted); }
+#hudBtns { position: absolute; right: 16px; top: calc(env(safe-area-inset-top, 0px) + 100px); display: flex; gap: 6px; pointer-events: auto; }
+#hudBtns button { width: 34px; height: 34px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); font: 700 13px/1 var(--f-body); cursor: pointer; }
+#trainTip { position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 82px); transform: translateX(-50%); max-width: min(560px, calc(100vw - 120px)); padding: 7px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; font-size: 12.5px; color: var(--muted); text-align: center; pointer-events: none; }
+#trainTip b { color: var(--gold-hi); font-weight: 700; }
+
+/* ---------- 3D anchored labels ---------- */
+#labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.anchor { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); white-space: nowrap; will-change: transform; }
+#tele { font: 900 34px/1 var(--f-display); color: #fff; text-shadow: 0 0 10px currentColor, 0 2px 4px #000; }
+#kz { font: 700 12px/1 var(--f-body); padding: 5px 8px; border-radius: 3px; background: var(--gold); color: #10141c; letter-spacing: .04em; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+#kz.back { background: #ff7a55; color: #fff; }
+.pop { position: absolute; transform: translate(-50%, -50%); font: 700 18px/1 var(--f-body); color: #fff; text-shadow: 0 2px 4px #000, 0 0 8px rgba(0,0,0,.8); animation: popUp 1s ease-out forwards; white-space: nowrap; }
+.pop.dmg { font: 700 30px/1 var(--f-num); color: #ffd36b; }
+.pop.small { font-size: 14px; color: #ffd36b; }
+.pop.warn { color: #ff9b7d; font-size: 15px; }
+.pop.counter { color: #9fd0ff; font-size: 22px; }
+.pop.block { color: #c9f5e4; font-size: 20px; }
+@keyframes popUp { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 15% { opacity: 1; transform: translate(-50%, -60%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -180%) scale(1); } }
+
+/* ---------- Cinematic overlays ---------- */
+#vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); }
+#speed { position: absolute; inset: -20%; pointer-events: none; opacity: 0; transition: opacity .15s;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.0) 0deg 3deg, rgba(255,255,255,.16) 3.4deg 3.8deg, rgba(255,255,255,0) 4.2deg 9deg);
+  -webkit-mask: radial-gradient(circle at center, transparent 28%, #000 70%); mask: radial-gradient(circle at center, transparent 28%, #000 70%);
+  animation: spin 1.2s linear infinite; }
+#speed.on { opacity: 1; }
+@keyframes spin { to { transform: rotate(9deg); } }
+#flash { position: absolute; inset: 0; pointer-events: none; background: #fff; opacity: 0; }
+#wipe { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, #05070b 0 48%, var(--gold) 48% 49%, #05070b 49%); transform: translateX(-110%); transition: transform .3s cubic-bezier(.7,0,.3,1); }
+#wipe.on { transform: translateX(0); }
+#letterbox::before, #letterbox::after { content: ""; position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height .25s; }
+#letterbox::before { top: 0; } #letterbox::after { bottom: 0; }
+#letterbox.on::before, #letterbox.on::after { height: 8vh; }
+#letterbox { position: absolute; inset: 0; pointer-events: none; }
+
+#banner { position: absolute; left: 6vw; top: 50%; transform: translateY(-50%); pointer-events: none; display: flex; align-items: center; gap: 14px; opacity: 0; }
+#banner .kanji { writing-mode: vertical-rl; font: 900 clamp(54px, 9vw, 110px)/1 var(--f-display); letter-spacing: .08em; color: #fff; -webkit-text-stroke: 1px rgba(0,0,0,.4); text-shadow: 0 0 24px var(--mc, #e8b53a), 0 4px 0 rgba(0,0,0,.6); }
+#banner .roma { writing-mode: vertical-rl; font: 700 clamp(12px, 1.6vw, 16px)/1 var(--f-num); letter-spacing: .3em; color: var(--mc, #e8b53a); text-transform: uppercase; }
+#banner .slash { position: absolute; left: -30px; right: -60px; top: 50%; height: 6px; background: var(--mc, #e8b53a); transform: rotate(-8deg) scaleX(0); transform-origin: left; box-shadow: 0 0 20px var(--mc, #e8b53a); }
+#banner.go { animation: bannerIn 1.5s cubic-bezier(.2,.9,.2,1) forwards; }
+#banner.go .slash { animation: slash .35s .05s cubic-bezier(.2,.9,.2,1) forwards; }
+@keyframes bannerIn { 0% { opacity: 0; transform: translate(-40px, -50%) scale(1.25); filter: blur(8px); } 12% { opacity: 1; transform: translate(0, -50%) scale(1); filter: blur(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, -50%); } }
+@keyframes slash { to { transform: rotate(-8deg) scaleX(1); opacity: .0; } }
+
+#call { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; opacity: 0; width: 92vw; }
+#call .m { font: 900 clamp(64px, 15vw, 190px)/1 var(--f-display); letter-spacing: .06em; color: #fff; text-shadow: 0 6px 0 rgba(0,0,0,.55), 0 0 40px rgba(232,181,58,.6); }
+#call .s { margin-top: 10px; font: 700 clamp(13px, 2vw, 20px)/1 var(--f-num); letter-spacing: .5em; color: var(--gold-hi); text-indent: .5em; }
+#call .tags { margin-top: 12px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+#call .tags span { font: 700 12px/1 var(--f-body); padding: 5px 8px; background: rgba(0,0,0,.6); border: 1px solid var(--gold); color: var(--gold-hi); border-radius: 3px; }
+#call.ippon .m { background: linear-gradient(180deg, #fff6d0, #f1c44e 55%, #b8801c); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 6px 0 rgba(0,0,0,.6)) drop-shadow(0 0 30px rgba(241,196,78,.7)); text-shadow: none; }
+#call.waza .m { font-size: clamp(50px, 11vw, 130px); }
+#call.matte .m, #call.hajime .m, #call.rei .m { font-size: clamp(44px, 9vw, 110px); }
+#call.shido .m { color: var(--shido); font-size: clamp(44px, 9vw, 110px); }
+#call.go { animation: callIn var(--dur, 1.4s) cubic-bezier(.2,.9,.2,1) forwards; }
+@keyframes callIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); filter: blur(10px); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(.96); filter: blur(0); } 16% { transform: translate(-50%, -50%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.04); } }
+
+/* ---------- Move bar (desktop) ---------- */
+#movebar { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translateX(-50%); display: flex; gap: 6px; pointer-events: none; flex-wrap: wrap; justify-content: center; width: min(980px, calc(100vw - 32px)); }
+.mv { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; padding: 7px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; min-width: 116px; transition: opacity .12s, border-color .12s, transform .12s; position: relative; }
+.mv kbd { grid-row: span 2; font: 700 12px/1 var(--f-num); min-width: 26px; height: 26px; padding: 0 5px; display: grid; place-items: center; border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 4px; color: var(--fg); background: rgba(255,255,255,.04); }
+.mv b { font: 700 13.5px/1.1 var(--f-body); }
+.mv span { font: 500 10.5px/1.2 var(--f-num); color: var(--muted); letter-spacing: .03em; }
+.mv.off { opacity: .38; }
+.mv.hot { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(232,181,58,.35); }
+.mv.hot::after { content: "崩"; position: absolute; right: -6px; top: -8px; font: 900 12px/1 var(--f-display); background: var(--gold); color: #10141c; padding: 3px 4px; border-radius: 3px; }
+#hint { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 74px); transform: translateX(-50%); font-size: 12.5px; color: var(--fg); background: rgba(0,0,0,.55); padding: 6px 12px; border-radius: 3px; pointer-events: none; white-space: nowrap; opacity: 0; transition: opacity .2s; }
+#hint.on { opacity: 1; }
+#hint b { color: var(--gold-hi); }
+
+/* ---------- Touch controls ---------- */
+#touch { position: absolute; left: 0; right: 0; bottom: 0; height: 46vh; pointer-events: none; }
+#stick { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 16px); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.07), rgba(255,255,255,.02) 70%); border: 1px solid var(--line); pointer-events: auto; touch-action: none; }
+#knob { position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); }
+#btns { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 14px); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: 236px; height: 214px; pointer-events: none; }
+#btns button { position: absolute; width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(12,18,28,.72); font: 700 14px/1.05 var(--f-body); pointer-events: auto; touch-action: none; display: grid; place-items: center; text-align: center; padding: 0; }
+#btns button small { display: block; font: 600 9.5px/1 var(--f-num); color: var(--muted); margin-top: 3px; }
+#btns button.big { width: 78px; height: 78px; font-size: 16px; background: rgba(232,181,58,.22); border-color: var(--gold); }
+#btns button.press { transform: scale(.92); background: rgba(232,181,58,.45); }
+#btns button.off { opacity: .38; }
+#btns button.hot { box-shadow: 0 0 0 2px var(--gold), 0 0 14px rgba(232,181,58,.5); }
+#btns [data-act="grab"] { right: 6px; bottom: 6px; }
+#btns [data-act="osoto"] { right: 96px; bottom: 0; }
+#btns [data-act="seoi"] { right: 86px; bottom: 74px; }
+#btns [data-act="kouchi"] { right: 14px; bottom: 96px; }
+#btns [data-act="dodge"] { right: 166px; bottom: 30px; width: 56px; height: 56px; font-size: 13px; }
+#btns [data-act="guard"] { right: 158px; bottom: 102px; width: 56px; height: 56px; font-size: 13px; }
+
+/* ---------- Overlays (menu / result / pause) ---------- */
+.ov { position: absolute; inset: 0; display: grid; place-items: center; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px); background: linear-gradient(90deg, rgba(4,6,10,.9) 0%, rgba(4,6,10,.62) 55%, rgba(4,6,10,.25) 100%); overflow-y: auto; touch-action: pan-y; }
+.sheet { width: min(640px, 100%); display: grid; gap: 18px; justify-self: start; margin-left: max(0px, 5vw); }
+.eyebrow { font: 700 11px/1 var(--f-num); letter-spacing: .32em; color: var(--gold); }
+h1 { margin: 0; display: grid; gap: 6px; }
+h1 .k { font: 900 clamp(72px, 14vw, 132px)/0.95 var(--f-display); letter-spacing: .04em; background: linear-gradient(180deg, #fff, #f5d27a 60%, #b8801c); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 rgba(0,0,0,.5)); }
+h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 52ch; }
+.opts { display: grid; gap: 10px; }
+.opt { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 10px; }
+.opt > span { font: 700 12.5px/1 var(--f-body); color: var(--muted); letter-spacing: .08em; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { padding: 9px 14px; border-radius: 4px; border: 1px solid var(--line); background: rgba(255,255,255,.04); font: 700 13.5px/1 var(--f-body); cursor: pointer; }
+.seg button small { font: 500 10.5px/1 var(--f-num); color: var(--muted); margin-left: 4px; }
+.seg button.on { background: var(--gold); border-color: var(--gold); color: #10141c; }
+.seg button.on small { color: #3b2c08; }
+.cta { justify-self: start; padding: 14px 30px; border-radius: 4px; border: 0; background: var(--gold); color: #10141c; font: 900 18px/1 var(--f-display); letter-spacing: .14em; cursor: pointer; box-shadow: 0 6px 0 #8a6516; }
+.cta:active { transform: translateY(3px); box-shadow: 0 3px 0 #8a6516; }
+.ghost { padding: 12px 20px; border-radius: 4px; border: 1px solid var(--line); background: rgba(255,255,255,.05); font: 700 14px/1 var(--f-body); cursor: pointer; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); }
+.tabs button { padding: 10px 14px; border: 0; background: none; font: 700 13px/1 var(--f-body); color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button.on { color: var(--fg); border-bottom-color: var(--gold); }
+.panel { font-size: 13.5px; line-height: 1.75; color: #d5dbe5; max-width: 60ch; }
+.panel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.panel td, .panel th { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.panel th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.panel kbd { font: 700 11.5px/1 var(--f-num); padding: 3px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; background: rgba(255,255,255,.05); white-space: nowrap; }
+.panel ul { margin: 0; padding-left: 1.2em; }
+.panel li + li { margin-top: 6px; }
+.panel b { color: var(--gold-hi); }
+.panel .num { font-family: var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tw { overflow-x: auto; }
+.res { justify-self: center; margin: 0; text-align: center; width: min(560px, 100%); }
+.res .big { font: 900 clamp(56px, 12vw, 110px)/1 var(--f-display); letter-spacing: .06em; }
+.res .big.win { background: linear-gradient(180deg, #fff6d0, #f1c44e 55%, #b8801c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.res .big.lose { color: #9aa6b8; }
+.res .why { font: 700 16px/1.4 var(--f-body); color: var(--gold-hi); letter-spacing: .08em; }
+.stats { display: grid; grid-template-columns: 1fr auto auto; gap: 0; font-size: 13.5px; text-align: left; }
+.stats div { padding: 7px 10px; border-bottom: 1px solid var(--line); }
+.stats .h { color: var(--muted); font-size: 12px; }
+.stats .v { font-family: var(--f-num); text-align: right; font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+#pause .sheet { justify-self: center; margin: 0; text-align: center; justify-items: center; }
+#pause .big { font: 900 48px/1 var(--f-display); letter-spacing: .2em; }
+#hud, #movebar, #touch, #labels, #hudBtns { transition: opacity .3s; }
+.hide-ui #hud, .hide-ui #movebar, .hide-ui #touch, .hide-ui #hudBtns, .hide-ui #hint, .hide-ui #trainTip { opacity: 0; pointer-events: none !important; }
+.hide-ui #touch * { pointer-events: none !important; }
+.cine #movebar, .cine #touch, .cine #hint { opacity: 0; }
+#loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); font: 700 14px/1.6 var(--f-body); color: var(--muted); text-align: center; padding: 16px; }
+
+@media (max-width: 760px) {
+  #hud { padding-left: 10px; padding-right: 10px; }
+  .bar-row { gap: 8px; }
+  .nm { font-size: 12.5px; }
+  .tag { font-size: 10.5px; padding: 4px 5px; }
+  .badge { font-size: 10px; padding: 3px 4px; }
+  .pip { width: 16px; height: 16px; font-size: 9.5px; }
+  #timer { font-size: 22px; min-width: 66px; padding: 5px 8px 4px; }
+  .hp { height: 14px; }
+  .hp b { font-size: 10px; }
+  .rg span { display: none; }
+  #hudBtns { top: calc(env(safe-area-inset-top, 0px) + 96px); right: 10px; }
+  .fp-top .badge.ctr, .fp-top .badge.warn, .clock small { display: none; }
+  .fp-top { gap: 5px; }
+  .pips { gap: 2px; }
+  #stick { width: 124px; height: 124px; left: calc(env(safe-area-inset-left, 0px) + 12px); }
+  #knob { width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+  #btns { width: 212px; height: 200px; right: calc(env(safe-area-inset-right, 0px) + 8px); }
+  #btns button { width: 58px; height: 58px; font-size: 13px; }
+  #btns button.big { width: 70px; height: 70px; }
+  #btns [data-act="osoto"] { right: 82px; bottom: 0; }
+  #btns [data-act="seoi"] { right: 74px; bottom: 66px; }
+  #btns [data-act="kouchi"] { right: 8px; bottom: 84px; }
+  #btns [data-act="dodge"] { right: 146px; bottom: 74px; width: 52px; height: 52px; font-size: 12px; }
+  #btns [data-act="guard"] { right: 136px; bottom: 136px; width: 52px; height: 52px; font-size: 12px; }
+  #trainTip { top: calc(env(safe-area-inset-top, 0px) + 112px); font-size: 11.5px; max-width: calc(100vw - 32px); }
+  .sheet { margin-left: 0; justify-self: center; }
+  .opt { grid-template-columns: 1fr; gap: 6px; }
+  #hint { bottom: calc(env(safe-area-inset-bottom, 0px) + 240px); font-size: 11.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #speed { animation: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="c" aria-label="3D 柔道場館"></canvas>
+  <div id="vignette"></div>
+  <div id="speed"></div>
+  <div id="letterbox"></div>
+  <div id="labels">
+    <div id="tele" class="anchor" hidden>!</div>
+    <div id="kz" class="anchor" hidden></div>
+  </div>
+
+  <div id="hud">
+    <div class="bar-row">
+      <div class="fp l" id="fp0">
+        <div class="fp-top"><span class="tag w">白</span><span class="nm">你</span><span class="badge" id="grip0">組</span><span class="badge ctr" id="ctr0">返</span><span class="badge warn" id="pas0">消極</span><span class="spacer"></span><span class="pips" id="waza0"></span><span class="cards" id="shido0"></span></div>
+        <div class="hp"><i class="chip" id="hpc0"></i><i class="fill" id="hp0"></i><b id="hpn0">100</b></div>
+        <div class="st" id="stw0"><i id="st0"></i></div>
+        <div class="rg"><span>體力回復速度</span><i><b id="rg0"></b></i><em id="rgn0">100%</em></div>
+      </div>
+      <div class="clock"><div id="timer">2:00</div><small id="clockLbl">比賽時間</small></div>
+      <div class="fp r" id="fp1">
+        <div class="fp-top"><span class="tag b">藍</span><span class="nm" id="cpuName">CPU 三段</span><span class="badge" id="grip1">組</span><span class="badge ctr" id="ctr1">返</span><span class="badge warn" id="pas1">消極</span><span class="spacer"></span><span class="pips" id="waza1"></span><span class="cards" id="shido1"></span></div>
+        <div class="hp"><i class="chip" id="hpc1"></i><i class="fill" id="hp1"></i><b id="hpn1">100</b></div>
+        <div class="st" id="stw1"><i id="st1"></i></div>
+        <div class="rg"><span>體力回復速度</span><i><b id="rg1"></b></i><em id="rgn1">100%</em></div>
+      </div>
+    </div>
+  </div>
+  <div id="hudBtns"><button id="btnPause" aria-label="暫停">II</button><button id="btnMute" aria-label="靜音">♪</button></div>
+  <div id="trainTip" hidden></div>
+  <div id="hint">推著對手走 → <b>大外割 / 捨身小內割</b>　拉著對手走 → <b>單臂過肩摔</b></div>
+
+  <div id="banner"><div class="slash"></div><div class="kanji"></div><div class="roma"></div></div>
+  <div id="call"><div class="m"></div><div class="s"></div><div class="tags"></div></div>
+
+  <div id="movebar">
+    <div class="mv" data-m="grab"><kbd>J</kbd><b>抓把</b><span>體力 10</span></div>
+    <div class="mv" data-m="osoto"><kbd>K</kbd><b>大外割</b><span>體力 24</span></div>
+    <div class="mv" data-m="seoi"><kbd>L</kbd><b>單臂過肩摔</b><span>體力 30</span></div>
+    <div class="mv" data-m="kouchi"><kbd>I</kbd><b>捨身小內割</b><span>體力 20</span></div>
+    <div class="mv" data-m="dodge"><kbd>Space</kbd><b>閃避</b><span>體力 14</span></div>
+    <div class="mv" data-m="guard"><kbd>Shift</kbd><b>防守</b><span>按住 · 每秒 9</span></div>
+  </div>
+
+  <div id="touch" hidden>
+    <div id="stick"><div id="knob"></div></div>
+    <div id="btns">
+      <button data-act="grab" class="big">抓把<small>10</small></button>
+      <button data-act="osoto">大外<small>24</small></button>
+      <button data-act="seoi">背負<small>30</small></button>
+      <button data-act="kouchi">小內<small>20</small></button>
+      <button data-act="dodge">閃避<small>14</small></button>
+      <button data-act="guard" data-hold="1">防守<small>按住</small></button>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+  <div id="wipe"></div>
+
+  <div id="menu" class="ov">
+    <div class="sheet">
+      <div class="eyebrow">3D JUDO FIGHTING · 柔道格鬥</div>
+      <h1><span class="k">一本</span><span class="e">IPPON 柔道對決</span></h1>
+      <p class="lede">先抓把，再用推拉製造崩勢，看準時機出手。體力不夠就不能出招，招式用得越多，體力回得越慢。</p>
+      <div class="opts">
+        <div class="opt"><span>模式</span><div class="seg" data-k="mode"><button data-v="match" class="on">正式比賽</button><button data-v="train">練習模式</button></div></div>
+        <div class="opt"><span>對手段位</span><div class="seg" data-k="lv"><button data-v="1">初段<small>入門</small></button><button data-v="2" class="on">三段<small>標準</small></button><button data-v="3">國手<small>困難</small></button></div></div>
+        <div class="opt"><span>比賽時間</span><div class="seg" data-k="time"><button data-v="90">1:30</button><button data-v="120" class="on">2:00</button><button data-v="240">4:00<small>IJF</small></button></div></div>
+      </div>
+      <button id="start" class="cta">開始比賽</button>
+      <div>
+        <div class="tabs" role="tablist">
+          <button class="on" data-tab="t1">操作</button>
+          <button data-tab="t2">柔道教室</button>
+          <button data-tab="t3">規則與計分</button>
+        </div>
+        <div class="panel" id="t1">
+          <div class="tw"><table>
+            <tr><th>按鍵</th><th>動作</th><th>說明</th></tr>
+            <tr><td><kbd>W A S D</kbd> / 方向鍵</td><td>移動</td><td>左右靠近或後退，上下繞圈側移</td></tr>
+            <tr><td><kbd>J</kbd></td><td>抓把</td><td>造成少量傷害並取得組手；投技一定要先抓把</td></tr>
+            <tr><td><kbd>K</kbd></td><td>大外割</td><td>對手後退或被你推時最有效</td></tr>
+            <tr><td><kbd>L</kbd></td><td>單臂過肩摔</td><td>對手前壓或被你拉時最有效，傷害最高</td></tr>
+            <tr><td><kbd>I</kbd></td><td>捨身小內割</td><td>出招最快、能破防守，但被閃掉會自己倒地</td></tr>
+            <tr><td><kbd>Space</kbd></td><td>閃避</td><td>短暫無敵，並甩開所有組手</td></tr>
+            <tr><td><kbd>Shift</kbd>（按住）</td><td>防守</td><td>擋得住大外割和過肩摔，持續消耗體力</td></tr>
+            <tr><td><kbd>P</kbd> / <kbd>Esc</kbd></td><td>暫停</td><td><kbd>M</kbd> 切換音效</td></tr>
+          </table></div>
+          <p>手機會自動顯示虛擬搖桿與按鈕。</p>
+        </div>
+        <div class="panel" id="t2" hidden>
+          <ul>
+            <li><b>崩し（崩勢）</b>：抓到把之後，往前推，對手會往後倒 →「後崩」，用大外割或捨身小內割；往後拉，對手會往前撲 →「前崩」，用單臂過肩摔。對手頭上會亮起提示，招式列也會標出「崩」。</li>
+            <li><b>組手</b>：被對手抓住時，你的體力回復慢 40%。用閃避可以切掉對手的手。組手抓太久（7 秒）不進攻會自動鬆手。</li>
+            <li><b>返し技（反擊）</b>：對手出招會有前搖（身上發光、頭上「!」）。在前搖期間閃避成功，接下來 1.3 秒內不用抓把就能直接投，而且得分條件大幅提高。</li>
+            <li><b>防守姿勢</b>：沉腰防守能擋住大外割與過肩摔，被擋的一方會失衡。但雙腳張開的防守姿勢正好給了小內割機會，捨身小內割可以破防。</li>
+            <li><b>捨身技的風險</b>：捨身小內割出招最快，但落空時自己會倒在地上，對手有 2 秒反擊時間。</li>
+            <li><b>體力管理</b>：每個動作都會累積疲勞，疲勞越高，體力回復越慢（看體力條下方的紫色條）。疲勞只會非常緩慢地消退，所以別亂出招。</li>
+          </ul>
+        </div>
+        <div class="panel" id="t3" hidden>
+          <ul>
+            <li><b>一本</b>：直接獲勝。完美條件的投技（例如返し技＋正確崩勢）或把對手血量打到 0 都算一本。</li>
+            <li><b>技有（半勝）</b>：條件好的投技，傷害 ×1.5。累積兩次技有＝<b>合技一本</b>，獲勝。</li>
+            <li><b>一般投技</b>：只造成傷害，不計分。</li>
+            <li><b>指導</b>：25 秒沒有出投技（消極）、防守姿勢超過 3.5 秒，各給一次指導。<b>三次指導＝反則負</b>。</li>
+            <li><b>時間到</b>：先比技有數；相同時血量差 10 以上判優勢勝；再相同就進入<b>黃金得分</b>，先投成功的人獲勝。</li>
+            <li>每次投技結束，主審喊「待て」，兩人回到開始線重新開始。</li>
+          </ul>
+          <div class="tw"><table>
+            <tr><th>招式</th><th class="num">體力</th><th class="num">前搖</th><th class="num">傷害</th><th>有利崩勢</th></tr>
+            <tr><td>抓把</td><td class="num">10</td><td class="num">0.20s</td><td class="num">4</td><td>—</td></tr>
+            <tr><td>大外割</td><td class="num">24</td><td class="num">0.32s</td><td class="num">20</td><td>後崩</td></tr>
+            <tr><td>單臂過肩摔</td><td class="num">30</td><td class="num">0.40s</td><td class="num">24</td><td>前崩</td></tr>
+            <tr><td>捨身小內割</td><td class="num">20</td><td class="num">0.22s</td><td class="num">17</td><td>後崩／破防</td></tr>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="result" class="ov" hidden>
+    <div class="sheet res">
+      <div class="eyebrow" id="resEyebrow">比賽結束 · それまで</div>
+      <div class="big" id="resBig">勝</div>
+      <div class="why" id="resWhy"></div>
+      <div class="stats" id="resStats"></div>
+      <div class="row"><button class="cta" id="again">再戰一場</button><button class="ghost" id="toMenu">回主選單</button></div>
+    </div>
+  </div>
+
+  <div id="pause" class="ov" hidden>
+    <div class="sheet">
+      <div class="big">暫停</div>
+      <div class="row"><button class="cta" id="resume">繼續</button><button class="ghost" id="restart">重新開始</button><button class="ghost" id="quit">回主選單</button></div>
+    </div>
+  </div>
+
+  <div id="loading">載入 3D 引擎中…</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+'use strict';
+(function () {
+if (!window.THREE) { document.getElementById('loading').textContent = '3D 引擎載入失敗，請確認網路連線後重新整理。'; return; }
+document.getElementById('loading').remove();
+
+/* =========================================================
+   Utilities
+   ========================================================= */
+const $ = (s) => document.querySelector(s);
+const V3 = THREE.Vector3;
+const PI = Math.PI, TAU = PI * 2;
+const H = 0.98;                       // 站立時髖部高度
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (a, b, rate, dt) => lerp(a, b, 1 - Math.exp(-rate * dt));
+const smooth = (t) => t * t * (3 - 2 * t);
+const rand = (a, b) => a + Math.random() * (b - a);
+const wrap = (a) => { while (a > PI) a -= TAU; while (a < -PI) a += TAU; return a; };
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =========================================================
+   Move data
+   ========================================================= */
+const MOVES = {
+  grab:   { name: '抓把', cost: 10, fat: 0.6, startup: 0.2, dmg: 4 },
+  osoto:  { name: '大外割', roma: 'O-SOTO-GARI', cost: 24, fat: 1, startup: 0.32, dmg: 20, blockable: true, kuzushi: 'back', color: 0xff5a3c, css: '#ff6a4a' },
+  seoi:   { name: '單臂過肩摔', roma: 'IPPON-SEOI-NAGE', cost: 30, fat: 1, startup: 0.40, dmg: 24, blockable: true, kuzushi: 'front', color: 0xffc23c, css: '#ffc94a' },
+  kouchi: { name: '捨身小內割', roma: 'SUTEMI KO-UCHI-GARI', cost: 20, fat: 1, startup: 0.22, dmg: 17, blockable: false, kuzushi: 'back', color: 0xb470ff, css: '#c08cff' },
+  dodge:  { name: '閃避', cost: 14, fat: 0.6 },
+  guard:  { name: '防守', drain: 9 },
+};
+const THROWS = ['osoto', 'seoi', 'kouchi'];
+const REGEN_BASE = 20;
+
+/* =========================================================
+   Poses — joint rotations (radians). Fighter faces +Z.
+   spine/chest +x = lean forward; arm/leg -x = raise forward; knee +x = bend; elbow -x = bend
+   ========================================================= */
+const JN = ['spine', 'chest', 'neck', 'lSh', 'lEl', 'rSh', 'rEl', 'lHip', 'lKnee', 'rHip', 'rKnee'];
+function P(over, base) {
+  const p = {};
+  for (const n of JN) {
+    let v = over && over[n] !== undefined ? over[n] : (base ? base[n] : [0, 0, 0]);
+    p[n] = typeof v === 'number' ? [v, 0, 0] : v.slice();
+  }
+  return p;
+}
+const POSES = {};
+POSES.stance = P({ spine: 0.12, chest: 0.04, neck: -0.12, lSh: [-0.45, 0, 0.22], lEl: -1.2, rSh: [-0.5, 0, -0.22], rEl: -1.25, rHip: [-0.24, 0, -0.06], rKnee: 0.4, lHip: [0.12, 0, 0.07], lKnee: 0.32 });
+POSES.grip = P({ spine: 0.22, chest: [0.06, 0.08, 0], neck: -0.2, rSh: [-1.15, 0, -0.05], rEl: -0.55, lSh: [-0.85, 0, 0.18], lEl: -0.7, rKnee: 0.44, lKnee: 0.38 }, POSES.stance);
+POSES.guard = P({ spine: 0.5, chest: 0.1, neck: -0.45, lSh: [-0.9, 0, 0.3], lEl: -1.0, rSh: [-0.9, 0, -0.3], rEl: -1.0, lHip: [-0.45, 0, 0.32], lKnee: 0.95, rHip: [-0.45, 0, -0.32], rKnee: 0.95 });
+POSES.reach = P({ spine: 0.4, chest: 0.1, neck: -0.35, rSh: [-1.45, 0, -0.05], rEl: -0.25, lSh: [-1.35, 0, 0.1], lEl: -0.25, rHip: [-0.55, 0, -0.07], rKnee: 0.65, lHip: [0.32, 0, 0.07], lKnee: 0.25 });
+POSES.stagger = P({ spine: [-0.25, 0, 0.15], chest: -0.1, neck: 0.25, lSh: [-0.3, 0, 1.0], lEl: -0.6, rSh: [-0.2, 0, -1.1], rEl: -0.5, lHip: [-0.4, 0, 0.15], lKnee: 0.5, rHip: [0.3, 0, -0.05], rKnee: 0.3 });
+POSES.flinch = P({ spine: -0.08, neck: 0.35, chest: -0.1 }, POSES.grip);
+POSES.dodge = P({ spine: -0.05, neck: 0.05, lSh: [-0.8, 0, 0.35], lEl: -1.5, rSh: [-0.8, 0, -0.35], rEl: -1.5, lHip: [0.55, 0, 0.1], lKnee: 0.7, rHip: [-0.45, 0, -0.1], rKnee: 0.45 });
+POSES.victory = P({ spine: 0.02, neck: -0.18, rSh: [-2.95, 0, -0.2], rEl: -0.15, lSh: [0.05, 0, 0.25], lEl: -0.4, rHip: [0, 0, -0.08], rKnee: 0.1, lHip: [0, 0, 0.08], lKnee: 0.1 });
+POSES.dejected = P({ spine: 0.35, neck: 0.45, lSh: [0.1, 0, 0.12], rSh: [0.1, 0, -0.12], lEl: -0.2, rEl: -0.2, lKnee: 0.15, rKnee: 0.15, lHip: [0, 0, 0.06], rHip: [0, 0, -0.06] });
+POSES.bow = P({ spine: 0.6, neck: 0.12, lSh: [0.2, 0, 0.06], rSh: [0.2, 0, -0.06], lEl: -0.1, rEl: -0.1, lHip: [-0.02, 0, 0.05], rHip: [-0.02, 0, -0.05], lKnee: 0.05, rKnee: 0.05 });
+POSES.su_osoto = P({ spine: 0.06, chest: [0.05, -0.2, 0], neck: -0.1, lHip: [-0.45, 0, 0.18], lKnee: 0.4, rSh: [-1.3, 0, -0.05], rEl: -0.3, lSh: [-0.4, 0, 0.35], lEl: -1.55 }, POSES.grip);
+POSES.su_seoi = P({ spine: 0.32, chest: [0.05, 0.35, 0], rSh: [-1.75, 0, -0.3], rEl: -1.3, lSh: [-0.7, 0, 0.25], lEl: -1.25, rHip: [-0.55, 0, -0.06], rKnee: 0.9, lHip: [-0.2, 0, 0.07], lKnee: 0.8 }, POSES.grip);
+POSES.su_kouchi = P({ spine: 0.5, chest: 0.1, neck: -0.4, rHip: [-0.75, 0, 0.12], rKnee: 0.5, lHip: [-0.35, 0, 0.07], lKnee: 1.0, rSh: [-1.3, 0, -0.05], rEl: -0.45, lSh: [-1.1, 0, 0.15], lEl: -0.6 }, POSES.grip);
+POSES.ukemi = P({ spine: 0.25, chest: 0.05, neck: 0.6, lSh: [0.2, 0, 1.25], rSh: [0.2, 0, -1.25], lEl: 0, rEl: 0, lHip: -0.9, lKnee: 0.7, rHip: -1.2, rKnee: 0.3 });
+POSES.ref_idle = P({ lSh: [0.05, 0, 0.12], rSh: [0.05, 0, -0.12], lEl: -0.15, rEl: -0.15, lHip: [0, 0, 0.05], rHip: [0, 0, -0.05] });
+POSES.ref_ippon = P({ rSh: [-3.05, 0, -0.05], rEl: 0 }, POSES.ref_idle);
+POSES.ref_waza = P({ rSh: [0, 0, -1.57], rEl: 0 }, POSES.ref_idle);
+POSES.ref_matte = P({ rSh: [-1.57, 0, 0.1], rEl: 0 }, POSES.ref_idle);
+POSES.ref_shido = P({ rSh: [-1.45, 0, 0.25], rEl: -0.1, lSh: [-0.6, 0, 0.1], lEl: -1.2 }, POSES.ref_idle);
+POSES.ref_hajime = P({ rSh: [-1.2, 0, -0.3], lSh: [-1.2, 0, 0.3], rEl: -0.1, lEl: -0.1 }, POSES.ref_idle);
+
+/* =========================================================
+   Keyframed throw choreography (attacker frame: attacker at origin facing +Z,
+   defender starts at z=0.78 facing -Z). Smooth Hermite interpolation;
+   `hard` keys arrive at speed (impact) and stop dead.
+   ========================================================= */
+function compileC(ts, arrs, hard) {
+  const n = ts.length, d = arrs[0].length, tin = [], tout = [];
+  for (let i = 0; i < n; i++) {
+    const ti = new Array(d).fill(0), to = new Array(d).fill(0);
+    for (let j = 0; j < d; j++) {
+      let m = 0;
+      if (i > 0 && i < n - 1) m = (arrs[i + 1][j] - arrs[i - 1][j]) / (ts[i + 1] - ts[i - 1]);
+      ti[j] = m; to[j] = m;
+      if (hard && hard[i] && i > 0) { ti[j] = 1.6 * (arrs[i][j] - arrs[i - 1][j]) / (ts[i] - ts[i - 1]); to[j] = 0; }
+    }
+    tin.push(ti); tout.push(to);
+  }
+  return { ts, arrs, tin, tout, d, n, end: ts[n - 1] };
+}
+function sampleC(c, t, out) {
+  const { ts, n, arrs } = c;
+  if (t <= ts[0]) { for (let j = 0; j < c.d; j++) out[j] = arrs[0][j]; return out; }
+  if (t >= ts[n - 1]) { for (let j = 0; j < c.d; j++) out[j] = arrs[n - 1][j]; return out; }
+  let i = 0; while (i < n - 2 && t >= ts[i + 1]) i++;
+  const dt = ts[i + 1] - ts[i], s = (t - ts[i]) / dt, s2 = s * s, s3 = s2 * s;
+  const h00 = 2 * s3 - 3 * s2 + 1, h10 = s3 - 2 * s2 + s, h01 = -2 * s3 + 3 * s2, h11 = s3 - s2;
+  const a0 = arrs[i], a1 = arrs[i + 1], m0 = c.tout[i], m1 = c.tin[i + 1];
+  for (let j = 0; j < c.d; j++) out[j] = h00 * a0[j] + h10 * dt * m0[j] + h01 * a1[j] + h11 * dt * m1[j];
+  return out;
+}
+function compileFT(keys) {
+  let pose = P(POSES.grip), pos = [0, H, 0], rot = [0, 0, 0], snap = 1;
+  const ts = [], arrs = [], hard = [];
+  for (const k of keys) {
+    if (k.pose) pose = P(k.pose, pose);
+    if (k.pos) pos = k.pos;
+    if (k.rot) rot = k.rot;
+    if (k.snap !== undefined) snap = k.snap;
+    const a = [...pos, ...rot, snap];
+    for (const n of JN) a.push(...pose[n]);
+    ts.push(k.t); arrs.push(a); hard.push(!!k.hard);
+  }
+  return compileC(ts, arrs, hard);
+}
+function compileCam(keys) { return compileC(keys.map(k => k.t), keys.map(k => [...k.p.map((v, i) => k.l[i] + (v - k.l[i]) * 1.35), ...k.l]), null); }
+
+const G = POSES.grip;
+const TRACK_DEFS = {
+  osoto: {
+    dur: 1.6, impact: 0.83, slow: [0.4, 0.8, 0.28], trail: [0.34, 0.95],
+    A: [
+      { t: 0, pose: G, pos: [0, H, 0], rot: [0, 0, 0], snap: 1 },
+      { t: 0.22, pose: { spine: 0.12, chest: [0.05, -0.25, 0], lHip: [-0.5, 0, 0.2], lKnee: 0.35, rHip: [0.25, 0, -0.05], rKnee: 0.25, rSh: [-1.35, 0, -0.05], rEl: -0.25, lSh: [-0.45, 0, 0.4], lEl: -1.55 }, pos: [0.24, H, 0.22], rot: [0, -0.28, 0] },
+      { t: 0.44, pose: { spine: 0.35, chest: [0.1, -0.2, 0], rHip: [-1.4, 0, 0.12], rKnee: 0.2, lKnee: 0.3, lHip: [-0.2, 0, 0.15] }, pos: [0.26, H, 0.3] },
+      { t: 0.64, pose: { spine: 0.95, chest: [0.2, -0.1, 0], neck: -0.55, rHip: [0.95, 0, 0.1], rKnee: 0.3, rSh: [-1.0, 0, -0.1], rEl: -0.4, lSh: [-0.3, 0, 0.35], lEl: -1.6, lKnee: 0.45 }, pos: [0.26, H, 0.42] },
+      { t: 0.84, hard: true, pose: { spine: 1.15, neck: -0.7, rHip: [1.3, 0, 0.1], rKnee: 0.4, rSh: [-0.65, 0, -0.2], rEl: -0.3, lKnee: 0.6 }, pos: [0.26, H, 0.5] },
+      { t: 1.6, pose: { spine: 0.65, neck: -0.4, rHip: [0.25, 0, -0.05], rKnee: 0.45, lKnee: 0.55, lHip: [-0.3, 0, 0.12], lSh: [-0.9, 0, 0.3], lEl: -0.5, rSh: [-0.45, 0, -0.25], rEl: -0.4 }, pos: [0.26, H, 0.46] },
+    ],
+    B: [
+      { t: 0, pose: G, pos: [0, H, 0.78], rot: [0, PI, 0], snap: 1 },
+      { t: 0.22, pose: { spine: -0.12, neck: 0.2, rSh: [-0.9, 0, -0.15], lSh: [-0.7, 0, 0.25] }, pos: [0.06, H, 0.84], rot: [-0.22, PI, 0] },
+      { t: 0.44, pose: { spine: -0.15, neck: 0.35, rHip: [-0.35, 0, 0], rKnee: 0.15, lHip: [0.1, 0, 0.05], lSh: [-1.3, 0, 0.6], lEl: -0.4, rSh: [-1.1, 0, -0.7], rEl: -0.3 }, pos: [0.06, H, 0.9], rot: [-0.45, PI, 0], snap: 0.85 },
+      { t: 0.64, pose: { rHip: [-1.4, 0, 0], rKnee: 0.1, lHip: [-0.65, 0, 0.05], lKnee: 0.35, lSh: [-2.3, 0, 0.8], rSh: [-2.1, 0, -0.8], spine: 0.1, neck: 0.5 }, pos: [0.1, 0.82, 1.02], rot: [-1.0, PI, 0], snap: 0 },
+      { t: 0.84, hard: true, pose: POSES.ukemi, pos: [0.1, 0.16, 1.18], rot: [-1.5708, PI, 0] },
+      { t: 1.6, pose: { lHip: -0.25, lKnee: 0.5, rHip: -0.35, rKnee: 0.4, lSh: [0.05, 0, 1.0], rSh: [0.05, 0, -1.0], neck: 0.25, spine: 0.08 }, pos: [0.1, 0.15, 1.18] },
+    ],
+    cam: [
+      { t: 0, p: [2.9, 1.5, 0.3], l: [0, 1.0, 0.45] },
+      { t: 0.4, p: [2.1, 0.95, 1.7], l: [0.1, 0.95, 0.7] },
+      { t: 0.84, p: [1.45, 0.45, 2.25], l: [0.1, 0.45, 0.9] },
+      { t: 1.6, p: [2.5, 1.25, 2.5], l: [0.1, 0.45, 0.8] },
+    ],
+  },
+  seoi: {
+    dur: 1.6, impact: 0.86, slow: [0.42, 0.82, 0.26], trail: [0.38, 0.97],
+    A: [
+      { t: 0, pose: G, pos: [0, H, 0], rot: [0, 0, 0], snap: 1 },
+      { t: 0.18, pose: { spine: 0.25, chest: [0.05, 0.3, 0], rHip: [-0.5, 0, -0.05], rKnee: 0.6, lHip: [0.1, 0, 0.1], lKnee: 0.55, rSh: [-1.7, 0, -0.35], rEl: -1.4, lSh: [-0.9, 0, 0.3], lEl: -0.8 }, pos: [0.02, H, 0.32], rot: [0, 1.25, 0] },
+      { t: 0.4, pose: { spine: 0.4, chest: [0.1, 0, 0], neck: -0.3, lHip: [-1.0, 0, 0.15], lKnee: 1.6, rHip: [-1.0, 0, -0.15], rKnee: 1.6, rSh: [-2.5, 0, -0.45], rEl: -1.7, lSh: [-0.8, 0, 0.5], lEl: -1.3 }, pos: [0, H, 0.52], rot: [0, PI, 0] },
+      { t: 0.62, pose: { spine: 1.0, chest: 0.25, neck: -0.5, lHip: [-0.35, 0, 0.12], lKnee: 0.45, rHip: [-0.35, 0, -0.12], rKnee: 0.45, rSh: [-1.3, 0, -0.3], rEl: -1.3, lSh: [-0.4, 0, 0.3], lEl: -1.5 }, pos: [0, H, 0.52] },
+      { t: 0.86, hard: true, pose: { spine: 1.3, chest: 0.2, neck: -0.3, lKnee: 0.65, rKnee: 0.65, lHip: [-0.6, 0, 0.15], rHip: [-0.6, 0, -0.15], rSh: [-0.6, 0, -0.3], rEl: -0.5, lSh: [-0.9, 0, 0.2], lEl: -0.25 }, pos: [0, H, 0.5] },
+      { t: 1.6, pose: { spine: 0.7, neck: -0.35, lKnee: 0.5, rKnee: 0.5, lHip: [-0.3, 0, 0.1], rHip: [-0.3, 0, -0.1], lSh: [-1.05, 0, 0.25], lEl: -0.4, rSh: [-0.4, 0, -0.2], rEl: -0.5 }, pos: [0, H, 0.5] },
+    ],
+    B: [
+      { t: 0, pose: G, pos: [0, H, 0.78], rot: [0, PI, 0], snap: 1 },
+      { t: 0.18, pose: { spine: 0.3, neck: -0.1, rSh: [-1.5, 0, -0.25], rEl: -0.3, rHip: [-0.4, 0, -0.06], rKnee: 0.4 }, pos: [0, H, 0.76], rot: [0.2, PI, 0] },
+      { t: 0.4, pose: { spine: 0.35, neck: 0.1, rSh: [-2.2, 0, -0.3], rEl: -0.4, lSh: [-1.0, 0, 0.4], lHip: [-0.3, 0, 0.05], lKnee: 0.6, rHip: [-0.5, 0, -0.05], rKnee: 0.7 }, pos: [0, 1.12, 0.8], rot: [0.7, PI, 0], snap: 0 },
+      { t: 0.63, pose: { spine: 0.2, neck: 0.3, lHip: [-0.5, 0, 0.2], lKnee: 0.8, rHip: [-0.2, 0, -0.2], rKnee: 0.3, lSh: [-2.6, 0, 0.7], lEl: -0.2 }, pos: [0, 1.85, 0.34], rot: [2.9, PI, 0] },
+      { t: 0.86, hard: true, pose: P({ rSh: [-1.2, 0, -0.3] }, POSES.ukemi), pos: [0, 0.16, -0.38], rot: [4.712, PI, 0] },
+      { t: 1.6, pose: { lHip: -0.3, lKnee: 0.5, rHip: -0.4, rKnee: 0.4, lSh: [0.05, 0, 1.0], neck: 0.25, spine: 0.08 }, pos: [0, 0.15, -0.4] },
+    ],
+    cam: [
+      { t: 0, p: [2.9, 1.4, 0.3], l: [0, 1.0, 0.4] },
+      { t: 0.4, p: [2.1, 0.75, -0.9], l: [0, 1.15, 0.4] },
+      { t: 0.63, p: [1.6, 0.45, -1.6], l: [0, 1.35, 0.2] },
+      { t: 0.86, p: [1.95, 0.7, -2.0], l: [0, 0.4, -0.1] },
+      { t: 1.6, p: [2.6, 1.45, -1.6], l: [0, 0.4, 0] },
+    ],
+  },
+  kouchi: {
+    dur: 1.5, impact: 0.74, slow: [0.24, 0.68, 0.3], trail: [0.18, 0.8],
+    A: [
+      { t: 0, pose: G, pos: [0, H, 0], rot: [0, 0, 0], snap: 1 },
+      { t: 0.14, pose: { spine: 0.4, neck: -0.35, lHip: [-0.45, 0, 0.08], lKnee: 0.95, rHip: [-0.75, 0, 0.22], rKnee: 0.35, rSh: [-1.3, 0, -0.05], rEl: -0.4, lSh: [-1.15, 0, 0.15], lEl: -0.55 }, pos: [0.04, H, 0.2] },
+      { t: 0.32, pose: { spine: 0.45, rHip: [-0.15, 0, 0.28], rKnee: 0.75, lKnee: 0.6, lHip: [-0.1, 0, 0.08] }, pos: [0.05, H, 0.36], rot: [0.45, 0, 0], snap: 0.5 },
+      { t: 0.52, pose: { spine: 0.3, neck: -0.5, lHip: [0.35, 0, 0.05], lKnee: 0.4, rHip: [0.15, 0, 0.2], rKnee: 0.9, rSh: [-1.65, 0, -0.1], rEl: -0.2, lSh: [-1.6, 0, 0.1], lEl: -0.2 }, pos: [0.05, 0.72, 0.58], rot: [1.0, 0, 0], snap: 0 },
+      { t: 0.74, hard: true, pose: { spine: 0.15, neck: -0.6, lHip: [0.2, 0, 0.1], lKnee: 0.5, rHip: [0.1, 0, 0.15], rKnee: 0.7, rSh: [-1.8, 0, -0.35], rEl: -0.6, lSh: [-1.8, 0, 0.35], lEl: -0.6 }, pos: [0.05, 0.42, 0.78], rot: [1.42, 0, 0] },
+      { t: 1.5, pose: { spine: 0.3, neck: -0.4, rSh: [-1.2, 0, -0.25], rEl: 0, lSh: [-1.2, 0, 0.25], lEl: 0, lKnee: 1.2, rKnee: 1.2, lHip: [0.6, 0, 0.1], rHip: [0.6, 0, -0.1] }, pos: [0.05, 0.55, 0.8], rot: [1.1, 0, 0] },
+    ],
+    B: [
+      { t: 0, pose: G, pos: [0, H, 0.78], rot: [0, PI, 0], snap: 1 },
+      { t: 0.14, pose: { spine: 0.1, neck: 0 }, pos: [0, H, 0.8] },
+      { t: 0.32, pose: { rHip: [-0.75, 0, 0], rKnee: 0.1, lKnee: 0.35, spine: 0.0, neck: 0.3, lSh: [-1.6, 0, 0.6], rSh: [-1.6, 0, -0.6], lEl: -0.3, rEl: -0.3 }, pos: [0, H, 0.86], rot: [-0.35, PI, 0], snap: 0.7 },
+      { t: 0.52, pose: { rHip: [-1.4, 0, 0], lHip: [-0.85, 0, 0], lKnee: 0.6, neck: 0.5, spine: 0.15, lSh: [-2.4, 0, 0.8], rSh: [-2.4, 0, -0.8] }, pos: [0, 0.62, 0.98], rot: [-1.0, PI, 0], snap: 0 },
+      { t: 0.74, hard: true, pose: P({ lHip: [-1.0, 0, 0.35], lKnee: 0.9, rHip: [-1.1, 0, -0.35], rKnee: 0.6 }, POSES.ukemi), pos: [0, 0.16, 1.08], rot: [-1.5708, PI, 0] },
+      { t: 1.5, pose: { neck: 0.3, spine: 0.1, lHip: [-0.9, 0, 0.4], rHip: [-0.95, 0, -0.4] }, pos: [0, 0.15, 1.08] },
+    ],
+    cam: [
+      { t: 0, p: [2.7, 1.3, 0.3], l: [0, 1.0, 0.45] },
+      { t: 0.3, p: [1.8, 0.55, 0.55], l: [0, 0.75, 0.7] },
+      { t: 0.74, p: [1.5, 0.38, 1.6], l: [0, 0.3, 0.9] },
+      { t: 1.5, p: [2.3, 1.4, 1.9], l: [0, 0.4, 0.9] },
+    ],
+  },
+};
+const KOUCHI_MISS = compileFT([
+  { t: 0, pose: G, pos: [0, H, 0], rot: [0, 0, 0], snap: 1 },
+  { t: 0.14, pose: TRACK_DEFS.kouchi.A[1].pose, pos: [0.04, H, 0.2] },
+  { t: 0.34, pose: { spine: 0.45, rHip: [-0.4, 0, 0.28], rKnee: 0.5, lKnee: 0.6 }, pos: [0.05, H, 0.42], rot: [0.55, 0, 0], snap: 0.4 },
+  { t: 0.6, pose: { spine: 0.3, neck: -0.5, lHip: [0.35, 0, 0.05], lKnee: 0.3, rHip: [0.25, 0, 0.1], rKnee: 0.4, rSh: [-1.7, 0, -0.2], rEl: -0.3, lSh: [-1.7, 0, 0.2], lEl: -0.3 }, pos: [0.05, 0.55, 0.65], rot: [1.15, 0, 0], snap: 0 },
+  { t: 0.8, hard: true, pose: { spine: 0.1, neck: -0.7, rSh: [-1.4, 0, -0.5], rEl: -1.3, lSh: [-1.4, 0, 0.5], lEl: -1.3, lHip: [0.05, 0, 0.1], rHip: [0.05, 0, -0.1], lKnee: 0.2, rKnee: 0.2 }, pos: [0.05, 0.2, 0.8], rot: [1.52, 0, 0] },
+  { t: 1.3, pos: [0.05, 0.21, 0.8] },
+  { t: 1.75, pose: { spine: 0.4, neck: -0.2, lHip: [-1.3, 0, 0.1], lKnee: 2.0, rHip: [-0.3, 0, -0.1], rKnee: 2.1, rSh: [-0.6, 0, -0.2], rEl: -0.3, lSh: [-0.6, 0, 0.2], lEl: -0.3 }, pos: [0.05, 0.62, 0.8], rot: [0.3, 0, 0] },
+  { t: 2.05, pose: POSES.stance, pos: [0.05, H, 0.8], rot: [0, 0, 0], snap: 1 },
+]);
+const TRACKS = {};
+for (const k in TRACK_DEFS) {
+  const d = TRACK_DEFS[k];
+  TRACKS[k] = { ...d, A: compileFT(d.A), B: compileFT(d.B), cam: compileCam(d.cam) };
+}
+
+/* =========================================================
+   Renderer / scene / arena
+   ========================================================= */
+const canvas = $('#c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070b);
+scene.fog = new THREE.Fog(0x05070b, 13, 34);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 120);
+camera.position.set(0, 2.2, 7);
+
+scene.add(new THREE.HemisphereLight(0xa9bbdc, 0x1b140c, 0.75));
+const key = new THREE.DirectionalLight(0xfff1dc, 2.6);
+key.position.set(3.5, 11, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 30 });
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.02;
+scene.add(key);
+const rimA = new THREE.PointLight(0x5d8dff, 60, 0, 2); rimA.position.set(-6, 4, -5); scene.add(rimA);
+const rimB = new THREE.PointLight(0xffb066, 45, 0, 2); rimB.position.set(6, 3.5, -4); scene.add(rimB);
+const fill = new THREE.PointLight(0xfff5e6, 25, 0, 2); fill.position.set(0, 3, 7); scene.add(fill);
+
+function tatamiTexture() {
+  const S = 2048, M = S / 14;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d');
+  for (let ty = 0; ty < 14; ty++) for (let tx = 0; tx < 14; tx++) {
+    const cx = tx - 7 + 0.5, cy = ty - 7 + 0.5;
+    const contest = Math.abs(cx) < 4 && Math.abs(cy) < 4;
+    const base = contest ? [222, 186, 80] : [38, 88, 178];
+    const v = rand(-7, 7);
+    g.fillStyle = `rgb(${base[0] + v},${base[1] + v},${base[2] + v})`;
+    g.fillRect(tx * M, ty * M, M, M);
+    // woven grain, alternating direction like real tatami
+    g.strokeStyle = contest ? 'rgba(120,90,20,0.10)' : 'rgba(10,30,80,0.18)';
+    g.lineWidth = 1;
+    const vert = (tx + ty) % 2 === 0;
+    for (let i = 3; i < M; i += 4) {
+      g.beginPath();
+      if (vert) { g.moveTo(tx * M + i, ty * M); g.lineTo(tx * M + i, ty * M + M); }
+      else { g.moveTo(tx * M, ty * M + i); g.lineTo(tx * M + M, ty * M + i); }
+      g.stroke();
+    }
+    g.strokeStyle = 'rgba(0,0,0,0.38)'; g.lineWidth = 2.5;
+    g.strokeRect(tx * M + 1, ty * M + 1, M - 2, M - 2);
+  }
+  // starting marks (white for 白, blue for 藍), 10 x 50 cm tape, 3 m apart
+  const mark = (x, col) => { g.fillStyle = col; g.fillRect((7 + x - 0.05) * M, (7 - 0.25) * M, 0.1 * M, 0.5 * M); };
+  mark(-1.5, '#f4f1e8'); mark(1.5, '#2d6be4');
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+const ARENA = {};
+(function buildArena() {
+  const side = new THREE.MeshStandardMaterial({ color: 0x1d3f86, roughness: 0.9 });
+  const top = new THREE.MeshStandardMaterial({ map: tatamiTexture(), roughness: 0.88 });
+  const plat = new THREE.Mesh(new THREE.BoxGeometry(14, 0.06, 14), [side, side, top, side, side, side]);
+  plat.position.y = -0.03; plat.receiveShadow = true; scene.add(plat);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x0a0c11, roughness: 0.55, metalness: 0.25 }));
+  floor.rotation.x = -PI / 2; floor.position.y = -0.061; floor.receiveShadow = true; scene.add(floor);
+  // stands
+  const standMat = new THREE.MeshStandardMaterial({ color: 0x12161f, roughness: 1 });
+  const crowdGeo = new THREE.BoxGeometry(0.42, 0.62, 0.36);
+  const crowdMat = new THREE.MeshStandardMaterial({ roughness: 1 });
+  const seats = [];
+  const palette = [0x5a6170, 0x7a4b3c, 0x30466e, 0x8b8d93, 0x6b5a3a, 0x3b5b4a, 0x9a3b34, 0xb9b3a4, 0x2a2f3a];
+  for (let s = 0; s < 4; s++) {
+    for (let row = 0; row < 6; row++) {
+      const d = 10 + row * 0.95, y = row * 0.55;
+      const tier = new THREE.Mesh(new THREE.BoxGeometry(2 * d + 2, 0.55, 0.95), standMat);
+      const ang = s * PI / 2;
+      tier.position.set(Math.sin(ang) * d, y + 0.22, Math.cos(ang) * d);
+      tier.rotation.y = ang; tier.receiveShadow = true; scene.add(tier);
+      for (let x = -d + 0.5; x < d - 0.4; x += rand(0.52, 0.75)) {
+        if (Math.random() < 0.18) continue;
+        seats.push({ ang, d, x, y: y + 0.82, col: palette[(Math.random() * palette.length) | 0], ph: rand(0, TAU) });
+      }
+    }
+  }
+  const crowd = new THREE.InstancedMesh(crowdGeo, crowdMat, seats.length);
+  const m4 = new THREE.Matrix4(), col = new THREE.Color();
+  seats.forEach((st, i) => {
+    st.px = Math.sin(st.ang) * st.d + Math.cos(st.ang) * st.x;
+    st.pz = Math.cos(st.ang) * st.d - Math.sin(st.ang) * st.x;
+    m4.makeRotationY(st.ang + PI); m4.setPosition(st.px, st.y, st.pz);
+    crowd.setMatrixAt(i, m4); crowd.setColorAt(i, col.setHex(st.col));
+  });
+  scene.add(crowd);
+  ARENA.crowd = crowd; ARENA.seats = seats;
+  // light rig + soft beams
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffe6b8, transparent: true, opacity: 0.045, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(4.2, 11, 40, 1, true), beamMat);
+  beam.position.set(0, 5.5, 0); scene.add(beam);
+  const lampMat = new THREE.MeshBasicMaterial({ color: 0xfff3da });
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * TAU;
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.5), lampMat);
+    lamp.position.set(Math.cos(a) * 3.2, 11, Math.sin(a) * 3.2); lamp.rotation.y = -a; scene.add(lamp);
+  }
+  const frame = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.08, 6, 48), new THREE.MeshStandardMaterial({ color: 0x1a1f29, roughness: 0.6 }));
+  frame.rotation.x = PI / 2; frame.position.y = 11.1; scene.add(frame);
+})();
+
+/* =========================================================
+   Character rig
+   ========================================================= */
+function buildRig(o) {
+  const mat = (c, r = 0.85) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: 0 });
+  const giM = mat(o.gi), pantsM = mat(o.pants ?? o.gi), skinM = mat(o.skin, 0.6), hairM = mat(o.hair, 0.9), collarM = mat(o.collar ?? o.gi, 0.8);
+  const beltM = o.belt != null ? mat(o.belt, 0.6) : null;
+  const root = new THREE.Group(), body = new THREE.Group();
+  body.rotation.order = 'YXZ'; body.position.y = H; root.add(body);
+  const J = {}, soles = [];
+  const add = (parent, mesh, x = 0, y = 0, z = 0) => { mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh; };
+  const cap = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, 12), m);
+  const grp = (parent, x, y, z) => { const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); return g; };
+  add(body, new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.21), pantsM), 0, -0.04, 0);
+  J.spine = grp(body, 0, 0.04, 0);
+  add(J.spine, cap(0.145, 0.16, giM), 0, 0.14, 0);
+  if (beltM) {
+    add(J.spine, new THREE.Mesh(new THREE.CylinderGeometry(0.158, 0.158, 0.055, 18), beltM), 0, 0.03, 0).scale.set(1.06, 1, 0.84);
+    add(J.spine, new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.03), beltM), 0, 0.03, 0.137);
+    for (const s of [1, -1]) { const tl = add(J.spine, new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.17, 0.014), beltM), 0.022 * s, -0.06, 0.142); tl.rotation.z = 0.16 * s; }
+  }
+  J.chest = grp(J.spine, 0, 0.28, 0);
+  add(J.chest, cap(0.16, 0.12, giM), 0, 0.07, 0).scale.set(1.18, 1, 0.78);
+  add(J.chest, cap(0.095, 0.25, giM), 0, 0.17, 0).rotation.z = PI / 2;
+  for (const s of [1, -1]) { const lp = add(J.chest, new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.3, 0.02), collarM), 0.045 * s, 0.1, 0.123); lp.rotation.z = 0.38 * s; lp.rotation.x = -0.12; }
+  J.neck = grp(J.chest, 0, 0.25, 0);
+  add(J.neck, cap(0.05, 0.05, skinM), 0, 0.03, 0);
+  add(J.neck, new THREE.Mesh(new THREE.SphereGeometry(0.112, 20, 16), skinM), 0, 0.15, 0.01).scale.set(0.92, 1.05, 1);
+  add(J.neck, new THREE.Mesh(new THREE.SphereGeometry(0.118, 20, 12, 0, TAU, 0, PI * 0.55), hairM), 0, 0.168, -0.006).scale.set(0.96, 1, 1.05);
+  for (const [s, n] of [[1, 'l'], [-1, 'r']]) {
+    const S = grp(J.chest, 0.22 * s, 0.17, 0); J[n + 'Sh'] = S;
+    add(S, cap(0.068, 0.19, giM), 0, -0.14, 0);
+    const E = grp(S, 0, -0.29, 0); J[n + 'El'] = E;
+    add(E, cap(0.058, 0.15, giM), 0, -0.1, 0);
+    add(E, new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 10), skinM), 0, -0.255, 0.005);
+    const Hp = grp(body, 0.1 * s, -0.06, 0); J[n + 'Hip'] = Hp;
+    add(Hp, cap(0.088, 0.28, pantsM), 0, -0.22, 0);
+    const K = grp(Hp, 0, -0.45, 0); J[n + 'Knee'] = K;
+    add(K, cap(0.072, 0.27, pantsM), 0, -0.2, 0);
+    add(K, new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.055, 0.22), skinM), 0, -0.44, 0.045);
+    soles.push(grp(K, 0, -0.468, 0));
+  }
+  return { root, body, J, soles, mats: { gi: giM, pants: pantsM } };
+}
+const _v = new V3(), _v2 = new V3();
+function setPose(f, p) { for (const n of JN) { const v = p[n]; f.J[n].rotation.set(v[0], v[1], v[2]); } }
+function soleMinY(f) {
+  f.root.updateMatrixWorld(true);
+  let m = Infinity;
+  for (const s of f.soles) { s.getWorldPosition(_v); if (_v.y < m) m = _v.y; }
+  return m;
+}
+
+/* Afterimage ghosts */
+function makeGhostPool(f, n = 14) {
+  const src = []; f.body.traverse(o => src.push(o));
+  const list = [];
+  for (let i = 0; i < n; i++) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const g = f.body.clone(true), nodes = [];
+    g.traverse(o => { nodes.push(o); if (o.isMesh) { o.material = mat; o.castShadow = false; o.receiveShadow = false; } });
+    const wrapG = new THREE.Group(); wrapG.add(g); wrapG.visible = false; scene.add(wrapG);
+    list.push({ wrap: wrapG, nodes, mat, life: 0, max: 1, op: 0.4 });
+  }
+  return { list, src, idx: 0 };
+}
+function spawnGhost(f, color, life = 0.4, op = 0.4) {
+  const P_ = f.ghosts, gh = P_.list[P_.idx++ % P_.list.length];
+  gh.wrap.position.copy(f.root.position); gh.wrap.rotation.copy(f.root.rotation);
+  P_.src.forEach((s, i) => { const d = gh.nodes[i]; d.position.copy(s.position); d.quaternion.copy(s.quaternion); d.scale.copy(s.scale); });
+  gh.mat.color.setHex(color); gh.life = gh.max = life; gh.op = op; gh.wrap.visible = true;
+}
+function updateGhosts(dt) {
+  for (const f of ALL) for (const gh of f.ghosts.list) {
+    if (gh.life <= 0) continue;
+    gh.life -= dt;
+    if (gh.life <= 0) { gh.wrap.visible = false; continue; }
+    gh.mat.opacity = gh.op * (gh.life / gh.max);
+  }
+}
+
+/* =========================================================
+   Fighters
+   ========================================================= */
+const ALL = [];
+class Fighter {
+  constructor(id, o) {
+    this.id = id; this.name = o.name; this.isRef = !!o.isRef;
+    Object.assign(this, buildRig(o));
+    scene.add(this.root);
+    this.cur = P(o.isRef ? POSES.ref_idle : POSES.stance);
+    this.ghosts = makeGhostPool(this, o.isRef ? 1 : 14);
+    if (!o.isRef) {
+      this.aura = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 48), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      this.aura.rotation.x = -PI / 2; this.aura.position.y = 0.025; this.root.add(this.aura);
+    }
+    this.prev = new V3(); this.vel = new V3(); this.moveIn = new V3();
+    this.reset(true);
+    ALL.push(this);
+  }
+  reset(full) {
+    if (full) {
+      this.hp = 100; this.hpChip = 100; this.chipDelay = 0; this.st = 100; this.fatigue = 0; this.waza = 0; this.shido = 0;
+      this.stats = { tried: 0, landed: 0, dmg: 0, pdodge: 0, blocks: 0, grabs: 0 };
+    }
+    this.state = 'idle'; this.t = 0; this.dur = 0; this.grip = false; this.gripT = 0; this.counterT = 0; this.regenDelay = 0;
+    this.move = null; this.res = null; this.guardT = 0; this.passive = 0; this.guardHeld = false; this.buffer = null;
+    this.walkPhase = 0; this.glow = 0; this.vel.set(0, 0, 0); this.moveIn.set(0, 0, 0); this.track = null; this.ghostAcc = 0;
+  }
+  get pos() { return this.root.position; }
+  canAct() { return this.state === 'idle' || this.state === 'guard'; }
+  invuln() { return this.state === 'dodge' && this.t < 0.32; }
+  regenRate() { let r = REGEN_BASE / (1 + 0.12 * this.fatigue); if (opp(this).grip) r *= 0.6; return r; }
+  spend(c, fat) { if (this.st < c) return false; this.st -= c; this.fatigue += fat; this.regenDelay = 0.8; return true; }
+}
+const F = [
+  new Fighter(0, { name: '你', gi: 0xf3f0e7, collar: 0xdcd8cc, belt: 0x141414, skin: 0xd9a77e, hair: 0x1b1510 }),
+  new Fighter(1, { name: 'CPU', gi: 0x1f52c8, collar: 0x173f9c, belt: 0x141414, skin: 0xc28a62, hair: 0x0c0a08 }),
+];
+const REF = new Fighter(2, { name: '主審', isRef: true, gi: 0x1a2030, pants: 0x15191f, collar: 0xe8e8e8, skin: 0xcf9d76, hair: 0x2a2520 });
+REF.pose = 'ref_idle'; REF.poseT = 0;
+const opp = (f) => (f === F[0] ? F[1] : F[0]);
+const distF = (a, b) => Math.hypot(a.pos.x - b.pos.x, a.pos.z - b.pos.z);
+function axisTo(a, b, out = new V3()) { out.set(b.pos.x - a.pos.x, 0, b.pos.z - a.pos.z); const l = out.length(); if (l > 1e-4) out.divideScalar(l); else out.set(1, 0, 0); return out; }
+const isThrowState = (f) => ['throwing', 'thrown', 'down', 'win', 'lose'].includes(f.state);
+
+/* =========================================================
+   Effects: particles, shockwaves, screen
+   ========================================================= */
+const dotTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.4, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+})();
+class Particles {
+  constructor(n, size) {
+    this.n = n; this.pos = new Float32Array(n * 3); this.vel = new Float32Array(n * 3); this.col = new Float32Array(n * 3);
+    this.base = new Float32Array(n * 3); this.life = new Float32Array(n); this.max = new Float32Array(n); this.i = 0;
+    for (let k = 0; k < n; k++) this.pos[k * 3 + 1] = -99;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(this.col, 3));
+    this.pts = new THREE.Points(g, new THREE.PointsMaterial({ size, map: dotTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    this.pts.frustumCulled = false; scene.add(this.pts);
+  }
+  emit(p, count, o = {}) {
+    const c = new THREE.Color(o.color ?? 0xffffff);
+    for (let k = 0; k < count; k++) {
+      const i = this.i++ % this.n, a = rand(0, TAU), sp = rand(0.3, 1) * (o.speed ?? 3);
+      this.pos[i * 3] = p.x + rand(-0.15, 0.15); this.pos[i * 3 + 1] = p.y + rand(0, 0.1); this.pos[i * 3 + 2] = p.z + rand(-0.15, 0.15);
+      this.vel[i * 3] = Math.cos(a) * sp; this.vel[i * 3 + 1] = rand(0.3, 1) * (o.up ?? 2); this.vel[i * 3 + 2] = Math.sin(a) * sp;
+      this.life[i] = this.max[i] = rand(...(o.life ?? [0.4, 0.9]));
+      const v = rand(0.7, 1);
+      this.base[i * 3] = c.r * v; this.base[i * 3 + 1] = c.g * v; this.base[i * 3 + 2] = c.b * v;
+    }
+  }
+  update(dt) {
+    for (let i = 0; i < this.n; i++) {
+      if (this.life[i] <= 0) continue;
+      this.life[i] -= dt;
+      const j = i * 3;
+      if (this.life[i] <= 0) { this.pos[j + 1] = -99; this.col[j] = this.col[j + 1] = this.col[j + 2] = 0; continue; }
+      this.vel[j + 1] -= 5.5 * dt;
+      const drag = Math.exp(-2.2 * dt);
+      this.vel[j] *= drag; this.vel[j + 2] *= drag;
+      this.pos[j] += this.vel[j] * dt; this.pos[j + 1] += this.vel[j + 1] * dt; this.pos[j + 2] += this.vel[j + 2] * dt;
+      if (this.pos[j + 1] < 0.02) { this.pos[j + 1] = 0.02; this.vel[j + 1] *= -0.25; }
+      const k = this.life[i] / this.max[i];
+      this.col[j] = this.base[j] * k; this.col[j + 1] = this.base[j + 1] * k; this.col[j + 2] = this.base[j + 2] * k;
+    }
+    this.pts.geometry.attributes.position.needsUpdate = true;
+    this.pts.geometry.attributes.color.needsUpdate = true;
+  }
+}
+const dust = new Particles(260, 0.16);
+const sparks = new Particles(160, 0.07);
+const rings = [];
+for (let i = 0; i < 5; i++) {
+  const r = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 72), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  r.rotation.x = -PI / 2; r.position.y = 0.03; r.userData = { t: 1, max: 1, scale: 1 }; scene.add(r); rings.push(r);
+}
+let ringIdx = 0;
+function shock(p, color, scale = 3.2, max = 0.55, delay = 0) {
+  const r = rings[ringIdx++ % rings.length];
+  r.position.set(p.x, 0.03, p.z); r.material.color.setHex(color); r.userData = { t: -delay, max, scale };
+}
+function updateRings(dt) {
+  for (const r of rings) {
+    const u = r.userData; u.t += dt;
+    if (u.t < 0 || u.t > u.max) { r.material.opacity = 0; continue; }
+    const k = u.t / u.max;
+    r.scale.setScalar(0.15 + (1 - (1 - k) * (1 - k)) * u.scale);
+    r.material.opacity = (1 - k) * 0.9;
+  }
+}
+let shake = 0, hitstop = 0, timeScale = 1, targetTS = 1;
+const flashEl = $('#flash');
+function flash(color = '#fff', strength = 0.8) {
+  if (REDUCED) strength *= 0.3;
+  flashEl.style.transition = 'none'; flashEl.style.background = color; flashEl.style.opacity = strength;
+  requestAnimationFrame(() => { flashEl.style.transition = 'opacity .35s ease-out'; flashEl.style.opacity = 0; });
+}
+function addShake(v) { shake = Math.max(shake, REDUCED ? v * 0.3 : v); }
+
+const labelsEl = $('#labels');
+function toScreen(p) {
+  _v2.copy(p).project(camera);
+  return { x: (_v2.x + 1) / 2 * innerWidth, y: (1 - _v2.y) / 2 * innerHeight, vis: _v2.z < 1 };
+}
+const popThrottle = {};
+function popup(f, text, cls = '', yOff = 2.05) {
+  const k = f.id + text;
+  if (popThrottle[k] && performance.now() - popThrottle[k] < 500) return;
+  popThrottle[k] = performance.now();
+  f.root.updateMatrixWorld(true);
+  f.body.getWorldPosition(_v); _v.y = Math.max(_v.y, 0.3) + (yOff - H);
+  const s = toScreen(_v);
+  const el = document.createElement('div');
+  el.className = 'pop ' + cls; el.textContent = text;
+  el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
+  labelsEl.appendChild(el);
+  setTimeout(() => el.remove(), 1050);
+}
+const callEl = $('#call');
+function call(main, sub, cls = '', dur = 1.4, tags) {
+  callEl.className = cls;
+  callEl.querySelector('.m').textContent = main;
+  callEl.querySelector('.s').textContent = sub || '';
+  callEl.querySelector('.tags').innerHTML = (tags || []).map(t => `<span>${t}</span>`).join('');
+  callEl.style.setProperty('--dur', dur + 's');
+  void callEl.offsetWidth; callEl.classList.add('go');
+}
+const bannerEl = $('#banner');
+function banner(mv) {
+  bannerEl.classList.remove('go');
+  bannerEl.style.setProperty('--mc', mv.css);
+  bannerEl.querySelector('.kanji').textContent = mv.name;
+  bannerEl.querySelector('.roma').textContent = mv.roma;
+  void bannerEl.offsetWidth; bannerEl.classList.add('go');
+}
+
+/* =========================================================
+   Audio (synthesised, no files)
+   ========================================================= */
+let AC = null, master = null, noiseBuf = null, muted = false;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = muted ? 0 : 0.7; master.connect(AC.destination);
+    noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  } catch (e) { AC = null; }
+}
+function noise(dur, o = {}) {
+  if (!AC) return;
+  const t0 = AC.currentTime, src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+  const f = AC.createBiquadFilter(); f.type = o.type || 'bandpass'; f.Q.value = o.q ?? 1;
+  f.frequency.setValueAtTime(o.f0 ?? 800, t0); f.frequency.exponentialRampToValueAtTime(o.f1 ?? o.f0 ?? 800, t0 + dur);
+  const g = AC.createGain(); g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(o.gain ?? 0.4, t0 + (o.attack ?? 0.005));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(master); src.start(t0, Math.random()); src.stop(t0 + dur + 0.05);
+}
+function tone(f0, f1, dur, gain = 0.3, type = 'sine', delay = 0) {
+  if (!AC) return;
+  const t0 = AC.currentTime + delay, o = AC.createOscillator(); o.type = type;
+  o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur);
+  const g = AC.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(gain, t0 + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
+}
+const sfx = {
+  whoosh: (g = 0.3) => noise(0.32, { type: 'bandpass', f0: 280, f1: 2200, q: 0.9, gain: g, attack: 0.06 }),
+  grip: () => { noise(0.09, { type: 'highpass', f0: 1800, f1: 3200, gain: 0.3 }); tone(220, 160, 0.08, 0.15, 'triangle'); },
+  thud: (p = 1) => { tone(120, 38, 0.45, 0.9 * p); noise(0.3, { type: 'lowpass', f0: 1200, f1: 180, gain: 0.8 * p }); },
+  buzz: () => tone(150, 120, 0.14, 0.12, 'square'),
+  block: () => { tone(320, 200, 0.12, 0.25, 'triangle'); noise(0.12, { type: 'bandpass', f0: 900, f1: 600, gain: 0.3 }); },
+  dodge: () => noise(0.22, { type: 'bandpass', f0: 1800, f1: 500, q: 1.4, gain: 0.25, attack: 0.02 }),
+  counter: () => { tone(880, 1760, 0.25, 0.18, 'sine'); tone(1320, 2640, 0.25, 0.12, 'sine', 0.05); },
+  bell: () => { tone(740, 735, 1.1, 0.22, 'triangle'); tone(1110, 1100, 0.9, 0.1, 'sine'); },
+  crowd: (dur = 2.5, g = 0.25) => noise(dur, { type: 'bandpass', f0: 700, f1: 520, q: 0.4, gain: g, attack: 0.25 }),
+  charge: (c) => tone(c === 'seoi' ? 300 : c === 'osoto' ? 260 : 340, 620, 0.3, 0.08, 'sawtooth'),
+};
+
+/* =========================================================
+   Game state
+   ========================================================= */
+const CFG = { mode: 'match', lv: 2, time: 120 };
+let phase = 'title';   // title | intro | fight | throw | matte | over
+let frozen = false, ai0 = null;
+let gclock = 0, timeLeft = 120, golden = false, paused = false, ACTID = 0;
+let TD = null, ai = null, laterQ = [], tipIdx = 0, tipT = 0;
+const later = (t, fn) => laterQ.push({ t, fn });
+
+function tryAction(f, act, silent) {
+  const o = opp(f);
+  if (!f.canAct()) return false;
+  const fb = (msg) => { if (f === F[0] && !silent) { popup(f, msg, 'warn'); sfx.buzz(); if (msg === '體力不足') { const w = $('#stw0'); w.classList.remove('flash'); void w.offsetWidth; w.classList.add('flash'); } } return false; };
+  if (act === 'dodge') {
+    if (!f.spend(MOVES.dodge.cost, MOVES.dodge.fat)) return fb('體力不足');
+    f.state = 'dodge'; f.t = 0; f.actId = ++ACTID;
+    const ax = axisTo(f, o);
+    if (f.moveIn.lengthSq() > 0.09) f.dodgeDir = f.moveIn.clone().normalize();
+    else f.dodgeDir = ax.clone().multiplyScalar(-1).addScaledVector(new V3(-ax.z, 0, ax.x), rand(-0.5, 0.5)).normalize();
+    if (f.dodgeDir.dot(ax) > 0.3) f.dodgeDir.addScaledVector(ax, -f.dodgeDir.dot(ax) * 1.2).normalize();
+    if (f.grip || o.grip) { f.grip = false; o.grip = false; popup(f, '切手', 'small'); }
+    sfx.dodge();
+    return true;
+  }
+  if (act === 'grab') {
+    if (f.grip) return false;
+    if (!f.spend(MOVES.grab.cost, MOVES.grab.fat)) return fb('體力不足');
+    f.state = 'grab'; f.t = 0; f.res = null; f.actId = ++ACTID;
+    sfx.whoosh(0.12);
+    return true;
+  }
+  const mv = MOVES[act];
+  if (!mv || !THROWS.includes(act)) return false;
+  if (!f.grip && f.counterT <= 0) return fb('先抓把才能投');
+  if (f.st < mv.cost) return fb('體力不足');
+  f.spend(mv.cost, mv.fat);
+  f.kzStart = kuzushiOf(o, f);
+  f.state = 'startup'; f.move = act; f.t = 0; f.actId = ++ACTID; f.passive = 0; f.stats.tried++;
+  sfx.charge(act);
+  return true;
+}
+function queueAction(f, act) {
+  if (phase !== 'fight') return;
+  if (f.canAct()) tryAction(f, act);
+  else f.buffer = { act, until: gclock + 0.2 };
+}
+function toIdle(f) { f.state = 'idle'; f.t = 0; f.move = null; f.res = null; f.glow = 0; }
+
+function kuzushiOf(def, att) {
+  if (def.state === 'guard') return null;
+  if (def.state === 'stagger' && def.stDir) return def.stDir;
+  const ax = axisTo(def, att, _v2);
+  const a = def.vel.x * ax.x + def.vel.z * ax.z;
+  if (a > 0.55) return 'front';
+  if (a < -0.55) return 'back';
+  if (def.state === 'grab' && def.t < 0.2) return 'front';
+  return null;
+}
+function throwQuality(att, def, key) {
+  const mv = MOVES[key]; let q = 0.35; const tags = [];
+  const k = att.kzStart || kuzushiOf(def, att);
+  if (k && k === mv.kuzushi) { q += 0.3; tags.push(k === 'front' ? '前崩' : '後崩'); }
+  const ctr = att.counterT > 0 ? 0.35 : 0, stg = def.state === 'stagger' ? 0.3 : 0;
+  if (ctr || stg) { q += Math.max(ctr, stg); tags.push(ctr >= stg ? '返し技' : '對手失衡'); }
+  if (def.st < 25) { q += 0.15; tags.push('對手疲勞'); }
+  if (att.grip && att.gripT > 1.5) { q += 0.1; tags.push('組手完成'); }
+  if (key === 'kouchi' && def.state === 'guard') { q += 0.15; tags.push('破防'); }
+  return { q, tags };
+}
+
+function resolveGrab(f) {
+  const o = opp(f);
+  if (distF(f, o) <= 1.25 && !o.invuln() && !isThrowState(o) && o.state !== 'fallen') {
+    f.grip = true; f.gripT = 0; f.stats.grabs++;
+    o.hp = Math.max(1, o.hp - MOVES.grab.dmg); o.chipDelay = 0.5; o.st = Math.max(0, o.st - 6);
+    if (o.state === 'idle' || o.state === 'guard') { o.state = 'flinch'; o.t = 0; o.dur = 0.2; }
+    o.body.getWorldPosition(_v); _v.y += 0.35; sparks.emit(_v, 14, { color: 0xffe9b0, speed: 1.6, up: 1.2, life: [0.15, 0.35] });
+    sfx.grip(); popup(o, '-4', 'small', 1.9);
+    return true;
+  }
+  return false;
+}
+function whiff(f, key) {
+  f.grip = false;
+  if (key === 'kouchi') {
+    f.state = 'fallen'; f.t = 0; f.track = KOUCHI_MISS;
+    f.trackYaw = f.root.rotation.y; f.snapA = snapArr(f, f.root.position, f.trackYaw, 0);
+  } else { f.state = 'stagger'; f.t = 0; f.dur = 0.7; f.stDir = 'front'; }
+}
+function commitThrow(f) {
+  const o = opp(f), key = f.move, mv = MOVES[key];
+  f.glow = 0;
+  if (o.invuln()) {
+    o.counterT = key === 'kouchi' ? 2.0 : 1.3; o.stats.pdodge++;
+    popup(o, '閃避成功！返し技機會', 'counter'); flash('#7fb8ff', 0.3); sfx.counter();
+    targetTS = 0.35; later(0.35, () => { if (phase === 'fight') targetTS = 1; });
+    whiff(f, key); return;
+  }
+  if (distF(f, o) > 1.5 || o.state === 'fallen' || isThrowState(o)) { popup(f, '落空', 'warn'); whiff(f, key); return; }
+  if (o.state === 'guard' && mv.blockable) {
+    f.state = 'stagger'; f.t = 0; f.dur = 0.75; f.grip = false; f.stDir = 'back';
+    f.st = Math.max(0, f.st - 10); o.st = Math.max(0, o.st - 5); o.counterT = 0.9; o.stats.blocks++;
+    popup(o, '防守成功', 'block'); sfx.block(); addShake(0.12);
+    return;
+  }
+  const { q, tags } = throwQuality(f, o, key);
+  startThrow(f, o, key, q, tags);
+}
+
+/* Snapshot of a fighter's current body in a frame, for blending into a track */
+function snapArr(f, P0, yaw, refYaw) {
+  const dx = f.pos.x - P0.x, dz = f.pos.z - P0.z, c = Math.cos(yaw), s = Math.sin(yaw);
+  let ry = wrap(f.root.rotation.y + f.body.rotation.y - yaw);
+  while (ry - refYaw > PI) ry -= TAU; while (ry - refYaw < -PI) ry += TAU;
+  const a = [dx * c - dz * s, f.body.position.y, dx * s + dz * c, f.body.rotation.x, ry, f.body.rotation.z, 0];
+  for (const n of JN) a.push(...f.cur[n]);
+  return a;
+}
+const TMP = new Array(40).fill(0);
+function applyArr(f, a, from, w) {
+  if (from && w < 1) for (let j = 0; j < a.length; j++) if (j !== 6) a[j] = lerp(from[j], a[j], w);
+  f.body.position.set(a[0], a[1], a[2]);
+  f.body.rotation.set(a[3], a[4], a[5]);
+  let i = 7; for (const n of JN) { const c = f.cur[n]; c[0] = a[i++]; c[1] = a[i++]; c[2] = a[i++]; }
+  setPose(f, f.cur);
+  const snap = clamp(a[6], 0, 1) * (from ? w : 1) + (from ? (1 - w) : 0);
+  if (snap > 0.001) f.body.position.y -= soleMinY(f) * snap;
+}
+function transferBody(f) {
+  f.root.updateMatrixWorld(true);
+  f.body.getWorldPosition(_v);
+  f.root.position.set(_v.x, 0, _v.z);
+  f.root.rotation.y = wrap(f.root.rotation.y + f.body.rotation.y);
+  f.body.position.x = 0; f.body.position.z = 0; f.body.rotation.y = 0;
+}
+
+function startThrow(att, def, key, q, tags) {
+  const tr = TRACKS[key];
+  const yaw = Math.atan2(def.pos.x - att.pos.x, def.pos.z - att.pos.z);
+  const P0 = att.pos.clone();
+  TD = { att, def, key, tr, t: 0, P0, yaw, q, tags, impact: false, gacc: 0, win: null, reason: null,
+    snapA: snapArr(att, P0, yaw, 0), snapB: snapArr(def, P0, yaw, PI), camFrom: { p: camera.position.clone(), l: camS.look.clone() } };
+  { const dx = camera.position.x - P0.x, dz = camera.position.z - P0.z; TD.cm = (dx * Math.cos(yaw) - dz * Math.sin(yaw)) < 0 ? -1 : 1; }
+  att.state = 'throwing'; def.state = 'thrown'; att.grip = def.grip = false; att.move = def.move = null;
+  att.glow = def.glow = 0; att.counterT = 0; att.stats.landed++;
+  def.root.position.copy(P0); def.root.rotation.y = yaw; att.root.rotation.y = yaw;
+  def.body.rotation.y = 0; att.body.rotation.y = 0;
+  phase = 'throw';
+  document.body.classList.add('cine'); $('#letterbox').classList.add('on');
+  banner(MOVES[key]); sfx.whoosh(0.45);
+}
+function frameToWorld(x, y, z, out) {
+  const c = Math.cos(TD.yaw), s = Math.sin(TD.yaw);
+  return out.set(TD.P0.x + x * c + z * s, y, TD.P0.z - x * s + z * c);
+}
+const camTmp = new Array(6).fill(0);
+function updateThrow(dt) {
+  const T = TD, tr = T.tr;
+  T.t += dt;
+  const w = smooth(clamp(T.t / 0.14, 0, 1));
+  applyArr(T.att, sampleC(tr.A, T.t, TMP), T.snapA, w);
+  applyArr(T.def, sampleC(tr.B, T.t, TMP), T.snapB, w);
+  const inSlow = !T.impact && T.t > tr.slow[0] && T.t < tr.slow[1];
+  targetTS = inSlow ? tr.slow[2] : 1;
+  if (T.t > tr.trail[0] && T.t < tr.trail[1]) {
+    T.gacc += dt;
+    while (T.gacc > 0.028) { T.gacc -= 0.028; spawnGhost(T.def, MOVES[T.key].color, 0.5, 0.32); if (Math.random() < 0.5) spawnGhost(T.att, 0xffffff, 0.3, 0.14); }
+  }
+  if (!T.impact && T.t >= tr.impact) onImpact();
+  if (T.t >= tr.dur + 0.35) endThrow();
+}
+function onImpact() {
+  const T = TD, { att, def, key, q } = T, mv = MOVES[key];
+  T.impact = true;
+  let label = 'none', dmg = mv.dmg;
+  if (q >= 1.0) { label = 'ippon'; dmg = def.hp; }
+  else if (q >= 0.7) { label = 'waza'; dmg = Math.round(mv.dmg * 1.5); att.waza++; }
+  if (CFG.mode === 'train' && label === 'waza') att.waza = Math.min(att.waza, 1);
+  def.hp = Math.max(0, def.hp - dmg); def.chipDelay = 0.6; def.st = Math.max(0, def.st - 12); att.stats.dmg += dmg;
+  if (CFG.mode === 'match') {
+    if (label === 'ippon') { T.win = att; T.reason = '一本'; }
+    else if (def.hp <= 0) { T.win = att; T.reason = '一本（血量歸零）'; label = 'ippon'; }
+    else if (att.waza >= 2) { T.win = att; T.reason = '合技一本'; label = 'awase'; }
+    else if (golden) { T.win = att; T.reason = '黃金得分'; }
+  }
+  // effects
+  def.root.updateMatrixWorld(true); def.body.getWorldPosition(_v); _v.y = 0.05;
+  hitstop = label === 'ippon' || label === 'awase' ? 0.16 : 0.09;
+  addShake(label === 'none' ? 0.35 : 0.65);
+  flash(label === 'ippon' || label === 'awase' ? '#fff6d8' : '#ffffff', label === 'none' ? 0.45 : 0.85);
+  shock(_v, mv.color, 3.4); shock(_v, 0xffffff, 2.2, 0.4, 0.06);
+  if (label !== 'none') shock(_v, 0xffd56a, 5.5, 0.8, 0.1);
+  dust.emit(_v, label === 'none' ? 60 : 110, { color: 0xffeccc, speed: 3.2, up: 1.6, life: [0.5, 1.2] });
+  sparks.emit(_v, 40, { color: mv.color, speed: 4.5, up: 3, life: [0.3, 0.7] });
+  sfx.thud(label === 'none' ? 0.8 : 1);
+  sfx.crowd(label === 'none' ? 1.6 : 3.2, label === 'none' ? 0.15 : 0.32);
+  cheer(label === 'none' ? 1.2 : 3.5);
+  popup(def, '-' + dmg, 'dmg', 1.1);
+  if (label === 'ippon') { call('一本', 'IPPON', 'ippon', 2.4, T.tags); REF.pose = 'ref_ippon'; REF.poseT = 2.5; }
+  else if (label === 'awase') { call('合技一本', 'WAZA-ARI AWASETE IPPON', 'ippon', 2.4, T.tags); REF.pose = 'ref_ippon'; REF.poseT = 2.5; }
+  else if (label === 'waza') { call('技有', 'WAZA-ARI', 'waza', 1.6, T.tags); REF.pose = 'ref_waza'; REF.poseT = 1.6; }
+  else if (T.tags.length) call('', '', 'waza', 1.2, T.tags);
+  if (CFG.mode === 'train' && def.hp <= 0) def.hp = 0;
+}
+function endThrow() {
+  const T = TD; TD = null; targetTS = 1;
+  document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
+  if (T.win) endMatch(T.win, T.reason);
+  else matte();
+}
+
+function giveShido(f, reason) {
+  if (CFG.mode !== 'match' || phase !== 'fight') return;
+  f.shido++;
+  REF.pose = 'ref_shido'; REF.poseT = 1.6;
+  if (f.shido >= 3) { call('反則負', 'HANSOKU-MAKE', 'shido', 2); endMatch(opp(f), '反則負（三次指導）：' + reason); return; }
+  matte('指導', 'SHIDO · ' + (f === F[0] ? '白' : '藍') + ' · ' + reason, 'shido');
+}
+function matte(main = '待て', sub = 'MATTE', cls = 'matte') {
+  phase = 'matte';
+  call(main, sub, cls, 1.2);
+  if (cls === 'matte') { REF.pose = 'ref_matte'; REF.poseT = 1.0; }
+  for (const f of F) { f.grip = false; f.moveIn.set(0, 0, 0); f.guardHeld = false; }
+  later(0.95, () => $('#wipe').classList.add('on'));
+  later(1.3, () => { resetPositions(); if (CFG.mode === 'train') for (const f of F) if (f.hp <= 0) { f.hp = 100; f.hpChip = 100; } });
+  later(1.45, () => $('#wipe').classList.remove('on'));
+  later(1.7, () => { call('始め', golden ? 'HAJIME · GOLDEN SCORE' : 'HAJIME', 'hajime', 0.9); REF.pose = 'ref_hajime'; REF.poseT = 0.6; sfx.bell(); });
+  later(2.0, () => { if (phase === 'matte') phase = 'fight'; });
+}
+function resetPositions() {
+  const place = (f, x) => {
+    const keepSt = f.st;
+    f.reset(false); f.st = Math.min(100, keepSt + 12);
+    f.root.position.set(x, 0, 0); f.root.rotation.y = x < 0 ? PI / 2 : -PI / 2;
+    f.body.position.set(0, H, 0); f.body.rotation.set(0, 0, 0);
+    f.cur = P(POSES.stance); setPose(f, f.cur); f.prev.copy(f.root.position);
+  };
+  place(F[0], -1.5); place(F[1], 1.5);
+  REF.root.position.set(0, 0, -2.6); REF.root.rotation.y = 0;
+  camS.n.set(0, 0, 1); camS.snap = true;
+}
+function endMatch(winner, reason) {
+  phase = 'over';
+  const loser = opp(winner);
+  if (winner.state === 'throwing' || winner.state === 'fallen') transferBody(winner);
+  winner.state = 'win'; winner.t = 0; winner.grip = false;
+  if (loser.state === 'thrown') loser.state = 'down'; else { loser.state = 'lose'; loser.t = 0; loser.grip = false; }
+  REF.pose = 'ref_ippon'; REF.poseT = 3;
+  REF.winSide = winner;
+  sfx.crowd(3.5, 0.3); cheer(4);
+  later(2.8, () => showResult(winner, reason));
+}
+function timeUp() {
+  const [a, b] = F;
+  if (a.waza !== b.waza) return endMatch(a.waza > b.waza ? a : b, '優勢勝（技有）');
+  if (Math.abs(a.hp - b.hp) >= 10) return endMatch(a.hp > b.hp ? a : b, '判定勝（血量差 ' + Math.round(Math.abs(a.hp - b.hp)) + '）');
+  golden = true; timeLeft = 0;
+  matte('黃金得分', 'GOLDEN SCORE · 先投成功者勝', 'matte');
+}
+
+/* =========================================================
+   Per-fighter simulation
+   ========================================================= */
+const AX = new V3(), PERP = new V3(), DISP = new V3();
+function updateFighter(f, dt) {
+  const o = opp(f);
+  f.t += dt;
+  f.counterT = Math.max(0, f.counterT - dt);
+  if (f.chipDelay > 0) f.chipDelay -= dt; else if (f.hpChip > f.hp) f.hpChip = Math.max(f.hp, f.hpChip - 45 * dt);
+  if (f.hpChip < f.hp) f.hpChip = f.hp;
+  // stamina
+  if (f.state === 'guard') {
+    f.st = Math.max(0, f.st - MOVES.guard.drain * dt); f.fatigue += 0.15 * dt; f.guardT += dt;
+  } else {
+    f.guardT = 0;
+    if (f.regenDelay > 0) f.regenDelay -= dt;
+    else if (!isThrowState(f) && f.state !== 'fallen') f.st = Math.min(100, f.st + f.regenRate() * dt);
+  }
+  f.fatigue = Math.max(0, f.fatigue - 0.03 * dt);
+  // grip upkeep
+  if (f.grip) {
+    f.gripT += dt;
+    if (distF(f, o) > 1.7 || !['idle', 'guard', 'grab', 'startup', 'flinch'].includes(f.state)) f.grip = false;
+    else if (f.gripT > 7) { f.grip = false; if (f === F[0]) popup(f, '組手過久，鬆手', 'warn'); }
+  }
+  if (phase === 'fight') {
+    f.passive += dt;
+    if (CFG.mode === 'match') {
+      if (f.passive > 25) { f.passive = 0; giveShido(f, '消極'); return; }
+      if (f.state === 'guard' && f.guardT > 3.5) { f.guardT = 0; toIdle(f); giveShido(f, '防禦姿勢過久'); return; }
+    }
+  }
+  if (f.buffer && f.canAct()) { const b = f.buffer; f.buffer = null; if (gclock < b.until) tryAction(f, b.act); }
+  axisTo(f, o, AX);
+  switch (f.state) {
+    case 'idle': case 'guard': {
+      if (f.state === 'idle' && f.guardHeld && f.st > 3) { f.state = 'guard'; f.t = 0; }
+      else if (f.state === 'guard' && (!f.guardHeld || f.st <= 0)) toIdle(f);
+      let speed = 2.1;
+      if (f.state === 'guard') speed = 0.8;
+      if (f.grip || o.grip) speed *= 0.75;
+      if (f.st < 20) speed *= 0.75;
+      DISP.copy(f.moveIn);
+      if (DISP.lengthSq() > 1) DISP.normalize();
+      if (DISP.dot(AX) < 0) speed *= 0.88;
+      DISP.multiplyScalar(speed * dt);
+      f.pos.add(DISP);
+      // pushing / pulling while gripping drags the opponent: this is how kuzushi is made
+      if (f.grip && !o.invuln() && ['idle', 'guard', 'flinch', 'grab'].includes(o.state)) {
+        const ax = DISP.dot(AX);
+        o.pos.addScaledVector(AX, ax * (o.state === 'guard' ? 0.45 : 0.88));
+      }
+      break;
+    }
+    case 'grab':
+      if (f.t < 0.2) f.pos.addScaledVector(AX, 1.4 * dt);
+      else if (!f.res) f.res = resolveGrab(f) ? 'hit' : 'miss';
+      if (f.res && f.t >= 0.2 + (f.res === 'hit' ? 0.15 : 0.4)) toIdle(f);
+      break;
+    case 'startup': {
+      const mv = MOVES[f.move];
+      f.glow = clamp(f.t / mv.startup, 0, 1);
+      if (f.grip && distF(f, o) > 0.85) f.pos.addScaledVector(AX, 0.8 * dt);
+      if (f.t >= mv.startup) commitThrow(f);
+      break;
+    }
+    case 'dodge': {
+      const k = Math.max(0, 1 - f.t / 0.38);
+      f.pos.addScaledVector(f.dodgeDir, 6.4 * k * k * dt);
+      f.ghostAcc += dt;
+      if (f.t < 0.26 && f.ghostAcc > 0.045) { f.ghostAcc = 0; spawnGhost(f, 0x7fb8ff, 0.28, 0.3); }
+      if (f.t >= 0.38) toIdle(f);
+      break;
+    }
+    case 'stagger': case 'flinch':
+      if (f.t >= f.dur) toIdle(f);
+      break;
+    case 'bow':
+      if (f.t >= f.dur) toIdle(f);
+      break;
+    case 'fallen': {
+      const P0 = f.root.position;
+      sampleC(f.track, f.t, TMP);
+      applyArr(f, TMP, f.snapA, smooth(clamp(f.t / 0.12, 0, 1)));
+      if (f.t >= f.track.end) { transferBody(f); toIdle(f); }
+      break;
+    }
+  }
+}
+function resolveSpacing() {
+  const [a, b] = F;
+  if (isThrowState(a) || isThrowState(b)) return;
+  const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz) || 1e-4;
+  const minD = 0.64;
+  if (d < minD) {
+    const push = (minD - d) / 2, nx = dx / d, nz = dz / d;
+    if (a.state !== 'fallen') { a.pos.x -= nx * push; a.pos.z -= nz * push; }
+    if (b.state !== 'fallen') { b.pos.x += nx * push; b.pos.z += nz * push; }
+  }
+  for (const f of F) { f.pos.x = clamp(f.pos.x, -4.7, 4.7); f.pos.z = clamp(f.pos.z, -4.7, 4.7); }
+}
+function faceOpponent(f, dt) {
+  if (!['idle', 'guard', 'grab', 'startup', 'stagger', 'flinch', 'dodge', 'bow'].includes(f.state)) return;
+  const o = opp(f);
+  const target = Math.atan2(o.pos.x - f.pos.x, o.pos.z - f.pos.z);
+  const rate = f.state === 'startup' ? 4 : 12;
+  f.root.rotation.y = wrap(f.root.rotation.y + wrap(target - f.root.rotation.y) * (1 - Math.exp(-rate * dt)));
+}
+
+/* Free (non-track) animation: blend toward a target pose + procedural layers */
+const TGT = P({});
+function animateFree(f, dt) {
+  if (f.state === 'down' || f.state === 'fallen' || f.state === 'throwing' || f.state === 'thrown') return;
+  let base = POSES.stance, rate = 12, rx = 0, ry = 0, rz = 0;
+  const sp = Math.hypot(f.vel.x, f.vel.z);
+  switch (f.state) {
+    case 'idle': base = (f.grip || opp(f).grip) ? POSES.grip : POSES.stance; break;
+    case 'guard': base = POSES.guard; rate = 16; break;
+    case 'grab': base = f.t < 0.2 ? POSES.reach : (f.res === 'hit' ? POSES.grip : POSES.stance); rate = f.t < 0.2 ? 26 : 14; break;
+    case 'startup': base = POSES['su_' + f.move]; rate = 18; if (f.move === 'seoi') ry = 0.55 * f.glow; if (f.move === 'osoto') ry = -0.2 * f.glow; break;
+    case 'stagger': base = POSES.stagger; rate = 14; rx = -0.12; break;
+    case 'flinch': base = POSES.flinch; rate = 30; rx = -0.06; break;
+    case 'dodge': base = POSES.dodge; rate = 24; { const side = f.dodgeDir ? f.dodgeDir.x * Math.cos(f.root.rotation.y) - f.dodgeDir.z * Math.sin(f.root.rotation.y) : 0; rz = -side * 0.35; rx = -0.15; } break;
+    case 'bow': base = POSES.bow; rate = 5; break;
+    case 'win': base = POSES.victory; rate = 4; break;
+    case 'lose': base = POSES.dejected; rate = 4; break;
+  }
+  if (f.isRef) { base = POSES[f.pose] || POSES.ref_idle; rate = 7; }
+  for (const n of JN) { const b = base[n], t = TGT[n]; t[0] = b[0]; t[1] = b[1]; t[2] = b[2]; }
+  // walk cycle
+  if (sp > 0.15 && ['idle', 'guard'].includes(f.state) || (f.isRef && sp > 0.15)) {
+    f.walkPhase += dt * (4 + sp * 3.2);
+    const amp = clamp(sp / 2, 0.25, 1), s = Math.sin(f.walkPhase);
+    TGT.lHip[0] += s * 0.38 * amp; TGT.rHip[0] -= s * 0.38 * amp;
+    TGT.lKnee[0] += Math.max(0, -s) * 0.4 * amp; TGT.rKnee[0] += Math.max(0, s) * 0.4 * amp;
+    if (!f.grip) { TGT.lSh[0] -= s * 0.12 * amp; TGT.rSh[0] += s * 0.12 * amp; }
+  }
+  // breathing / fatigue
+  if (!f.isRef) {
+    const tired = f.st < 25 && ['idle', 'guard'].includes(f.state);
+    const br = Math.sin(gclock * (tired ? 7 : 2.6)) * (tired ? 0.05 : 0.018);
+    TGT.spine[0] += br + (tired ? 0.18 : 0); TGT.neck[0] += tired ? -0.1 : 0;
+    if (tired) { TGT.lSh[0] += 0.3; TGT.rSh[0] += 0.3; }
+  }
+  const k = 1 - Math.exp(-rate * dt);
+  for (const n of JN) { const c = f.cur[n], t = TGT[n]; c[0] += (t[0] - c[0]) * k; c[1] += (t[1] - c[1]) * k; c[2] += (t[2] - c[2]) * k; }
+  const kb = 1 - Math.exp(-10 * dt);
+  f.body.rotation.x += (rx - f.body.rotation.x) * kb;
+  f.body.rotation.y += (ry - f.body.rotation.y) * kb;
+  f.body.rotation.z += (rz - f.body.rotation.z) * kb;
+  f.body.position.x += (0 - f.body.position.x) * kb;
+  f.body.position.z += (0 - f.body.position.z) * kb;
+  setPose(f, f.cur);
+  const prevY = f.body.position.y;
+  f.body.position.y = H;
+  const targetY = H - soleMinY(f);
+  f.body.position.y = prevY + (targetY - prevY) * (1 - Math.exp(-(Math.abs(targetY - prevY) > 0.2 ? 5 : 16) * dt));
+  // telegraph glow
+  if (f.aura) {
+    const g = f.state === 'startup' ? f.glow : 0;
+    const col = f.move && MOVES[f.move].color ? MOVES[f.move].color : 0xffffff;
+    f.aura.material.color.setHex(col);
+    f.aura.material.opacity = g * 0.9;
+    f.aura.scale.setScalar(1 + g * 0.6);
+    for (const m of [f.mats.gi, f.mats.pants]) { m.emissive.setHex(col); m.emissiveIntensity = g * 0.55; }
+  }
+}
+
+/* =========================================================
+   CPU opponent
+   ========================================================= */
+const AI_LV = {
+  1: { name: '初段', react: 0.45, defend: 0.28, aggr: 0.45, smart: 0.3, wait: [0.8, 1.7] },
+  2: { name: '三段', react: 0.3, defend: 0.55, aggr: 0.65, smart: 0.65, wait: [0.45, 1.1] },
+  3: { name: '國手', react: 0.2, defend: 0.78, aggr: 0.85, smart: 0.92, wait: [0.25, 0.75] },
+};
+class AI {
+  constructor(f, lv, train) { this.f = f; this.L = AI_LV[lv]; this.train = train; this.seen = -1; this.pending = null; this.guardUntil = 0; this.plan = null; this.grabCD = rand(0.6, 1.2); this.side = 1; this.sideT = 0; this.decide = 0; }
+  pickThrow() {
+    const f = this.f, o = opp(f), L = this.L, k = kuzushiOf(o, f);
+    if (Math.random() < L.smart) {
+      if (o.state === 'guard' && f.st >= MOVES.kouchi.cost) return 'kouchi';
+      if (k === 'front' && f.st >= MOVES.seoi.cost) return 'seoi';
+      if (k === 'back') { const c = Math.random() < 0.6 ? 'osoto' : 'kouchi'; if (f.st >= MOVES[c].cost) return c; }
+    }
+    const reserve = o.state === 'stagger' || f.counterT > 0 ? 0 : L.smart * 14;
+    const pool = THROWS.filter(m => f.st >= MOVES[m].cost + reserve);
+    return pool.length ? pool[(Math.random() * pool.length) | 0] : null;
+  }
+  update(dt) {
+    const f = this.f, o = opp(f), L = this.L, now = gclock;
+    const ax = axisTo(f, o, new V3()), d = distF(f, o), perp = new V3(-ax.z, 0, ax.x);
+    // react to the player's telegraphed throw
+    if (o.state === 'startup' && o.actId !== this.seen) {
+      this.seen = o.actId;
+      if (Math.random() < (this.train ? 0.22 : L.defend)) {
+        let act = o.move === 'kouchi' ? 'dodge' : (Math.random() < 0.45 && f.st > 15 ? 'guard' : 'dodge');
+        if (!this.train && f.grip && L.smart > 0.8 && o.move !== 'kouchi' && Math.random() < 0.25 && f.st >= MOVES.kouchi.cost) act = 'kouchi';
+        this.pending = { at: now + L.react * rand(0.75, 1.3), act, id: o.actId };
+      }
+    }
+    if (this.pending && now >= this.pending.at) {
+      const p = this.pending; this.pending = null;
+      if (o.state === 'startup' && o.actId === p.id) {
+        if (p.act === 'guard') this.guardUntil = now + 0.7; else tryAction(f, p.act);
+      }
+    }
+    f.guardHeld = now < this.guardUntil;
+    const mv = new V3();
+    if (f.guardHeld || !f.canAct()) { f.moveIn.set(0, 0, 0); return; }
+    this.grabCD -= dt; this.sideT -= dt; this.decide -= dt;
+    if (this.sideT <= 0) { this.side = Math.random() < 0.5 ? 1 : -1; this.sideT = rand(0.8, 2.2); }
+    const urgent = f.passive > 17 && !this.train;
+    const decide = this.decide <= 0; if (decide) this.decide = 0.1;
+    // punish openings
+    if (decide && !this.train && (f.counterT > 0 || (f.grip && o.state === 'stagger')) && d < 1.45 && Math.random() < 0.3 + L.smart * 0.6) {
+      const k = this.pickThrow(); if (k && tryAction(f, k)) { this.plan = null; return; }
+    }
+    if (f.grip) {
+      if (!this.plan) this.plan = Math.random() < L.smart ? { type: Math.random() < 0.5 ? 'pull' : 'push', t: 0, dur: rand(0.3, 0.55) } : { type: 'raw', t: 0, dur: rand(L.wait[0], L.wait[1]) };
+      const P_ = this.plan; P_.t += dt;
+      if (P_.type === 'pull') mv.copy(ax).multiplyScalar(-1);
+      else if (P_.type === 'push') mv.copy(ax);
+      if (P_.t >= P_.dur) {
+        if (!this.train) {
+          const k = this.pickThrow();
+          if (k && tryAction(f, k)) this.plan = null; else P_.t = P_.dur - 0.25;
+        } else this.plan = null;
+      }
+    } else {
+      this.plan = null;
+      const tired = f.st < 32 && !urgent;
+      if (tired) { if (d < 2.6) mv.copy(ax).multiplyScalar(-1); mv.addScaledVector(perp, this.side * 0.7); }
+      else {
+        if (d > 1.1) mv.copy(ax); else if (d < 0.8) mv.copy(ax).multiplyScalar(-0.6);
+        mv.addScaledVector(perp, this.side * (d > 1.6 ? 0.45 : 0.15));
+      }
+      if (decide) {
+        if (!tired && d < 1.22 && this.grabCD <= 0 && f.st >= MOVES.grab.cost + L.smart * 14 && Math.random() < L.aggr * 0.5 + (urgent ? 0.4 : 0) - (this.train ? 0.25 : 0)) {
+          tryAction(f, 'grab'); this.grabCD = rand(0.6, 1.4) / (L.aggr + 0.3);
+        } else if (o.grip && f.st > 25 && Math.random() < L.smart * 0.07) tryAction(f, 'dodge');
+      }
+    }
+    if (mv.lengthSq() > 1) mv.normalize();
+    f.moveIn.copy(mv);
+  }
+}
+
+/* =========================================================
+   Input
+   ========================================================= */
+const keys = {};
+const KEYMAP = { KeyJ: 'grab', KeyK: 'osoto', KeyL: 'seoi', KeyI: 'kouchi', Space: 'dodge' };
+addEventListener('keydown', (e) => {
+  if (e.repeat && KEYMAP[e.code]) { e.preventDefault(); return; }
+  keys[e.code] = true;
+  if (e.code === 'Escape' || e.code === 'KeyP') { togglePause(); e.preventDefault(); return; }
+  if (e.code === 'KeyM') { toggleMute(); return; }
+  if (KEYMAP[e.code]) { e.preventDefault(); if (!paused) queueAction(F[0], KEYMAP[e.code]); }
+  if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
+});
+addEventListener('keyup', (e) => { keys[e.code] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; touchGuard = false; stick.x = stick.y = 0; });
+const stick = { x: 0, y: 0, id: null, cx: 0, cy: 0 };
+let touchGuard = false;
+const stickEl = $('#stick'), knob = $('#knob');
+stickEl.addEventListener('pointerdown', (e) => {
+  stick.id = e.pointerId; const r = stickEl.getBoundingClientRect(); stick.cx = r.left + r.width / 2; stick.cy = r.top + r.height / 2;
+  stickEl.setPointerCapture(e.pointerId); moveStick(e); e.preventDefault();
+});
+stickEl.addEventListener('pointermove', (e) => { if (e.pointerId === stick.id) moveStick(e); });
+const endStick = (e) => { if (e.pointerId !== stick.id) return; stick.id = null; stick.x = stick.y = 0; knob.style.transform = ''; };
+stickEl.addEventListener('pointerup', endStick); stickEl.addEventListener('pointercancel', endStick);
+function moveStick(e) {
+  let dx = e.clientX - stick.cx, dy = e.clientY - stick.cy; const R = 52, l = Math.hypot(dx, dy);
+  if (l > R) { dx *= R / l; dy *= R / l; }
+  knob.style.transform = `translate(${dx}px, ${dy}px)`;
+  stick.x = dx / R; stick.y = -dy / R;
+  if (Math.hypot(stick.x, stick.y) < 0.2) stick.x = stick.y = 0;
+}
+document.querySelectorAll('#btns button').forEach((b) => {
+  const act = b.dataset.act;
+  b.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); b.classList.add('press'); b.setPointerCapture(e.pointerId); initAudio();
+    if (b.dataset.hold) touchGuard = true; else if (!paused) queueAction(F[0], act);
+  });
+  const up = () => { b.classList.remove('press'); if (b.dataset.hold) touchGuard = false; };
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+});
+let touchMode = matchMedia('(pointer: coarse)').matches;
+addEventListener('touchstart', () => { if (!touchMode) { touchMode = true; applyTouchMode(); } }, { passive: true });
+function applyTouchMode() { $('#touch').hidden = !touchMode; $('#movebar').style.display = touchMode ? 'none' : ''; }
+applyTouchMode();
+
+const CR = new V3(), CF = new V3();
+function playerInput() {
+  const f = F[0];
+  let x = 0, y = 0;
+  if (keys.KeyA || keys.ArrowLeft) x -= 1;
+  if (keys.KeyD || keys.ArrowRight) x += 1;
+  if (keys.KeyW || keys.ArrowUp) y += 1;
+  if (keys.KeyS || keys.ArrowDown) y -= 1;
+  x += stick.x; y += stick.y;
+  CR.setFromMatrixColumn(camera.matrixWorld, 0); CR.y = 0; CR.normalize();
+  camera.getWorldDirection(CF); CF.y = 0; CF.normalize();
+  f.moveIn.set(0, 0, 0).addScaledVector(CR, x).addScaledVector(CF, y * 0.85);
+  if (f.moveIn.lengthSq() > 1) f.moveIn.normalize();
+  f.guardHeld = !!(keys.ShiftLeft || keys.ShiftRight || touchGuard);
+}
+
+/* =========================================================
+   Camera
+   ========================================================= */
+const camS = { pos: new V3(0, 2.4, 7), look: new V3(0, 1, 0), n: new V3(0, 0, 1), snap: false };
+let shakeOff = new V3();
+function updateCamera(dtR) {
+  const a = F[0].pos, b = F[1].pos;
+  const tp = new V3(), tl = new V3();
+  let rate = 4;
+  if (phase === 'title') {
+    const ang = performance.now() / 1000 * 0.11;
+    tp.set(Math.sin(ang) * 6.2 + 1.2, 2.1, Math.cos(ang) * 6.2); tl.set(0.6, 0.95, 0); rate = 2;
+  } else if (phase === 'throw' && TD) {
+    sampleC(TD.tr.cam, TD.t, camTmp);
+    frameToWorld(camTmp[0] * TD.cm, camTmp[1], camTmp[2], tp);
+    frameToWorld(camTmp[3] * TD.cm, camTmp[4], camTmp[5], tl);
+    const aspect = innerWidth / innerHeight;
+    if (aspect < 1) { const M = tl.clone(); tp.sub(M).multiplyScalar(1 + (1 - aspect) * 0.9).add(M); }
+    rate = TD.t < 0.2 ? 5 : 9;
+  } else {
+    const M = a.clone().add(b).multiplyScalar(0.5);
+    const ax = b.clone().sub(a); ax.y = 0; const sep = ax.length(); if (sep > 1e-3) ax.divideScalar(sep); else ax.set(1, 0, 0);
+    const n = new V3(-ax.z, 0, ax.x); if (n.dot(camS.n) < 0) n.negate();
+    camS.n.lerp(n, 1 - Math.exp(-3 * dtR)).normalize();
+    const aspect = innerWidth / innerHeight;
+    const hf = Math.tan(camera.fov * PI / 360) * aspect;
+    let dist = Math.max(3.3 + sep * 0.95, (sep + 1.7) / (2 * hf));
+    if (phase === 'over') {
+      const w = REF.winSide || F[0];
+      const wp = w.pos.clone();
+      tp.copy(wp).addScaledVector(camS.n, 3.4); tp.y = 1.4; tl.copy(wp); tl.y = 1.15;
+      rate = 1.6;
+    } else {
+      tp.copy(M).addScaledVector(camS.n, dist); tp.y = 1.5 + dist * 0.09; tl.copy(M); tl.y = 0.98;
+    }
+  }
+  if (camS.snap) { camS.pos.copy(tp); camS.look.copy(tl); camS.snap = false; }
+  camS.pos.lerp(tp, 1 - Math.exp(-rate * dtR));
+  camS.look.lerp(tl, 1 - Math.exp(-rate * 1.4 * dtR));
+  shake = Math.max(0, shake - dtR * 1.8);
+  const s = shake * shake * 0.18;
+  shakeOff.set(rand(-s, s), rand(-s, s), rand(-s, s));
+  camera.position.copy(camS.pos).add(shakeOff);
+  camera.lookAt(camS.look);
+}
+function updateReferee(dt) {
+  if (REF.poseT > 0) { REF.poseT -= dt; if (REF.poseT <= 0) REF.pose = 'ref_idle'; }
+  if (phase !== 'throw' && phase !== 'title') {
+    const M = F[0].pos.clone().add(F[1].pos).multiplyScalar(0.5);
+    const tgt = M.clone().addScaledVector(camS.n, -2.7);
+    tgt.x = clamp(tgt.x, -5.2, 5.2); tgt.z = clamp(tgt.z, -5.2, 5.2);
+    REF.pos.x = damp(REF.pos.x, tgt.x, 1.6, dt); REF.pos.z = damp(REF.pos.z, tgt.z, 1.6, dt);
+    let face = Math.atan2(M.x - REF.pos.x, M.z - REF.pos.z);
+    if (phase === 'over' && REF.winSide) {
+      face = Math.atan2(camS.pos.x - REF.pos.x, camS.pos.z - REF.pos.z);
+    }
+    REF.root.rotation.y = wrap(REF.root.rotation.y + wrap(face - REF.root.rotation.y) * (1 - Math.exp(-4 * dt)));
+  }
+}
+let cheerT = 0;
+function cheer(t) { cheerT = Math.max(cheerT, t); }
+const cm4 = new THREE.Matrix4();
+function updateCrowd(dt) {
+  if (cheerT <= 0 || !ARENA.crowd) return;
+  cheerT -= dt;
+  const amp = Math.min(1, cheerT) * 0.16, now = performance.now() / 1000;
+  ARENA.seats.forEach((s, i) => {
+    cm4.makeRotationY(s.ang + PI);
+    cm4.setPosition(s.px, s.y + Math.max(0, Math.sin(now * 11 + s.ph)) * amp, s.pz);
+    ARENA.crowd.setMatrixAt(i, cm4);
+  });
+  ARENA.crowd.instanceMatrix.needsUpdate = true;
+}
+
+/* =========================================================
+   HUD
+   ========================================================= */
+const H_ = [0, 1].map(i => ({
+  hp: $('#hp' + i), hpc: $('#hpc' + i), hpn: $('#hpn' + i), st: $('#st' + i), stw: $('#stw' + i), rg: $('#rg' + i), rgn: $('#rgn' + i),
+  grip: $('#grip' + i), ctr: $('#ctr' + i), pas: $('#pas' + i), waza: $('#waza' + i), shido: $('#shido' + i), last: {},
+}));
+const timerEl = $('#timer'), clockLbl = $('#clockLbl'), teleEl = $('#tele'), kzEl = $('#kz'), hintEl = $('#hint');
+const mvEls = [...document.querySelectorAll('.mv')], tbEls = [...document.querySelectorAll('#btns button')];
+function fmtTime(t) { t = Math.max(0, t); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
+function updateHUD() {
+  F.forEach((f, i) => {
+    const h = H_[i], L = h.last;
+    h.hp.style.transform = `scaleX(${f.hp / 100})`;
+    h.hpc.style.transform = `scaleX(${f.hpChip / 100})`;
+    const hpT = Math.ceil(f.hp); if (L.hp !== hpT) { h.hpn.textContent = hpT; L.hp = hpT; }
+    h.st.style.transform = `scaleX(${f.st / 100})`;
+    h.stw.classList.toggle('low', f.st < 25);
+    const r = REGEN_BASE / (1 + 0.12 * f.fatigue) * (opp(f).grip ? 0.6 : 1) / REGEN_BASE;
+    h.rg.style.transform = `scaleX(${r})`;
+    const rt = Math.round(r * 100) + '%'; if (L.rg !== rt) { h.rgn.textContent = rt; L.rg = rt; }
+    h.grip.classList.toggle('on', f.grip);
+    h.ctr.classList.toggle('on', f.counterT > 0);
+    h.pas.classList.toggle('on', CFG.mode === 'match' && f.passive > 18 && phase === 'fight');
+    if (L.waza !== f.waza) { h.waza.innerHTML = `<span class="pip ${f.waza >= 1 ? 'on' : ''}">W</span><span class="pip ${f.waza >= 2 ? 'on' : ''}">W</span>`; L.waza = f.waza; }
+    if (L.shido !== f.shido) { h.shido.innerHTML = Array.from({ length: f.shido }, (_, k) => `<i class="card ${k >= 2 ? 'red' : ''}"></i>`).join(''); L.shido = f.shido; }
+  });
+  if (CFG.mode === 'train') { timerEl.textContent = '∞'; clockLbl.textContent = '練習模式'; timerEl.className = ''; }
+  else if (golden) { timerEl.textContent = fmtTime(timeLeft); clockLbl.textContent = 'GOLDEN SCORE'; timerEl.className = 'gs'; }
+  else { timerEl.textContent = fmtTime(Math.ceil(timeLeft)); clockLbl.textContent = '比賽時間'; timerEl.className = timeLeft < 15 ? 'low' : ''; }
+  // move availability for player
+  const p = F[0], o = F[1], k = (p.grip || p.counterT > 0) ? kuzushiOf(o, p) : null;
+  const can = (m) => {
+    if (m === 'guard') return p.st > 3;
+    if (m === 'dodge') return p.st >= MOVES.dodge.cost;
+    if (m === 'grab') return !p.grip && p.st >= MOVES.grab.cost;
+    return (p.grip || p.counterT > 0) && p.st >= MOVES[m].cost;
+  };
+  const hot = (m) => THROWS.includes(m) && can(m) && ((k && MOVES[m].kuzushi === k) || (m === 'kouchi' && o.state === 'guard') || p.counterT > 0);
+  mvEls.forEach(el => { const m = el.dataset.m; el.classList.toggle('off', !can(m)); el.classList.toggle('hot', hot(m)); });
+  tbEls.forEach(el => { const m = el.dataset.act; el.classList.toggle('off', !can(m)); el.classList.toggle('hot', hot(m)); });
+  hintEl.classList.toggle('on', phase === 'fight' && p.grip && !k);
+  // anchored labels
+  const showTele = phase === 'fight' && o.state === 'startup';
+  teleEl.hidden = !showTele;
+  if (showTele) {
+    o.body.getWorldPosition(_v); _v.y += 1.1; const s = toScreen(_v);
+    teleEl.style.transform = `translate(${s.x}px, ${s.y}px) translate(-50%, -100%) scale(${1 + o.glow * 0.5})`;
+    teleEl.style.color = MOVES[o.move].css;
+  }
+  const showKz = phase === 'fight' && !!k && !showTele;
+  kzEl.hidden = !showKz;
+  if (showKz) {
+    o.body.getWorldPosition(_v); _v.y += 1.0; const s = toScreen(_v);
+    kzEl.style.transform = `translate(${s.x}px, ${s.y}px) translate(-50%, -100%)`;
+    kzEl.className = 'anchor' + (k === 'back' ? ' back' : '');
+    kzEl.textContent = k === 'front' ? '前崩 ▸ 單臂過肩摔' : '後崩 ▸ 大外割／捨身小內割';
+  }
+  $('#speed').classList.toggle('on', timeScale < 0.6 && !REDUCED);
+}
+const TIPS = [
+  '先按 <b>J 抓把</b>，抓到後頭上「組」會亮起',
+  '抓把後<b>往後拉</b>，對手出現「前崩」→ 用 <b>L 單臂過肩摔</b>',
+  '抓把後<b>往前推</b>，對手出現「後崩」→ 用 <b>K 大外割</b>',
+  '對手按住防守時，用 <b>I 捨身小內割</b> 破防',
+  '對手身上發光時按 <b>Space 閃避</b>，成功後不用抓把就能反擊',
+  '看體力條下方的紫色條：招式用越多，回復越慢',
+];
+
+/* =========================================================
+   Flow: menu, match, pause, result
+   ========================================================= */
+document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  const k = seg.dataset.k; CFG[k] = k === 'mode' ? b.dataset.v : +b.dataset.v;
+  $('#start').textContent = CFG.mode === 'train' ? '開始練習' : '開始比賽';
+}));
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['t1', 't2', 't3'].forEach(id => { $('#' + id).hidden = id !== b.dataset.tab; });
+}));
+$('#start').addEventListener('click', () => { initAudio(); startMatch(); });
+$('#again').addEventListener('click', () => { initAudio(); startMatch(); });
+$('#toMenu').addEventListener('click', toMenu);
+$('#resume').addEventListener('click', togglePause);
+$('#restart').addEventListener('click', () => { togglePause(); startMatch(); });
+$('#quit').addEventListener('click', () => { togglePause(); toMenu(); });
+$('#btnPause').addEventListener('click', togglePause);
+$('#btnMute').addEventListener('click', toggleMute);
+function toggleMute() { muted = !muted; if (master) master.gain.value = muted ? 0 : 0.7; $('#btnMute').textContent = muted ? '×' : '♪'; }
+function togglePause() {
+  if (phase === 'title' || phase === 'over') return;
+  paused = !paused; $('#pause').hidden = !paused;
+  for (const k in keys) keys[k] = false;
+}
+function setUI(visible) { document.body.classList.toggle('hide-ui', !visible); }
+function toMenu() {
+  $('#result').hidden = true; $('#menu').hidden = false; phase = 'title'; TD = null; laterQ = []; targetTS = 1;
+  document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
+  setUI(false); resetPositions(); for (const f of F) f.reset(true); camS.snap = false;
+}
+function startMatch() {
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  $('#menu').hidden = true; $('#result').hidden = true;
+  laterQ = []; TD = null; golden = false; timeLeft = CFG.time; targetTS = 1; timeScale = 1;
+  for (const f of F) f.reset(true);
+  resetPositions();
+  ai = new AI(F[1], CFG.lv, CFG.mode === 'train');
+  $('#cpuName').textContent = (CFG.mode === 'train' ? '練習對手 ' : 'CPU ') + AI_LV[CFG.lv].name;
+  $('#trainTip').hidden = CFG.mode !== 'train'; tipIdx = 0; tipT = 0;
+  if (CFG.mode === 'train') $('#trainTip').innerHTML = TIPS[0];
+  document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
+  setUI(true);
+  phase = 'intro';
+  for (const f of F) { f.state = 'bow'; f.t = 0; f.dur = 1.1; }
+  later(0.25, () => call('禮', 'REI', 'rei', 1.0));
+  later(1.5, () => { call('始め', 'HAJIME', 'hajime', 0.9); REF.pose = 'ref_hajime'; REF.poseT = 0.6; sfx.bell(); });
+  later(1.8, () => { if (phase === 'intro') phase = 'fight'; });
+}
+function showResult(winner, reason) {
+  const youWin = winner === F[0];
+  $('#resBig').textContent = youWin ? '勝利' : '敗北';
+  $('#resBig').className = 'big ' + (youWin ? 'win' : 'lose');
+  $('#resWhy').textContent = (youWin ? '你' : '對手') + '以「' + reason + '」獲勝';
+  const [a, b] = F;
+  const rows = [['', '你（白）', '對手（藍）'], ['剩餘血量', Math.ceil(a.hp), Math.ceil(b.hp)], ['技有', a.waza, b.waza], ['指導', a.shido, b.shido],
+    ['投技出手／成功', a.stats.tried + '／' + a.stats.landed, b.stats.tried + '／' + b.stats.landed], ['造成傷害', a.stats.dmg, b.stats.dmg],
+    ['閃避成功', a.stats.pdodge, b.stats.pdodge], ['防守成功', a.stats.blocks, b.stats.blocks], ['最終回復速度', Math.round(100 / (1 + 0.12 * a.fatigue)) + '%', Math.round(100 / (1 + 0.12 * b.fatigue)) + '%']];
+  $('#resStats').innerHTML = rows.map((r, i) => r.map((c, j) => `<div class="${i === 0 ? 'h' : ''} ${j > 0 ? 'v' : ''}">${c}</div>`).join('')).join('');
+  $('#result').hidden = false; setUI(false);
+}
+
+/* =========================================================
+   Main loop
+   ========================================================= */
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  camera.fov = w / h < 0.8 ? 60 : 45;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+resetPositions(); setUI(false);
+for (const f of ALL) { animateFree(f, 1); }
+
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dtR = Math.min(0.05, (now - last) / 1000); last = now;
+  if (paused || frozen) { renderer.render(scene, camera); return; }
+  for (let i = laterQ.length - 1; i >= 0; i--) { const L = laterQ[i]; L.t -= dtR; if (L.t <= 0) { laterQ.splice(i, 1); L.fn(); } }
+  timeScale = damp(timeScale, targetTS, 14, dtR);
+  let dt = dtR * timeScale;
+  if (hitstop > 0) { hitstop -= dtR; dt = 0; }
+  gclock += dt;
+
+  if (phase === 'fight') {
+    if (ai0) ai0.update(dt); else playerInput();
+    ai.update(dt);
+    for (const f of F) updateFighter(f, dt);
+    if (CFG.mode === 'match' && phase === 'fight') {
+      if (!golden) { timeLeft -= dt; if (timeLeft <= 0) { timeLeft = 0; timeUp(); } }
+      else timeLeft += dt;
+    }
+  } else if (phase === 'throw' && TD) {
+    updateThrow(dt);
+  } else {
+    for (const f of F) { f.moveIn.set(0, 0, 0); f.guardHeld = false; if (['bow', 'stagger', 'flinch', 'grab', 'dodge', 'startup', 'fallen'].includes(f.state)) { if (phase === 'over' && f.state === 'startup') toIdle(f); else updateFighter(f, dt); } }
+    if (phase === 'intro' || phase === 'matte' || phase === 'title') for (const f of F) { f.counterT = 0; }
+  }
+  if (phase !== 'throw') { resolveSpacing(); for (const f of F) faceOpponent(f, dt); }
+  for (const f of F) {
+    if (dt > 0) { f.vel.lerp(_v.set((f.pos.x - f.prev.x) / dt, 0, (f.pos.z - f.prev.z) / dt), 1 - Math.exp(-8 * dt)); }
+    f.prev.copy(f.pos);
+    animateFree(f, dt);
+  }
+  updateReferee(dt);
+  REF.vel.set(0, 0, 0);
+  animateFree(REF, dt);
+  if (CFG.mode === 'train' && phase === 'fight') {
+    tipT += dtR; if (tipT > 7) { tipT = 0; tipIdx = (tipIdx + 1) % TIPS.length; $('#trainTip').innerHTML = TIPS[tipIdx]; }
+  }
+  dust.update(dt); sparks.update(dt); updateRings(dt); updateGhosts(dtR); updateCrowd(dtR);
+  updateCamera(dtR);
+  REF.root.visible = camera.position.distanceTo(_v.set(REF.pos.x, 1, REF.pos.z)) > 1.3;
+  if (phase !== 'title') updateHUD();
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(frame);
+
+// debug / test hook
+window.__judo = { set frozen(v) { frozen = v; }, set auto(lv) { ai0 = lv ? new AI(F[0], lv, false) : null; }, scrub(t) { if (!TD) return; TD.t = t; updateThrow(0); camS.snap = true; updateCamera(0.016); updateRings(0); renderer.render(scene, camera); }, F, CFG, get phase() { return phase; }, get TD() { return TD; }, startMatch, tryAction, queueAction, AI_LV, MOVES, get timeScale() { return timeScale; } };
+})();
+</script>
+</body>
+</html>
