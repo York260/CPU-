@@ -64,7 +64,7 @@ button { cursor: pointer; }
 .timeline li.now { border-color: var(--gold); color: var(--ink); font-weight: 700; }
 
 .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
-@media (max-width: 840px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 840px) { .layout { grid-template-columns: minmax(0, 1fr); } .layout > section { order: -1; } }
 
 /* 學生證 */
 .idcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -783,9 +783,9 @@ function apply(out) {
 function yearEnd(out) {
   const y = S.stage, lines = [];
   const checks = [
-    { k: "aca", name: "學科成績", thr: 30 + y * 5, fix: { aca: 6, men: -4 } },
-    { k: "fit", name: "體能測驗", thr: 30 + y * 5, fix: { fit: 6, men: -3 } },
-    { k: "mor", name: "操行成績", thr: 25, fix: { mor: 5, men: -2 } },
+    { k: "aca", name: "學科成績", thr: 35 + y * 5, fix: { aca: 6, men: -4 } },
+    { k: "fit", name: "體能測驗", thr: 35 + y * 5, fix: { fit: 6, men: -3 } },
+    { k: "mor", name: "操行成績", thr: 30, fix: { mor: 5, men: -2 } },
   ];
   checks.forEach((c) => {
     const v = S.stats[c.k];
@@ -805,10 +805,10 @@ function yearEnd(out) {
 
 function exam() {
   const s = S.stats, d = dept();
-  const score = Math.round(s.aca * 0.55 + s.men * 0.2 + s.mor * 0.1 + s.fit * 0.08 + s.soc * 0.07 + S.bonus + (S.flags.prep ? 4 : 0) + rnd(-6, 6));
+  const score = Math.round(s.aca * 0.5 + s.men * 0.15 + s.mor * 0.1 + s.fit * 0.05 + s.soc * 0.05 + S.bonus + (S.flags.prep ? 4 : 0) + rnd(-8, 8));
   S.examScore = score;
   S.log.push({ st: "特考", ev: "放榜", c: "總成績 " + score });
-  finish(score >= 52 ? "pass" : "failExam");
+  finish(score >= 58 ? "pass" : "failExam");
 }
 
 function continueOn() {
@@ -846,7 +846,7 @@ function finish(kind) {
     p: ["你把准考證號碼輸入了三次，結果都一樣。", "警大公費生畢業後必須通過特考才能任官；你決定明年再戰。一起畢業的同學陸續報到，你在群組裡看他們分享第一天上班的照片。", "這一年會很難熬，但你已經撐過四年了。"] };
   else {
     const t = topStat();
-    const top = S.examScore >= 80;
+    const top = S.examScore >= 82;
     const vale = S.stats.aca >= 85 && S.stats.mor >= 75;
     let unit = d.unit, role = d.role;
     if (f.front && d.id === "adm") unit = "市政府警察局保安警察大隊";
