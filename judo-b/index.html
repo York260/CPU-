@@ -10,6 +10,11 @@
 <style>
 /* Layout: 全螢幕 3D 場館；上方是 IJF 計分板風格的血條／體力條，下方是招式列（桌機）或虛擬搖桿（手機）。 */
 :root {
+  --paper: #fbf9f3;
+  --paper-ink: #1b2130;
+  --paper-muted: #5d6677;
+  --paper-line: #e2ddd0;
+  --paper-accent: #9a6a10;
   --bg: #06080c;
   --panel: rgba(9, 13, 21, 0.84);
   --panel-solid: #0d131e;
@@ -247,6 +252,20 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
 @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(232,181,58,.25); } }
 #coach.clear { border-left-color: var(--st); }
 .cine #coach { opacity: 0; pointer-events: none; }
+.row-l { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.rules-ov { background: rgba(4,6,10,.72); z-index: 5; }
+.rcard { width: min(720px, 100%); max-height: calc(100% - 8px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); border-radius: 6px; padding: 18px 22px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: grid; gap: 12px; align-content: start; }
+.rhead { display: flex; align-items: center; justify-content: space-between; }
+.rhead b { font: 900 22px/1.2 var(--f-display); letter-spacing: .08em; }
+.rhead button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--paper-line); background: #fff; color: var(--paper-ink); font-size: 16px; cursor: pointer; }
+.rcard .tabs { border-bottom-color: var(--paper-line); }
+.rcard .tabs button { color: var(--paper-muted); }
+.rcard .tabs button.on { color: var(--paper-ink); border-bottom-color: var(--paper-accent); }
+.rcard .panel { color: var(--paper-ink); max-width: none; }
+.rcard .panel b { color: var(--paper-accent); }
+.rcard .panel th { color: var(--paper-muted); }
+.rcard .panel td, .rcard .panel th { border-bottom-color: var(--paper-line); }
+.rcard .panel kbd { background: #fff; border-color: #cfc8b8; color: var(--paper-ink); }
 #loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); font: 700 14px/1.6 var(--f-body); color: var(--muted); text-align: center; padding: 16px; }
 
 @media (max-width: 760px) {
@@ -358,61 +377,65 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
     <div class="sheet">
       <div class="eyebrow">3D JUDO FIGHTING · 柔道格鬥</div>
       <h1><span class="k">一本</span><span class="e">IPPON 柔道對決</span></h1>
-      <p class="lede">先抓把，再用推拉製造崩勢，看準時機出手。體力不夠就不能出招，招式用得越多，體力回得越慢。第一次玩，建議先選「教學模式」。</p>
+      <p class="lede">抓把、推拉崩勢，看準時機投倒對手。第一次玩建議選「教學模式」。</p>
       <div class="opts">
         <div class="opt"><span>模式</span><div class="seg" data-k="mode"><button data-v="tutor">教學模式<small>新手推薦</small></button><button data-v="match" class="on">正式比賽</button><button data-v="train">練習模式</button></div></div>
         <div class="opt"><span>對手段位</span><div class="seg" data-k="lv"><button data-v="1">初段<small>入門</small></button><button data-v="2" class="on">三段<small>標準</small></button><button data-v="3">國手<small>困難</small></button></div></div>
         <div class="opt"><span>比賽時間</span><div class="seg" data-k="time"><button data-v="90">1:30</button><button data-v="120" class="on">2:00</button><button data-v="240">4:00<small>IJF</small></button></div></div>
       </div>
-      <button id="start" class="cta">開始比賽</button>
-      <div>
-        <div class="tabs" role="tablist">
-          <button class="on" data-tab="t1">操作</button>
-          <button data-tab="t2">柔道教室</button>
-          <button data-tab="t3">規則與計分</button>
-        </div>
-        <div class="panel" id="t1">
-          <div class="tw"><table>
-            <tr><th data-ctl="hdr"></th><th>動作</th><th>說明</th></tr>
-            <tr><td data-ctl="moveAll"></td><td>移動</td><td>左右靠近或後退，上下繞圈側移</td></tr>
-            <tr><td data-ctl="grab"></td><td>抓把</td><td>造成少量傷害並取得組手；投技一定要先抓把</td></tr>
-            <tr><td data-ctl="osoto"></td><td>大外割</td><td>對手後退或被你推時最有效</td></tr>
-            <tr><td data-ctl="seoi"></td><td>單臂過肩摔</td><td>對手前壓或被你拉時最有效，傷害最高</td></tr>
-            <tr><td data-ctl="kouchi"></td><td>捨身小內割</td><td>出招最快、能破防守，但被閃掉會自己倒地</td></tr>
-            <tr><td data-ctl="dodge"></td><td>閃避</td><td>短暫無敵，並甩開所有組手</td></tr>
-            <tr><td data-ctl="guardHold"></td><td>防守</td><td>擋得住大外割和過肩摔，持續消耗體力</td></tr>
-            <tr><td data-ctl="pause"></td><td>暫停</td><td data-ctl="mute"></td></tr>
-          </table></div>
-          <p data-ctl="note"></p>
-        </div>
-        <div class="panel" id="t2" hidden>
-          <ul>
-            <li><b>崩し（崩勢）</b>：抓到把之後，往前推，對手會往後倒 →「後崩」，用大外割或捨身小內割；往後拉，對手會往前撲 →「前崩」，用單臂過肩摔。對手頭上會亮起提示，招式列也會標出「崩」。</li>
-            <li><b>組手</b>：被對手抓住時，你的體力回復慢 40%。用閃避可以切掉對手的手。組手抓太久（7 秒）不進攻會自動鬆手。</li>
-            <li><b>返し技（反擊）</b>：對手出招會有前搖（身上發光、頭上「!」）。在前搖期間閃避成功，接下來 1.3 秒內不用抓把就能直接投，而且得分條件大幅提高。</li>
-            <li><b>防守姿勢</b>：沉腰防守能擋住大外割與過肩摔，被擋的一方會失衡。但雙腳張開的防守姿勢正好給了小內割機會，捨身小內割可以破防。</li>
-            <li><b>捨身技的風險</b>：捨身小內割出招最快，但落空時自己會倒在地上，對手有 2 秒反擊時間。</li>
-            <li><b>體力管理</b>：每個動作都會累積疲勞，疲勞越高，體力回復越慢（看體力條下方的紫色條）。疲勞只會非常緩慢地消退，所以別亂出招。</li>
-          </ul>
-        </div>
-        <div class="panel" id="t3" hidden>
-          <ul>
-            <li><b>一本</b>：直接獲勝。完美條件的投技（例如返し技＋正確崩勢）或把對手血量打到 0 都算一本。</li>
-            <li><b>技有（半勝）</b>：條件好的投技，傷害 ×1.5。累積兩次技有＝<b>合技一本</b>，獲勝。</li>
-            <li><b>一般投技</b>：只造成傷害，不計分。</li>
-            <li><b>指導</b>：25 秒沒有出投技（消極）、防守姿勢超過 3.5 秒，各給一次指導。<b>三次指導＝反則負</b>。</li>
-            <li><b>時間到</b>：先比技有數；相同時血量差 10 以上判優勢勝；再相同就進入<b>黃金得分</b>，先投成功的人獲勝。</li>
-            <li>每次投技結束，主審喊「待て」，兩人回到開始線重新開始。</li>
-          </ul>
-          <div class="tw"><table>
-            <tr><th>招式</th><th class="num">體力</th><th class="num">前搖</th><th class="num">傷害</th><th>有利崩勢</th></tr>
-            <tr><td>抓把</td><td class="num">10</td><td class="num">0.20s</td><td class="num">4</td><td>—</td></tr>
-            <tr><td>大外割</td><td class="num">24</td><td class="num">0.32s</td><td class="num">20</td><td>後崩</td></tr>
-            <tr><td>單臂過肩摔</td><td class="num">30</td><td class="num">0.40s</td><td class="num">24</td><td>前崩</td></tr>
-            <tr><td>捨身小內割</td><td class="num">20</td><td class="num">0.22s</td><td class="num">17</td><td>後崩／破防</td></tr>
-          </table></div>
-        </div>
-      </div>
+      <div class="row-l"><button id="start" class="cta">開始比賽</button><button id="rulesBtn" class="ghost">詳細規則</button></div>
+    </div>
+  </div>
+
+  <div id="rules" class="ov rules-ov" hidden>
+    <div class="rcard" role="dialog" aria-label="詳細規則">
+      <div class="rhead"><b>詳細規則</b><button id="rulesClose" aria-label="關閉">✕</button></div>
+          <div class="tabs" role="tablist">
+            <button class="on" data-tab="t1">操作</button>
+            <button data-tab="t2">柔道教室</button>
+            <button data-tab="t3">規則與計分</button>
+          </div>
+          <div class="panel" id="t1">
+            <div class="tw"><table>
+              <tr><th data-ctl="hdr"></th><th>動作</th><th>說明</th></tr>
+              <tr><td data-ctl="moveAll"></td><td>移動</td><td>左右靠近或後退，上下繞圈側移</td></tr>
+              <tr><td data-ctl="grab"></td><td>抓把</td><td>造成少量傷害並取得組手；投技一定要先抓把</td></tr>
+              <tr><td data-ctl="osoto"></td><td>大外割</td><td>對手後退或被你推時最有效</td></tr>
+              <tr><td data-ctl="seoi"></td><td>單臂過肩摔</td><td>對手前壓或被你拉時最有效，傷害最高</td></tr>
+              <tr><td data-ctl="kouchi"></td><td>捨身小內割</td><td>出招最快、能破防守，但被閃掉會自己倒地</td></tr>
+              <tr><td data-ctl="dodge"></td><td>閃避</td><td>短暫無敵，並甩開所有組手</td></tr>
+              <tr><td data-ctl="guardHold"></td><td>防守</td><td>擋得住大外割和過肩摔，持續消耗體力</td></tr>
+              <tr><td data-ctl="pause"></td><td>暫停</td><td data-ctl="mute"></td></tr>
+            </table></div>
+            <p data-ctl="note"></p>
+          </div>
+          <div class="panel" id="t2" hidden>
+            <ul>
+              <li><b>崩し（崩勢）</b>：抓到把之後，往前推，對手會往後倒 →「後崩」，用大外割或捨身小內割；往後拉，對手會往前撲 →「前崩」，用單臂過肩摔。對手頭上會亮起提示，招式列也會標出「崩」。</li>
+              <li><b>組手</b>：被對手抓住時，你的體力回復慢 40%。用閃避可以切掉對手的手。組手抓太久（7 秒）不進攻會自動鬆手。</li>
+              <li><b>返し技（反擊）</b>：對手出招會有前搖（身上發光、頭上「!」）。在前搖期間閃避成功，接下來 1.3 秒內不用抓把就能直接投，而且得分條件大幅提高。</li>
+              <li><b>防守姿勢</b>：沉腰防守能擋住大外割與過肩摔，被擋的一方會失衡。但雙腳張開的防守姿勢正好給了小內割機會，捨身小內割可以破防。</li>
+              <li><b>捨身技的風險</b>：捨身小內割出招最快，但落空時自己會倒在地上，對手有 2 秒反擊時間。</li>
+              <li><b>體力管理</b>：每個動作都會累積疲勞，疲勞越高，體力回復越慢（看體力條下方的紫色條）。疲勞只會非常緩慢地消退，所以別亂出招。</li>
+            </ul>
+          </div>
+          <div class="panel" id="t3" hidden>
+            <ul>
+              <li><b>一本</b>：直接獲勝。完美條件的投技（例如返し技＋正確崩勢）或把對手血量打到 0 都算一本。</li>
+              <li><b>技有（半勝）</b>：條件好的投技，傷害 ×1.5。累積兩次技有＝<b>合技一本</b>，獲勝。</li>
+              <li><b>一般投技</b>：只造成傷害，不計分。</li>
+              <li><b>指導</b>：25 秒沒有出投技（消極）、防守姿勢超過 3.5 秒，各給一次指導。<b>三次指導＝反則負</b>。</li>
+              <li><b>時間到</b>：先比技有數；相同時血量差 10 以上判優勢勝；再相同就進入<b>黃金得分</b>，先投成功的人獲勝。</li>
+              <li>每次投技結束，主審喊「待て」，兩人回到開始線重新開始。</li>
+            </ul>
+            <div class="tw"><table>
+              <tr><th>招式</th><th class="num">體力</th><th class="num">前搖</th><th class="num">傷害</th><th>有利崩勢</th></tr>
+              <tr><td>抓把</td><td class="num">10</td><td class="num">0.20s</td><td class="num">4</td><td>—</td></tr>
+              <tr><td>大外割</td><td class="num">24</td><td class="num">0.32s</td><td class="num">20</td><td>後崩</td></tr>
+              <tr><td>單臂過肩摔</td><td class="num">30</td><td class="num">0.40s</td><td class="num">24</td><td>前崩</td></tr>
+              <tr><td>捨身小內割</td><td class="num">20</td><td class="num">0.22s</td><td class="num">17</td><td>後崩／破防</td></tr>
+            </table></div>
+          </div>
     </div>
   </div>
 
@@ -1566,6 +1589,7 @@ const KEYMAP = { KeyJ: 'grab', KeyK: 'osoto', KeyL: 'seoi', KeyI: 'kouchi', Spac
 addEventListener('keydown', (e) => {
   if (e.repeat && KEYMAP[e.code]) { e.preventDefault(); return; }
   keys[e.code] = true;
+  if (e.code === 'Escape' && !$('#rules').hidden) { $('#rules').hidden = true; return; }
   if (e.code === 'Escape' || e.code === 'KeyP') { togglePause(); e.preventDefault(); return; }
   if (e.code === 'KeyM') { toggleMute(); return; }
   if (e.code === 'Enter' && TUT.on && TUT.done && !paused) { e.preventDefault(); tutNext(); return; }
@@ -1998,6 +2022,9 @@ function syncSeg() {
   $('#start').textContent = CFG.mode === 'train' ? '開始練習' : CFG.mode === 'tutor' ? '開始教學' : '開始比賽';
 }
 $('#toMenu').addEventListener('click', toMenu);
+$('#rulesBtn').addEventListener('click', () => { $('#rules').hidden = false; });
+$('#rulesClose').addEventListener('click', () => { $('#rules').hidden = true; });
+$('#rules').addEventListener('click', (e) => { if (e.target.id === 'rules') $('#rules').hidden = true; });
 $('#resume').addEventListener('click', togglePause);
 $('#restart').addEventListener('click', () => { togglePause(); startMatch(); });
 $('#quit').addEventListener('click', () => { togglePause(); toMenu(); });
