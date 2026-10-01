@@ -92,6 +92,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nw-track.time i { background: var(--gold); }
 .nw-track.esc i { background: var(--red); }
 .nw-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0, 0, 0, .6); }
+.kg { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.kg-bar { --kl: rgba(255, 255, 255, .1); --kr: rgba(255, 255, 255, .1); position: relative; flex: 1; height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--kl) 0%, rgba(255, 255, 255, .06) 30%, rgba(255, 255, 255, .06) 70%, var(--kr) 100%); border: 1px solid rgba(255, 255, 255, .14); }
+.kg-c { position: absolute; left: 50%; top: 2px; bottom: 2px; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, .3); }
+#kgM { position: absolute; left: 50%; top: -4px; width: 8px; height: 20px; margin-left: -4px; border-radius: 3px; background: #fff; box-shadow: 0 0 8px rgba(255, 255, 255, .8); }
+.kg.zap #kgM { box-shadow: 0 0 14px #fff, 0 0 4px #FFD36B; background: #FFF4D6; }
+.kg.end #kgM { background: #FF8A6B; box-shadow: 0 0 14px #FF8A6B; }
 .nw-legend { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
 
 /* 寢技方向鍵：三鍵等寬平均分布 */
@@ -319,6 +325,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   <div class="nw-row"><b id="nwTitle">壓制中</b><span id="nwTime">0.0 秒</span></div>
   <div class="nw-track time"><i id="nwTimeBar"></i><span class="nw-tick" style="left:25%"></span><span class="nw-tick" style="left:50%"></span></div>
   <div class="nw-track esc"><i id="nwEsc"></i></div>
+  <div class="kg" id="kg" hidden><span id="kgL">壓住</span><div class="kg-bar" id="kgBar"><i class="kg-c"></i><b id="kgM"></b></div><span id="kgR">掙脫</span></div>
   <div class="nw-legend"><span>5 秒有效・10 秒半勝・20 秒一本</span><span id="nwEscLab">紅條：逃脫</span></div>
 </div>
 <div class="pad" id="pad" hidden>
@@ -377,9 +384,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
         <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
         <li>被丟體、過肩摔、大腰摔成<b>有效</b>時，有時會出現<b>前迴轉</b>的機會：畫面稍微變慢、頭上出現藍色提示時按下，滾翻後不算分，對手也不能壓制。半勝以上來不及滾。</li>
-        <li>摔倒對手後選壓制：<b>袈裟固</b>連打、<b>上四方固</b>按亮起的方向。</li>
+        <li>摔倒對手後選壓制：<b>袈裟固</b>連打比快，把計量器的標推到底（被壓時推到底就掙脫）；<b>上四方固</b>按亮起的方向。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
-        <li>消極或出界會被判指導，3 次判負。</li>
+        <li>太久不出招、超過 15 秒沒抓把、抓把後 12 秒只防守不進攻、出界，都會被判指導，3 次判負。</li>
         <li>電腦：WASD 移動，J 抓把、K 閃避／防禦，抓把後 1、2、3 出招。</li>
       </ul>
     </details>
@@ -423,9 +430,9 @@ $("loading").hidden = true;
 
 /* ---------- 難度 ---------- */
 const DIFFS = [
-  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, mashGain: 3.8, mashDecay: 7, aiEsc: 9, ukemi: 0.3 },
-  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, mashGain: 3.2, mashDecay: 9, aiEsc: 12, ukemi: 0.45 },
-  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, mashGain: 2.7, mashDecay: 11, aiEsc: 15, ukemi: 0.6 },
+  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, aiTap: 4.2, ukemi: 0.3 },
+  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, aiTap: 5.2, ukemi: 0.45 },
+  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, aiTap: 6.2, ukemi: 0.6 },
 ];
 let DIFF = DIFFS[1];
 let MATCH_TIME = 90;
@@ -645,7 +652,7 @@ function makeFighter(side) {
     side, isAI: !white, fig, name: white ? "白" : "藍",
     x: 0, z: 0, yaw: 0, cur: clonePose(POSE.STAND), tgt: POSE.STAND, rate: 10,
     stamina: 100, sc: { ippon: 0, waza: 0, yuko: 0, shido: 0 },
-    act: null, cool: 0, push: 0, pushS: 0, lean: 0, lastAttack: 0, counterT: 0, walkPh: 0, moveAmt: 0,
+    act: null, cool: 0, push: 0, pushS: 0, lean: 0, lastAttack: 0, noGrip: 0, defT: 0, counterT: 0, walkPh: 0, moveAmt: 0,
     ai: { mode: "resist", modeT: 0, decideT: 0, gripT: 0 },
   };
 }
@@ -820,6 +827,7 @@ function spend(f, n) { f.stamina = clamp(f.stamina - n, 0, 100); }
 function tryGrip(f) {
   if (busy(f) || f.cool > 0) return;
   spend(f, 6);
+  f.noGrip = 0; f.warnG = false;
   setAct(f, "reach", f.isAI ? DIFF.wind * 0.65 : 0.26);
   const o = other(f);
   if (o.isAI && !busy(o) && Math.random() < DIFF.dodgeP && dist(f, o) < 1.4) o.ai.dodgeAt = DIFF.tau * 0.45;
@@ -838,7 +846,7 @@ function tryBrace(f) {
 function tryThrow(f, tech) {
   if (busy(f) || f.cool > 0 || !G.gripped) return;
   spend(f, TECHS[tech].cost);
-  f.lastAttack = 0;
+  f.lastAttack = 0; f.defT = 0; f.warnD = false;
   const wind = f.isAI ? DIFF.wind : TECHS[tech].wind;
   setAct(f, "throwWind", wind, { tech });
   const o = other(f);
@@ -864,6 +872,7 @@ function resolveReach(f) {
   if (Math.random() < p) {
     G.gripped = true;
     G.initiative = { who: f, t: 3 };
+    for (const x of [W, B]) { x.noGrip = 0; x.warnG = false; }
     for (const x of [W, B]) { if (x.act && x.act.type === "reach") x.act = null; x.pushS = 0; x.push = 0; }
     toast(f.isAI ? "被對手抓住了" : "抓把成功！", f.isAI ? "bad" : "good");
     GC.q = 0.45; clack();
@@ -1000,8 +1009,8 @@ function startThrow(att, def, tech, result) {
   an.slow0 = T.peak[0];
   an.slowTs = [1, 0.25, 0.14][L];     // 升空到最高點的慢動作倍率
   an.flashT = [0, 0.14, 0.32][L];     // 施技瞬間的「大招閃」定格（真實秒數）
-  an.freezeT = [0, 1.0, 1.9][L];      // 空中定格環繞的長度
-  an.sweep = [0, 1.9, 3.7][L];        // 環繞角度（弧度）：約 110° 與 210°
+  an.freezeT = [0, 1.6, 2.4][L];      // 空中定格環繞的長度
+  an.sweep = [0, PI * 2, PI * 2][L];  // 環繞一整圈（360°）
   att.act = def.act = null;
   att.lastAttack = 0;
   G.gripped = false;
@@ -1145,19 +1154,27 @@ function startHold(holder, held, type = "kesa") {
     to = { x: chest.x + side.x * 0.5 * s, z: chest.z + side.z * 0.5 * s };
     toYaw = Math.atan2(chest.x - to.x, chest.z - to.z);
   }
-  G.hold = { type, holder, held, t: 0, esc: 0, phase: "in", inT: 0, from: { x: holder.x, z: holder.z, yaw: holder.yaw, pose: clonePose(holder.cur) }, to, toYaw, prompt: null, next: 0.7, fb: 0, taps: 0, pulse: 0 };
+  G.hold = { type, holder, held, t: 0, esc: 0, phase: "in", inT: 0, from: { x: holder.x, z: holder.z, yaw: holder.yaw, pose: clonePose(holder.cur) }, to, toYaw, prompt: null, next: 0.7, fb: 0, taps: 0, pulse: 0,
+    m: 0, mv: 0, A: 0, av: 0, hr: 0, rr: 0, aiAcc: 0, ph: rand(0, PI), spin: Math.random() < 0.5 ? 1 : -1 };
   G.state = "osaekomi";
   call("抑え込み", "壓制・" + HOLD_NAME[type], holder === W ? "" : "blue", 1.2);
   refGesture("R_OSAE", 99);
 }
-// 袈裟固連打：被壓時增加逃脫，壓人時降低對手逃脫
+/* 袈裟固：水平計量器。標從中間開始，被壓者每點一下往「掙脫」端推、壓制者往回推；
+   標很靈敏（每下都會明顯晃動），推到掙脫端就逃脫。被壓者點得越快，兩人一起轉得越快。 */
+const KESA_I = 0.15, KESA_TAU = 0.6;
+function kesaPush(h, byHeld) {
+  const s = byHeld ? 1 : -1;
+  h.av += s * KESA_I;   // 標的平衡點被推過去
+  h.mv += s * 0.9;      // 標本身被彈一下，所以會前後擺盪
+  if (byHeld) h.hr += 1 / KESA_TAU; else h.rr += 1 / KESA_TAU;
+  h.jolt = byHeld ? 1 : -0.6;
+}
 function mash() {
   const h = G.hold;
   if (G.state !== "osaekomi" || !h || h.phase !== "on" || h.type !== "kesa") return;
-  if (h.held === W) h.esc += DIFF.mashGain;
-  else h.esc = Math.max(0, h.esc - 2.6);
+  kesaPush(h, h.held === W);
   h.taps++; h.pulse = 0.12; if (!h.combo) h.combo = 0;
-  h.jolt = h.held === W ? 1 : -0.6;
   // 連擊計數：0.45 秒內接著點就累加
   const now = G.time;
   h.combo = now - (h.lastTap || -9) < 0.45 ? (h.combo || 0) + 1 : 1;
@@ -1174,9 +1191,9 @@ function mash() {
   el.style.top = (r.top - 10 + Math.random() * 20) + "px";
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 600);
-  const esc = $("nwEsc").parentElement;
-  esc.classList.remove("zap"); void esc.offsetWidth; esc.classList.add("zap");
-  setTimeout(() => esc.classList.remove("zap"), 120);
+  const kg = $("kg");
+  kg.classList.remove("zap"); void kg.offsetWidth; kg.classList.add("zap");
+  setTimeout(() => kg.classList.remove("zap"), 120);
   shake = Math.max(shake, 0.05);
 }
 function newPrompt() {
@@ -1224,10 +1241,33 @@ function stepHold(dt) {
   const hp = clonePose(h.type === "kami" ? POSE.KAMI : POSE.HOLD); hp.body[2] = -wig * 0.5;
   if (h.pulse > 0) h.pulse -= dt;
   dampPose(h.holder.cur, hp, 10, dt);
-  // 袈裟固：連打比拚
+  // 袈裟固：連打推標
   if (h.type === "kesa") {
-    if (h.held === W) h.esc = Math.max(0, h.esc - DIFF.mashDecay * dt);
-    else h.esc += DIFF.aiEsc * (0.6 + 0.8 * Math.pow(Math.sin(h.t * 1.7), 2)) * dt;
+    // AI 一陣一陣地點（忽快忽慢），所以標會前後擺盪
+    const rate = DIFF.aiTap * (0.55 + 0.9 * Math.pow(Math.sin(h.t * 1.9 + h.ph), 2));
+    h.aiAcc += rate * dt * rand(0.5, 1.5);
+    while (h.aiAcc >= 1) { h.aiAcc -= 1; kesaPush(h, h.held !== W); }
+    h.hr *= Math.exp(-dt / KESA_TAU); h.rr *= Math.exp(-dt / KESA_TAU);
+    // 平衡點：雙方連打速度的差慢慢推動
+    h.av *= Math.exp(-1.6 * dt);
+    h.A = clamp(h.A + h.av * dt, -1.05, 1.05);
+    if (h.A <= -1.05) h.av = Math.abs(h.av) * 0.3;
+    // 標：用彈簧掛在平衡點上、阻尼很小，所以每一下都會明顯晃
+    h.mv += (70 * (h.A - h.m) - 3.2 * h.mv + rand(-6, 6)) * dt;
+    h.m += h.mv * dt;
+    if (h.m <= -1) { h.m = -1; h.mv = Math.abs(h.mv) * 0.5; }
+    if (h.m >= 1) h.m = 1;
+    h.esc = h.m >= 1 ? 100 : (h.m + 1) * 49.9;
+    // 被壓者掙扎帶著兩人繞著被壓者胸口緩緩旋轉，速度跟著被壓者的連打速度
+    const a = h.spin * 0.06 * Math.min(h.hr, 10) * dt;
+    if (a) {
+      const yD = h.held.yaw, c = { x: h.held.x - Math.sin(yD) * 0.32, z: h.held.z - Math.cos(yD) * 0.32 };
+      const ca = Math.cos(a), sa = Math.sin(a);
+      for (const f of [h.held, h.holder]) {
+        const dx = f.x - c.x, dz = f.z - c.z;
+        f.x = c.x + dx * ca + dz * sa; f.z = c.z + dz * ca - dx * sa; f.yaw += a;
+      }
+    }
   }
   // 上四方固：方向提示
   const p = h.type === "kami" ? h.prompt : null;
@@ -1293,16 +1333,17 @@ function matte(delay = 0.3) {
 }
 function beginReset() {
   G.state = "reset";
-  G.reset = { t: 0, from: [W, B].map((f) => ({ x: f.x, z: f.z })) };
+  // 回到開始線：依兩人目前左右決定用哪一邊的線（不用穿過對方），鏡頭再轉到讓白（玩家）在左邊的那一側
+  G.reset = { t: 0, from: [W, B].map((f) => ({ x: f.x, z: f.z })), side: W.x <= B.x ? 1 : -1 };
   for (const f of [W, B]) { f.act = null; f.pushS = f.push = f.lean = 0; f.cur.body[0] = wrap(f.cur.body[0]); }
 }
 function stepReset(dt) {
   const r = G.reset; r.t += dt;
   const s = smooth(clamp(r.t / 1.3, 0, 1));
   [W, B].forEach((f, i) => {
-    const mx = f === W ? -2 : 2;
+    const mx = (f === W ? -2 : 2) * r.side;
     f.x = lerp(r.from[i].x, mx, s); f.z = lerp(r.from[i].z, 0, s);
-    turnTo(f, f === W ? PI / 2 : -PI / 2, 8, dt);
+    turnTo(f, (f === W ? PI / 2 : -PI / 2) * r.side, 8, dt);
     f.tgt = r.t < 1.0 ? POSE.STAND : POSE.READY; f.rate = 6;
     f.moveAmt = r.t < 1.2 ? 0.6 : 0;
   });
@@ -1314,9 +1355,10 @@ function stepReset(dt) {
 }
 
 /* ---------- 指導 ---------- */
+const SHIDO_NOGRIP = 15, SHIDO_DEF = 12;
 function giveShido(f, why) {
   f.sc.shido++;
-  f.lastAttack = 0;
+  f.lastAttack = 0; f.noGrip = 0; f.defT = 0; f.warnG = f.warnD = false;
   renderBoard();
   call("指導", `${f.name}・${why}`, f === W ? "" : "blue", 1.4);
   refGesture("R_SHIDO", 1.2);
@@ -1340,7 +1382,7 @@ function startMatch() {
   setupTechButtons();
   for (const f of [W, B]) {
     f.sc = { ippon: 0, waza: 0, yuko: 0, shido: 0 };
-    f.stamina = 100; f.act = null; f.cool = 0; f.push = f.pushS = f.lean = 0; f.lastAttack = 0; f.counterT = 0;
+    f.stamina = 100; f.act = null; f.cool = 0; f.push = f.pushS = f.lean = 0; f.lastAttack = 0; f.counterT = 0; f.noGrip = 0; f.defT = 0; f.warnG = f.warnD = false;
     f.x = f === W ? -4.6 : 4.6; f.z = 0; f.yaw = f === W ? PI / 2 : -PI / 2;
     f.cur = clonePose(POSE.STAND);
   }
@@ -1567,9 +1609,11 @@ function aiNeutral(dt) {
   // 避免出界
   if (Math.abs(f.x) > 2.8) mx -= Math.sign(f.x) * 1.2;
   if (Math.abs(f.z) > 2.8) mz -= Math.sign(f.z) * 1.2;
+  // 快被判「不抓把」時主動靠近抓
+  if (f.noGrip > SHIDO_NOGRIP - 6 && d > 1.0) { mx += u.x * 0.8; mz += u.z * 0.8; }
   const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
   ai.gripT -= dt;
-  if (d < 1.15 && ai.gripT <= 0 && f.cool <= 0) {
+  if (d < (f.noGrip > SHIDO_NOGRIP - 6 ? 1.25 : 1.15) && ai.gripT <= 0 && f.cool <= 0) {
     if (Math.random() < dt * 1.3 * DIFF.aggr || (o.act && o.act.type === "stagger")) { tryGrip(f); ai.gripT = rand(0.6, 1.4); }
   }
   return { x: mx, z: mz };
@@ -1591,7 +1635,7 @@ function aiGrip(dt) {
   if (busy(f) || f.cool > 0) return;
   let best = f.loadout[0], bc = 0;
   for (const t of f.loadout) { const c = throwChance(f, o, t); if (c > bc) { bc = c; best = t; } }
-  const pass = f.lastAttack > 20 ? 0.35 : 0;
+  const pass = f.lastAttack > 20 || f.defT > SHIDO_DEF - 5 ? 0.45 : 0;
   if (bc > 0.32 && Math.random() < dt * 2.6 * DIFF.aggr) tryThrow(f, best);
   else if (Math.random() < dt * (0.07 + pass) * DIFF.aggr) tryThrow(f, f.loadout[Math.floor(Math.random() * f.loadout.length)]);
   else if (Math.random() < dt * 0.05) { G.gripped = false; toast("對手切開了抓把"); }
@@ -1621,8 +1665,15 @@ function stepFight(dt) {
     }
   }
   if (G.initiative) { G.initiative.t -= dt; if (G.initiative.t <= 0) G.initiative = null; }
-  // 消極指導
-  for (const f of [W, B]) if (f.lastAttack > 30) { if (giveShido(f, "消極")) return; }
+  // 消極指導：太久不出招、太久沒抓把、抓把後只防守
+  for (const f of [W, B]) {
+    if (!G.gripped) f.noGrip += dt;
+    if (f.lastAttack > 30) { if (giveShido(f, "消極")) return; }
+    if (f.noGrip > SHIDO_NOGRIP) { if (giveShido(f, "不抓把")) return; }
+    if (f.defT > SHIDO_DEF) { if (giveShido(f, "防守過久")) return; }
+  }
+  if (W.noGrip > SHIDO_NOGRIP - 4 && !W.warnG) { W.warnG = true; toast("太久沒抓把，快被判指導了", "bad", 1.6); }
+  if (W.defT > SHIDO_DEF - 4 && !W.warnD) { W.warnD = true; toast("一直防守不進攻，快被判指導了", "bad", 1.6); }
 
   const mv = camRelative(input.x, input.y);
   if (!G.gripped) {
@@ -1650,6 +1701,8 @@ function stepFight(dt) {
     for (const f of [W, B]) {
       const o = other(f);
       const brace = f.act && f.act.type === "brace";
+      // 抓把後不出招就累積「防守時間」，按防禦擋招算更多
+      f.defT += dt * (brace ? 1.8 : 1);
       f.lean = clamp((f.pushS - o.pushS) * (brace ? 0.3 : 1), -1.6, 1.6);
       f.stamina = clamp(f.stamina - dt * 5 * Math.abs(f.pushS) + dt * 2.5, 0, 100);
     }
@@ -1784,7 +1837,9 @@ function updateGameCam(dt) {
   const mid = { x: (W.x + B.x) / 2, z: (W.z + B.z) / 2 };
   const sep = dist(W, B);
   // 側面方向：兩人連線方向 ±90°，選和目前鏡頭角度差最小的那一個
-  if (sep > 0.35) {
+  if (G.state === "reset" || G.state === "intro") GC.yawT = G.state === "reset" && G.reset && G.reset.side < 0 ? PI : 0; // 回到開始線：白（玩家）在畫面左邊
+  else if (G.state === "osaekomi") GC.yawT = GC.yaw; // 壓制中鏡頭角度不動，看得出兩人在地上轉
+  else if (sep > 0.35) {
     const ax = Math.atan2(B.x - W.x, B.z - W.z);
     const c1 = ax + PI / 2, c2 = ax - PI / 2;
     GC.yawT = Math.abs(wrap(c1 - GC.yaw)) <= Math.abs(wrap(c2 - GC.yaw)) ? c1 : c2;
@@ -1799,9 +1854,9 @@ function updateGameCam(dt) {
   if (GC.snap) {
     Object.assign(GC, { yaw: GC.yawT, yv: 0, dist: need, dv: 0, tx: mid.x, ty, tz: mid.z, vx: 0, vy: 0, vz: 0, snap: false });
   } else {
-    // 轉向有速度上限（約每秒 100 度），兩人快速繞過彼此時也不會甩得太快
-    GC.yaw = GC.yaw + clamp(sd(0, wrap(GC.yawT - GC.yaw), GC, "yv", 0.55, dt), -1.75 * dt, 1.75 * dt);
-    GC.yv = clamp(GC.yv, -1.75, 1.75);
+    // 轉向跟得緊（約 0.25 秒追上），但有速度上限（約每秒 200 度），不會甩得太快
+    GC.yaw = GC.yaw + clamp(sd(0, wrap(GC.yawT - GC.yaw), GC, "yv", 0.25, dt), -3.5 * dt, 3.5 * dt);
+    GC.yv = clamp(GC.yv, -3.5, 3.5);
     GC.dist = sd(GC.dist, need, GC, "dv", 0.6, dt);
     GC.tx = sd(GC.tx, mid.x, GC, "vx", 0.22, dt);
     GC.tz = sd(GC.tz, mid.z, GC, "vz", 0.22, dt);
@@ -2171,7 +2226,7 @@ function heartbeat(lv) {
   if (!actx) return;
   try {
     const t0 = actx.currentTime;
-    const beats = lv === 2 ? [0, 0.22, 0.95, 1.17] : [0, 0.22];
+    const beats = lv === 2 ? [0, 0.22, 0.95, 1.17, 1.85, 2.07] : [0, 0.22, 0.85, 1.07];
     for (const b of beats) {
       const t = t0 + b, o = actx.createOscillator(), g = actx.createGain();
       o.type = "sine"; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
@@ -2405,7 +2460,7 @@ function updateHUD(dt) {
     $("nw").style.top = Math.round($("board").getBoundingClientRect().bottom + 8) + "px";
     const hn = HOLD_NAME[h.type];
     $("nwTitle").textContent = h.type === "kesa"
-      ? (h.holder === W ? `${hn}・連打壓緊` : `被${hn}・連打或搖手機掙脫`)
+      ? (h.holder === W ? `${hn}・連打把標往右推，別讓對手推到左端` : `被${hn}・連打把標推到右端就掙脫`)
       : (h.holder === W ? `${hn}・按亮起的方向壓住` : `被${hn}・按亮起的方向逃脫`);
     if (h.type === "kesa") {
       const m = $("mash");
@@ -2418,6 +2473,20 @@ function updateHUD(dt) {
     $("nwTime").textContent = h.t.toFixed(1) + " 秒";
     $("nwTimeBar").style.width = clamp(h.t / 20, 0, 1) * 100 + "%";
     $("nwEsc").style.width = clamp(h.esc, 0, 100) + "%";
+    const kesa = h.type === "kesa";
+    $("nwEsc").parentElement.hidden = kesa; $("kg").hidden = !kesa;
+    $("nwEscLab").textContent = kesa ? "點越快推越多" : "紅條：逃脫";
+    if (kesa) {
+      // 玩家永遠往右推：被壓時右端是掙脫，壓人時左端是對手掙脫
+      const mine = h.held === W ? h.m : -h.m;
+      $("kgM").style.left = (50 + mine * 50).toFixed(1) + "%";
+      $("kg").classList.toggle("end", h.m > 0.7);
+      $("kgL").textContent = h.held === W ? "被壓住" : "對手掙脫";
+      $("kgR").textContent = h.held === W ? "掙脫" : "壓緊";
+      const kb = $("kgBar").style;
+      kb.setProperty("--kl", h.held === W ? "rgba(42,99,214,.55)" : "rgba(229,72,60,.55)");
+      kb.setProperty("--kr", "rgba(61,190,122,.6)");
+    }
     const p = h.prompt;
     padBtns.forEach((b) => {
       const d = b.dataset.dir, live = p && !p.done && p.dir === d;
