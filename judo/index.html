@@ -312,6 +312,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>靠近按<b>抓把</b>；對手伸手時按<b>閃避</b>。</li>
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
         <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
+        <li>被前方技摔起來時，落地前按<b>前迴轉</b>：滾翻卸力，得分降一級，對手也不能壓制。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打、<b>上四方固</b>按亮起的方向。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
         <li>消極或出界會被判指導，3 次判負。</li>
@@ -358,9 +359,9 @@ $("loading").hidden = true;
 
 /* ---------- 難度 ---------- */
 const DIFFS = [
-  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, mashGain: 3.8, mashDecay: 7, aiEsc: 9 },
-  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, mashGain: 3.2, mashDecay: 9, aiEsc: 12 },
-  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, mashGain: 2.7, mashDecay: 11, aiEsc: 15 },
+  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, mashGain: 3.8, mashDecay: 7, aiEsc: 9, ukemi: 0.1 },
+  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, mashGain: 3.2, mashDecay: 9, aiEsc: 12, ukemi: 0.2 },
+  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, mashGain: 2.7, mashDecay: 11, aiEsc: 15, ukemi: 0.3 },
 ];
 let DIFF = DIFFS[1];
 let MATCH_TIME = 90;
@@ -558,6 +559,9 @@ const POSE = {
   G2H: P({ h: 1.55, body: [1.75], spine: [0.1], neck: [0.25], lSh: [-1.2, 0, 0.7], rSh: [-1.2, 0, -0.7], lHip: [0.35], lKnee: [0.5], rHip: [0.2], rKnee: [0.4] }),
   // 上四方固（取）：跪在對手頭上方、胸口壓住
   KAMI: P({ h: 0.42, body: [0.55], spine: [1.0], neck: [-0.5], lSh: [-1.4, 0, 0.5], lEl: [-1.2], rSh: [-1.4, 0, -0.5], rEl: [-1.2], lHip: [-1.5, 0, 0.3], lKnee: [2.2], rHip: [-1.5, 0, -0.3], rKnee: [2.2] }),
+  // 前迴轉倒法：縮身滾翻後單膝起身
+  ROLL1: P({ h: 0.45, body: [PI * 1.75], spine: [0.9], neck: [0.6], lSh: [-1.5, 0, 0.3], lEl: [-0.8], rSh: [-1.5, 0, -0.3], rEl: [-0.8], lHip: [-1.6], lKnee: [2.2], rHip: [-1.6], rKnee: [2.2] }),
+  ROLL2: P({ h: 0.6, body: [PI * 2], spine: [0.45], neck: [0.1], lSh: [-0.9, 0, 0.3], lEl: [-0.8], rSh: [-0.9, 0, -0.3], rEl: [-0.8], lHip: [-1.2, 0, 0.1], lKnee: [2.0], rHip: [-0.4, 0, -0.1], rKnee: [1.2] }),
   // 裁判
   R_STAND: P({ spine: [0.02], lSh: [0.02, 0, 0.1], rSh: [0.02, 0, -0.1], lEl: [-0.1], rEl: [-0.1] }),
   R_HAJIME: P({ spine: [0.05], lSh: [0.02, 0, 0.1], rSh: [-1.5, 0, -0.1], rEl: [-0.05] }),
@@ -678,6 +682,7 @@ window.addEventListener("keydown", (e) => {
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
   if (e.repeat) return;
   input.keys.add(k);
+  if (G.state === "throw") { if ("jkl ".includes(k)) tryRoll(); return; }
   if (G.state === "osaekomi" && G.hold && G.hold.type === "kesa") { if ("jkl ".includes(k)) mash(); return; }
   if (G.state === "fight" && G.gripped) {
     const n = "123".indexOf(k);
@@ -897,12 +902,35 @@ THROWS.kouchi = [
 
 function startThrow(att, def, tech, result) {
   const u = axis(att, def);
-  G.anim = { att, def, tech, result, t: 0, keys: THROWS[tech], O: { x: att.x, z: att.z }, u, right: { x: -u.z, z: u.x } };
+  const keys = THROWS[tech].map((k) => ({ t: k.t, A: { ...k.A }, D: { ...k.D } }));
+  const canRoll = !!(TECHS[tech] && TECHS[tech].dir === "fwd");
+  G.anim = { att, def, tech, result, t: 0, keys, O: { x: att.x, z: att.z }, u, right: { x: -u.z, z: u.x },
+    canRoll, ukemi: false, tried: false, win0: keys[2].t * 0.95, win1: keys[3].t + 0.06 };
+  // AI 被前方技摔時，依難度用前迴轉倒法卸力
+  if (canRoll && def.isAI && Math.random() < DIFF.ukemi) setTimeout(() => { if (G.anim && G.anim.def === B) doRoll(); }, (keys[2].t + 0.05) * 1000);
   att.act = def.act = null;
   att.lastAttack = 0;
   G.gripped = false;
   G.state = "throw";
   $("warn").hidden = true;
+}
+// 前迴轉倒法：把受方落地後的影格換成滾翻起身
+function doRoll() {
+  const an = G.anim;
+  if (!an || an.ukemi) return;
+  an.ukemi = true;
+  const endF = an.keys[4].D.f;
+  an.keys[4].D = { f: endF - 0.3, r: 0, yaw: 0, p: "ROLL1" };
+  an.keys[5].D = { f: endF - 0.75, r: 0, yaw: 0, p: "ROLL2" };
+  toast(an.def === W ? "前迴轉倒法！卸掉了力道" : "對手前迴轉倒法卸力！", an.def === W ? "good" : "bad", 1.4);
+  if (an.def === W) haptic("hit");
+}
+function tryRoll() {
+  const an = G.anim;
+  if (!an || an.def !== W || !an.canRoll || an.tried || an.ukemi) return;
+  an.tried = true;
+  if (an.t >= an.win0 && an.t <= an.win1) doRoll();
+  else { toast(an.t < an.win0 ? "太早了" : "太晚了", "bad"); haptic("miss"); }
 }
 function placeFromKey(f, k, an, isAtt) {
   const { O, u, right } = an;
@@ -924,7 +952,7 @@ function stepThrow(dt) {
     placeFromKey(f, { f: lerp(a.f, b.f, s), r: lerp(a.r, b.r, s), yaw: lerp(a.yaw, b.yaw, s) }, an, side === "A");
     f.cur = mixPose(POSE[a.p], POSE[b.p], s);
   }
-  if (!an.landed && an.t >= keys[keys.length - 2].t) { an.landed = true; shake = 0.25; thud(); haptic(an.def === W ? "thrown" : "land"); }
+  if (!an.landed && an.t >= keys[keys.length - 2].t) { an.landed = true; shake = 0.25; thud(); haptic(an.ukemi ? (an.def === W ? "tap" : "press") : an.def === W ? "thrown" : "land"); }
   if (an.t >= keys[keys.length - 1].t) finishThrow();
 }
 
@@ -940,7 +968,18 @@ function finishThrow() {
   def.cur.body[0] = wrap(def.cur.body[0]);
   att.cur.body[0] = wrap(att.cur.body[0]);
   att.yaw = wrap(att.yaw);
-  att.tgt = POSE.READY; def.tgt = POSE.LYING; att.moveAmt = def.moveAmt = 0;
+  att.tgt = POSE.READY; def.tgt = an.ukemi ? POSE.READY : POSE.LYING; att.moveAmt = def.moveAmt = 0;
+  if (an.ukemi) {
+    // 卸力降一級；有效再降就不算分，且不能接壓制
+    const down = { ippon: "waza", waza: "yuko", yuko: null }[an.result];
+    if (!down) { call("受身", "前迴轉卸力・不算分", "", 1.3); matte(1.0); return; }
+    const r2 = award(att, down);
+    renderBoard();
+    scoreCall(r2, att, TECH[tech] + "・受身卸力");
+    if (r2 === "awase" || G.golden) { endMatch(att, r2 === "awase" ? "合わせ技一本" : `黃金得分（${TECH[tech]}）`); return; }
+    matte(1.3);
+    return;
+  }
   const r = award(att, an.result);
   renderBoard();
   scoreCall(r, att, TECH[tech]);
@@ -1277,6 +1316,9 @@ function computeSlots() {
   } else if (st === "post" && G.post && G.post.att === W) {
     s[0] = { id: "kesa", label: "袈裟固", sub: "連打比拚", on: true, hot: true };
     s[1] = { id: "kami", label: "上四方", sub: "方向攻防", on: true, hot: true };
+  } else if (st === "throw" && G.anim && G.anim.def === W && G.anim.canRoll && !G.anim.tried && !G.anim.ukemi) {
+    const an = G.anim, inWin = an.t >= an.win0 && an.t <= an.win1;
+    s[0] = { id: "roll", label: "前迴轉", sub: inWin ? "現在！" : "準備", on: true, hot: inWin, cls: "t-def" };
   } else if (st === "intro" || st === "reset" || st === "wait" || (st === "post" && G.post && G.post.att !== W)) {
     s[0] = { id: "grip", label: "抓把", sub: "", on: false, cls: "t-attack" };
     s[1] = { id: "dodge", label: "閃避", sub: "", on: false, cls: "t-def" };
@@ -1307,6 +1349,7 @@ function pressSlot(i) {
   switch (d.id) {
     case "grip": tryGrip(W); break;
     case "dodge": tryDodge(W); break;
+    case "roll": tryRoll(); break;
     case "osoto": if (!busy(W) && W.cool <= 0) haptic("press"); tryThrow(W, "osoto"); break;
     case "ogoshi": if (!busy(W) && W.cool <= 0) haptic("press"); tryThrow(W, "ogoshi"); break;
     case "brace": tryBrace(W); break;
