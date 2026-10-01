@@ -312,7 +312,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>靠近按<b>抓把</b>；對手伸手時按<b>閃避</b>。</li>
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
         <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
-        <li>被丟體、過肩摔、大腰、抱頭摔摔起來時，落地前按<b>前迴轉</b>：滾翻卸力，得分降一級，對手也不能壓制。</li>
+        <li>被丟體、過肩摔、大腰摔起來時，落地前按<b>前迴轉</b>：滾翻卸力，得分降一級，對手也不能壓制。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打、<b>上四方固</b>按亮起的方向。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
         <li>消極或出界會被判指導，3 次判負。</li>
@@ -547,9 +547,6 @@ const POSE = {
   // 丟體（取）：右腳橫伸擋住
   TO1: P({ h: 0.78, spine: [0.35], neck: [-0.2], lSh: [-1.1, 0, 0.5], lEl: [-1.2], rSh: [-1.4, 0, -0.3], rEl: [-0.6], lHip: [-0.6, 0, 0.15], lKnee: [1.0], rHip: [-0.15, 0, -0.75], rKnee: [0.05] }),
   TO2: P({ h: 0.74, spine: [0.65], neck: [-0.3], lSh: [-0.6, 0, 0.6], lEl: [-1.5], rSh: [-0.9, 0, -0.3], rEl: [-1.0], lHip: [-0.6, 0, 0.15], lKnee: [1.05], rHip: [-0.15, 0, -0.75], rKnee: [0.05] }),
-  // 抱頭摔（取）：右臂繞過頸部
-  KU1: P({ h: 0.74, spine: [0.25], neck: [-0.1], lSh: [-1.2, 0, 0.45], lEl: [-0.7], rSh: [-2.6, 0, -0.6], rEl: [-2.0], lHip: [-0.6, 0, 0.18], lKnee: [1.1], rHip: [-0.6, 0, -0.18], rKnee: [1.1] }),
-  KU2: P({ h: 0.9, spine: [0.95], neck: [-0.35], lSh: [-0.8, 0, 0.65], lEl: [-1.3], rSh: [-2.2, 0, -0.6], rEl: [-1.8], lHip: [-0.15, 0, 0.15], lKnee: [0.2], rHip: [-0.15, 0, -0.15], rKnee: [0.2] }),
   // 捨身小內割（取）：勾內側腳跟、整個人壓下去
   KO1: P({ h: 0.85, spine: [0.45], neck: [-0.3], lSh: [-1.4, 0, 0.1], lEl: [-0.6], rSh: [-1.4, 0, -0.1], rEl: [-0.6], lHip: [-0.3, 0, 0.05], lKnee: [0.6], rHip: [-0.5, 0, 0.25], rKnee: [0.3] }),
   KO2: P({ h: 0.6, body: [0.9], spine: [0.4], neck: [-0.3], lSh: [-1.6, 0, 0.1], lEl: [-0.4], rSh: [-1.6, 0, -0.1], rEl: [-0.4], lHip: [-0.4], lKnee: [0.8], rHip: [0.6, 0, 0.2], rKnee: [0.4] }),
@@ -612,17 +609,14 @@ const TECHS = {
     base: (k) => (k > 0.3 ? Math.min(0.55, 0.05 + (k - 0.3) * 0.55) : 0.04), ideal: (k) => clamp(k - 0.3, 0, 1) },
   ogoshi:    { name: "大腰", short: "大腰", dir: "fwd", cost: 22, wind: 0.36, bias: 0.22, fail: "大腰沒能入身",
     base: (k) => Math.min(0.3, k > 0.45 ? 0.02 + (k - 0.45) * 0.35 : 0.02), ideal: (k) => clamp(k - 0.45, 0, 1) },
-  kubinage:  { name: "抱頭摔", short: "抱頭摔", dir: "fwd", cost: 20, wind: 0.32, bias: 0.2, risky: true, fail: "抱頭摔被看穿了",
-    base: (k, a, d) => Math.min(0.42, 0.03 + Math.max(0, Math.max(d.pushS, k) - 0.5) * 0.55), ideal: (k, a, d) => clamp(Math.max(d.pushS, k) - 0.5, 0, 1) },
 };
-const TECH_ORDER = ["kouchi", "osoto", "taiotoshi", "seoi", "ogoshi", "kubinage"];
+const TECH_ORDER = ["kouchi", "osoto", "taiotoshi", "seoi", "ogoshi"];
 const TECH_DESC = {
   kouchi: ["好成功", "多半有效", "失敗倒地"],
   osoto: ["主力", "穩定"],
   taiotoshi: ["繞圈加成"],
   seoi: ["易一本"],
   ogoshi: ["極難", "必殺一本"],
-  kubinage: ["對手前頂時", "高風險"],
 };
 const PREF_KEY = "judo-prefs-v1";
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } }
@@ -843,7 +837,7 @@ function resolveThrow(f) {
     return;
   }
   stagger(f, T.dir === "fwd" ? 0.9 : 0.7);
-  if (f.isAI) { W.counterT = T.risky ? 1.5 : 1.0; toast(T.risky ? "抱頭摔失手！大好反擊機會" : "對手失手！反擊機會", "good"); return; }
+  if (f.isAI) { W.counterT = T.risky ? 1.5 : 1.0; toast("對手失手！反擊機會", "good"); return; }
   toast(T.fail, "bad");
   haptic("fail");
   const wrongTiming = T.dir === "back" ? o.lean > 0.25 : o.lean < 0.2;
@@ -891,7 +885,6 @@ function fwdKeys({ a1, a2, a3, d2 = "G2", yaw = PI, endF = -0.55, speed = 1 }) {
 }
 THROWS.seoi = fwdKeys({ a1: "SE1", a2: "SE2", a3: "SE3", d2: "G2H", endF: -0.6 });
 THROWS.taiotoshi = fwdKeys({ a1: "TO1", a2: "TO2", a3: "TO2", d2: "G2L", yaw: PI * 0.7, endF: -0.35, speed: 0.92 });
-THROWS.kubinage = fwdKeys({ a1: "KU1", a2: "KU2", a3: "OG3", d2: "G2H", endF: -0.6, speed: 0.9 });
 THROWS.kouchi = [
   { t: 0, A: { f: 0, r: 0, yaw: 0, p: "GRIP" }, D: { f: 0.8, r: 0, yaw: 0, p: "GRIP" } },
   { t: 0.2, A: { f: 0.3, r: 0.05, yaw: 0.1, p: "KO1" }, D: { f: 0.9, r: 0, yaw: 0, p: "D1" } },
@@ -1391,7 +1384,7 @@ function renderTech() {
     if (!id) return {};
     if (id === "brace") return { id, on: !busy(W), hot: !!(B.act && B.act.type === "throwWind") };
     const c = Math.round(throwChance(W, B, id) * 100);
-    const hotAt = id === "ogoshi" ? 18 : id === "kubinage" ? 25 : 40;
+    const hotAt = id === "ogoshi" ? 18 : 40;
     return { id, on: ready, hot: c >= hotAt, c };
   });
   const sig = JSON.stringify(parts);
@@ -1555,7 +1548,7 @@ function targetPoseFor(f) {
     if (a.type === "dodge") return POSE.DODGE;
     if (a.type === "brace") return POSE.BLOCK;
     if (a.type === "stagger") return POSE.STAGGER;
-    if (a.type === "throwWind") return { ogoshi: POSE.OG1, seoi: POSE.SE1, taiotoshi: POSE.TO1, kubinage: POSE.KU1, kouchi: POSE.KO1 }[a.tech] || POSE.OS1;
+    if (a.type === "throwWind") return { ogoshi: POSE.OG1, seoi: POSE.SE1, taiotoshi: POSE.TO1, kouchi: POSE.KO1 }[a.tech] || POSE.OS1;
   }
   if (G.gripped) {
     const p = clonePose(POSE.GRIP);
