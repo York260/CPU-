@@ -79,6 +79,9 @@ button { cursor: pointer; }
 .stats { display: grid; gap: 6px; }
 .stat { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) 2.2em; align-items: center; gap: 8px; font-size: 13px; }
 .stat .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.meter { min-width: 0; display: grid; gap: 1px; }
+.meter .title { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.meter .title.max { color: var(--gold); font-weight: 700; }
 .bar { height: 6px; background: var(--tint); border-radius: 3px; overflow: hidden; }
 .bar > i { display: block; height: 100%; background: var(--navy); transition: width .4s ease; }
 .bar > i.low { background: var(--stamp); }
@@ -209,6 +212,15 @@ button { cursor: pointer; }
 const STAGES = ["預備教育", "一年級", "二年級", "三年級", "四年級", "特考"];
 const STAT_KEYS = ["fit", "aca", "mor", "men", "soc"];
 const STAT_NAME = { fit: "體能", aca: "課業", mor: "操行", men: "心情", soc: "人緣" };
+/* 能力稱號，依序對應 100、99~80、79~60、59~40、39~20、19 以下 */
+const STAT_TITLES = {
+  fit: ["宙斯之子", "熊男", "粗", "薄肌", "細狗", "皮包骨"],
+  aca: ["書仙下凡", "學霸", "卷", "低空飛過", "補考仔", "學渣"],
+  mor: ["隊部的哈巴狗", "乖寶寶", "守法良民", "擦邊球", "隊部熟客", "記過收藏家"],
+  men: ["佛系真人", "開心果", "平常心", "厭世", "emo 仔", "退訓邊緣"],
+  soc: ["警大魅魔", "交際花", "好麻吉", "路人", "邊緣人", "全隊公敵"],
+};
+const statTitle = (k, v) => STAT_TITLES[k][v >= 100 ? 0 : v >= 80 ? 1 : v >= 60 ? 2 : v >= 40 ? 3 : v >= 20 ? 4 : 5];
 const REC_GOOD = ["嘉獎", "小功", "大功"];
 const REC_BAD = ["申誡", "小過", "大過"];
 const REC_PTS = { 嘉獎: 1, 小功: 3, 大功: 9, 申誡: 1, 小過: 3, 大過: 9 };
@@ -966,7 +978,8 @@ function titleView() {
 }
 
 function statLine(k, v) {
-  return `<div class="stat"><span>${STAT_NAME[k]}</span><div class="bar"><i class="${v < 25 ? "low" : ""}" style="width:${v}%"></i></div><span class="v">${v}</span></div>`;
+  const t = statTitle(k, v);
+  return `<div class="stat"><span>${STAT_NAME[k]}</span><div class="meter"><span class="title${v >= 100 ? " max" : ""}">${t}</span><div class="bar"><i class="${v < 25 ? "low" : ""}" style="width:${v}%"></i></div></div><span class="v">${v}</span></div>`;
 }
 
 function createView() {
@@ -1098,7 +1111,7 @@ function stageEndView() {
 
 function endingView() {
   const E = S.ending, sealChars = (E.seal + "結局").slice(0, 4).split("");
-  const summary = STAT_KEYS.map((k) => `<div><small>${STAT_NAME[k]}</small><b>${S.stats[k]}</b></div>`).join("")
+  const summary = STAT_KEYS.map((k) => `<div><small>${STAT_NAME[k]}</small><b>${S.stats[k]}</b><small>${statTitle(k, S.stats[k])}</small></div>`).join("")
     + `<div><small>嘉獎／功</small><b>${S.rec.嘉獎}／${S.rec.小功 + S.rec.大功}</b></div>`
     + `<div><small>申誡／過</small><b>${S.rec.申誡}／${S.rec.小過 + S.rec.大過}</b></div>`;
   return `<article class="doc order">
