@@ -374,17 +374,17 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
         </div>
         <div class="panel" id="t1">
           <div class="tw"><table>
-            <tr><th>按鍵</th><th>動作</th><th>說明</th></tr>
-            <tr><td><kbd>W A S D</kbd> / 方向鍵</td><td>移動</td><td>左右靠近或後退，上下繞圈側移</td></tr>
-            <tr><td><kbd>J</kbd></td><td>抓把</td><td>造成少量傷害並取得組手；投技一定要先抓把</td></tr>
-            <tr><td><kbd>K</kbd></td><td>大外割</td><td>對手後退或被你推時最有效</td></tr>
-            <tr><td><kbd>L</kbd></td><td>單臂過肩摔</td><td>對手前壓或被你拉時最有效，傷害最高</td></tr>
-            <tr><td><kbd>I</kbd></td><td>捨身小內割</td><td>出招最快、能破防守，但被閃掉會自己倒地</td></tr>
-            <tr><td><kbd>Space</kbd></td><td>閃避</td><td>短暫無敵，並甩開所有組手</td></tr>
-            <tr><td><kbd>Shift</kbd>（按住）</td><td>防守</td><td>擋得住大外割和過肩摔，持續消耗體力</td></tr>
-            <tr><td><kbd>P</kbd> / <kbd>Esc</kbd></td><td>暫停</td><td><kbd>M</kbd> 切換音效</td></tr>
+            <tr><th data-ctl="hdr"></th><th>動作</th><th>說明</th></tr>
+            <tr><td data-ctl="moveAll"></td><td>移動</td><td>左右靠近或後退，上下繞圈側移</td></tr>
+            <tr><td data-ctl="grab"></td><td>抓把</td><td>造成少量傷害並取得組手；投技一定要先抓把</td></tr>
+            <tr><td data-ctl="osoto"></td><td>大外割</td><td>對手後退或被你推時最有效</td></tr>
+            <tr><td data-ctl="seoi"></td><td>單臂過肩摔</td><td>對手前壓或被你拉時最有效，傷害最高</td></tr>
+            <tr><td data-ctl="kouchi"></td><td>捨身小內割</td><td>出招最快、能破防守，但被閃掉會自己倒地</td></tr>
+            <tr><td data-ctl="dodge"></td><td>閃避</td><td>短暫無敵，並甩開所有組手</td></tr>
+            <tr><td data-ctl="guardHold"></td><td>防守</td><td>擋得住大外割和過肩摔，持續消耗體力</td></tr>
+            <tr><td data-ctl="pause"></td><td>暫停</td><td data-ctl="mute"></td></tr>
           </table></div>
-          <p>手機會自動顯示虛擬搖桿與按鈕。</p>
+          <p data-ctl="note"></p>
         </div>
         <div class="panel" id="t2" hidden>
           <ul>
@@ -1603,7 +1603,10 @@ document.querySelectorAll('#btns button').forEach((b) => {
 });
 let touchMode = matchMedia('(pointer: coarse)').matches;
 addEventListener('touchstart', () => { if (!touchMode) { touchMode = true; applyTouchMode(); } }, { passive: true });
-function applyTouchMode() { $('#touch').hidden = !touchMode; $('#movebar').style.display = touchMode ? 'none' : ''; }
+function applyTouchMode() {
+  $('#touch').hidden = !touchMode; $('#movebar').style.display = touchMode ? 'none' : '';
+  if (window.__ctlReady) { fillCtl(); if (window.__tutOn && window.__tutOn()) tutRender(); }
+}
 applyTouchMode();
 
 const CR = new V3(), CF = new V3();
@@ -1756,12 +1759,27 @@ function updateHUD() {
   }
   $('#speed').classList.toggle('on', timeScale < 0.6 && !REDUCED);
 }
+const CTL = {
+  move: ['<kbd>A</kbd> <kbd>D</kbd>（或方向鍵 ← →）', '<b>左下搖桿</b>左右推'],
+  side: ['<kbd>W</kbd> <kbd>S</kbd>（或方向鍵 ↑ ↓）', '<b>搖桿</b>往上或往下推'],
+  push: ['按住朝對手的方向往前推', '把搖桿推向對手、往前推'],
+  pull: ['按住遠離對手的方向往後拉', '把搖桿往反方向拉、往後拉'],
+  grab: ['<kbd>J</kbd>', '<kbd>抓把</kbd> 鈕'], osoto: ['<kbd>K</kbd>', '<kbd>大外</kbd> 鈕'], seoi: ['<kbd>L</kbd>', '<kbd>背負</kbd> 鈕'],
+  kouchi: ['<kbd>I</kbd>', '<kbd>小內</kbd> 鈕'], dodge: ['<kbd>Space</kbd>', '<kbd>閃避</kbd> 鈕'], guard: ['<kbd>Shift</kbd>', '<kbd>防守</kbd> 鈕'],
+  next: ['按 Enter 或「下一課」繼續', '點「下一課」繼續'],
+  hdr: ['按鍵', '手機操作'], moveAll: ['<kbd>W A S D</kbd> / 方向鍵', '左下搖桿'],
+  guardHold: ['<kbd>Shift</kbd>（按住）', '<kbd>防守</kbd> 鈕（按住）'],
+  pause: ['<kbd>P</kbd> / <kbd>Esc</kbd>', '右上 <kbd>II</kbd>'], mute: ['<kbd>M</kbd> 切換音效', '右上 ♪ 切換音效'],
+  note: ['用手機開啟時，會改成虛擬搖桿與按鈕。', '用電腦開啟時，改用鍵盤操作。'],
+};
+const fmt = (str) => str.replace(/\{(\w+)\}/g, (m, k) => CTL[k] ? CTL[k][touchMode ? 1 : 0] : m);
+function fillCtl() { document.querySelectorAll('[data-ctl]').forEach(el => { el.innerHTML = fmt('{' + el.dataset.ctl + '}'); }); }
 const TIPS = [
-  '先按 <b>J 抓把</b>，抓到後頭上「組」會亮起',
-  '抓把後<b>往後拉</b>，對手出現「前崩」→ 用 <b>L 單臂過肩摔</b>',
-  '抓把後<b>往前推</b>，對手出現「後崩」→ 用 <b>K 大外割</b>',
-  '對手按住防守時，用 <b>I 捨身小內割</b> 破防',
-  '對手身上發光時按 <b>Space 閃避</b>，成功後不用抓把就能反擊',
+  '先按 {grab} 抓把，抓到後名字旁的「組」會亮起',
+  '抓把後<b>往後拉</b>，對手出現「前崩」→ 用 {seoi} 單臂過肩摔',
+  '抓把後<b>往前推</b>，對手出現「後崩」→ 用 {osoto} 大外割',
+  '對手按住防守時，用 {kouchi} 捨身小內割破防',
+  '對手身上發光時按 {dodge} 閃避，成功後不用抓把就能反擊',
   '看體力條下方的紫色條：招式用越多，回復越慢',
 ];
 
@@ -1772,60 +1790,60 @@ const isP = (f) => f === F[0];
 const LESSONS = [
   { title: '站姿與移動', cpu: 'idle',
     body: `<p>比賽在 8×8 公尺的<b>比賽區</b>（黃色）進行，外圍藍色是安全區。開賽前雙方站上開始線互相行禮（禮），主審喊「始め」才開始。</p>
-<p>用 <kbd>A</kbd> <kbd>D</kbd>（方向鍵或左搖桿）靠近、後退。畫面會一直從側面看兩人，所以「右」永遠是畫面右邊。</p>`,
+<p>用 {move} 靠近、後退。畫面會一直從側面看兩人，所以「右」永遠是畫面右邊。</p>`,
     goals: [
       { text: '走到對手面前（距離 1.2 公尺內）', poll: () => distF(F[0], F[1]) < 1.2 },
       { text: '再退開（距離 2.5 公尺以上）', poll: () => distF(F[0], F[1]) > 2.5 },
     ] },
   { title: '側移繞圈', cpu: 'idle',
-    body: `<p>用 <kbd>W</kbd> <kbd>S</kbd> 繞著對手側移。實戰中側移能改變角度、避開對手的正面力量，也是找出手時機的方法。</p>
+    body: `<p>用 {side} 繞著對手側移。實戰中側移能改變角度、避開對手的正面力量，也是找出手時機的方法。</p>
 <p>後退比前進稍慢；被抓住或體力低於 20 時，移動也會變慢。</p>`,
     goals: [{ text: '繞著對手側移', need: 3, unit: '公尺', id: 'circle' }] },
   { title: '抓把（組手）', cpu: 'idle',
-    body: `<p>柔道從組手開始：右手抓衣領、左手抓袖子。距離 1.2 公尺內按 <kbd>J</kbd> <b>抓把</b>，對手會被扯一下，受到少量傷害。</p>
-<p><b>沒抓把就不能出投技。</b>抓到後名字旁的「組」會亮起。被抓住的一方體力回復慢 40%，所以要學會<b>切手</b>：按 <kbd>Space</kbd> 閃避，就能甩開雙方的手。</p>`,
+    body: `<p>柔道從組手開始：右手抓衣領、左手抓袖子。距離 1.2 公尺內按 {grab} <b>抓把</b>，對手會被扯一下，受到少量傷害。</p>
+<p><b>沒抓把就不能出投技。</b>抓到後名字旁的「組」會亮起。被抓住的一方體力回復慢 40%，所以要學會<b>切手</b>：按 {dodge} 閃避，就能甩開雙方的手。</p>`,
     goals: [
-      { text: '按 J 抓把成功', ev: (t, f) => t === 'grab' && isP(f) },
-      { text: '按 Space 閃避，把手切開', ev: (t, f) => t === 'cut' && isP(f) },
+      { text: '按 {grab} 抓把成功', ev: (t, f) => t === 'grab' && isP(f) },
+      { text: '按 {dodge} 閃避，把手切開', ev: (t, f) => t === 'cut' && isP(f) },
       { text: '再抓一次', ev: (t, f) => t === 'grab' && isP(f) },
     ] },
   { title: '體力與疲勞', cpu: 'idle',
     body: `<p>血條下方的綠色是<b>體力條</b>。每個動作都要花體力，不夠就不能出招，體力條會閃紅。</p>
 <p>每出一招也會累積<b>疲勞</b>：紫色條是體力回復速度，招式用得越多回得越慢，而且疲勞消退得很慢。高手比的不只是技術，還有體力分配。</p>`,
     goals: [
-      { text: '把體力用到 50 以下（快速連按 Space 閃避）', poll: () => F[0].st <= 50 },
+      { text: '把體力用到 50 以下（快速連按 {dodge} 閃避）', poll: () => F[0].st <= 50 },
       { text: '停手，等體力回到 90 以上，同時看紫色條變短了多少', poll: () => F[0].st >= 90 },
     ] },
   { title: '崩し：推 → 大外割', cpu: 'idle',
-    body: `<p><b>崩し</b>就是破壞對手的平衡。抓把後<b>按住朝對手的方向往前推</b>，對手被推著後退、重心落到腳跟，這叫「後崩」，對手頭上會亮起提示。</p>
-<p>這時按 <kbd>K</kbd> <b>大外割</b>：左腳踏到對手右側，右腳從後方掃倒他的右腳。</p>`,
+    body: `<p><b>崩し</b>就是破壞對手的平衡。抓把後<b>{push}</b>，對手被推著後退、重心落到腳跟，這叫「後崩」，對手頭上會亮起提示。</p>
+<p>這時按 {osoto} <b>大外割</b>：左腳踏到對手右側，右腳從後方掃倒他的右腳。</p>`,
     goals: [
       { text: '抓把', ev: (t, f) => t === 'grab' && isP(f) },
-      { text: '一邊往前推，一邊用大外割投成（要有「後崩」）', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'osoto' && d.tags.includes('後崩'), fail: (t, f, d) => t === 'land' && isP(f) && d.key === 'osoto' ? '投成了，但沒有「後崩」：出手前要先按住往前推' : null },
+      { text: '一邊往前推，一邊用大外割投成（要有「後崩」）', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'osoto' && d.tags.includes('後崩'), fail: (t, f, d) => t === 'land' && isP(f) && d.key === 'osoto' ? '投成了，但沒有「後崩」：出手前要先推著對手走' : null },
     ] },
   { title: '拉 → 單臂過肩摔', cpu: 'idle',
-    body: `<p>反過來，抓把後<b>按住遠離對手的方向往後拉</b>，對手會被拉得往前撲，這叫「前崩」。</p>
-<p>按 <kbd>L</kbd> <b>單臂過肩摔</b>：轉身背對、右臂夾住對手右臂，把他從肩上摔過去。傷害最高，但前搖最長、最花體力（30）。</p>`,
+    body: `<p>反過來，抓把後<b>{pull}</b>，對手會被拉得往前撲，這叫「前崩」。</p>
+<p>按 {seoi} <b>單臂過肩摔</b>：轉身背對、右臂夾住對手右臂，把他從肩上摔過去。傷害最高，但前搖最長、最花體力（30）。</p>`,
     goals: [
       { text: '抓把', ev: (t, f) => t === 'grab' && isP(f) },
-      { text: '一邊往後拉，一邊用單臂過肩摔投成（要有「前崩」）', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'seoi' && d.tags.includes('前崩'), fail: (t, f, d) => t === 'land' && isP(f) && d.key === 'seoi' ? '投成了，但沒有「前崩」：出手前要先按住往後拉' : null },
+      { text: '一邊往後拉，一邊用單臂過肩摔投成（要有「前崩」）', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'seoi' && d.tags.includes('前崩'), fail: (t, f, d) => t === 'land' && isP(f) && d.key === 'seoi' ? '投成了，但沒有「前崩」：出手前要先拉著對手走' : null },
     ] },
   { title: '破防：捨身小內割', cpu: 'guard',
     body: `<p>對手正在<b>沉腰防守</b>。這種姿勢擋得住大外割和過肩摔，被擋的一方會失衡。</p>
-<p>但防守時兩腳張得很開，正好讓你從內側掃腳。按 <kbd>I</kbd> <b>捨身小內割</b>：右腳勾掃對手右腳，用全身重量壓上去。它出招最快，但被閃掉時你會自己倒地。</p>`,
+<p>但防守時兩腳張得很開，正好讓你從內側掃腳。按 {kouchi} <b>捨身小內割</b>：右腳勾掃對手右腳，用全身重量壓上去。它出招最快，但被閃掉時你會自己倒地。</p>`,
     goals: [
       { text: '先抓把，用大外割或過肩摔試一次，感受被擋下', ev: (t, f) => t === 'blocked' && isP(f) },
       { text: '用捨身小內割破防投成', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'kouchi' },
     ] },
   { title: '閃避與返し技', cpu: 'attack',
     body: `<p>現在對手會主動抓把、出招。他出招前身上會發光、頭上出現「!」，這段叫<b>前搖</b>（教學中特別放慢）。</p>
-<p>前搖時按 <kbd>Space</kbd> 閃避，就能躲開，並取得<b>返し技</b>（反擊）機會：接下來 1.3 秒內<b>不用抓把</b>就能直接投，得分條件也大幅提高。對手出招落空會往前失衡，這時用過肩摔反擊最有效。</p>`,
+<p>前搖時按 {dodge} 閃避，就能躲開，並取得<b>返し技</b>（反擊）機會：接下來 1.3 秒內<b>不用抓把</b>就能直接投，得分條件也大幅提高。對手出招落空會往前失衡，這時用過肩摔反擊最有效。</p>`,
     goals: [
       { text: '在對手前搖時閃避成功', ev: (t, f) => t === 'pdodge' && isP(f) },
       { text: '閃避後馬上用任一投技反擊投成', ev: (t, f, d) => t === 'land' && isP(f) && d.tags.includes('返し技'), fail: (t, f, d) => t === 'land' && isP(f) ? '投成了，但超過反擊時間：閃避後要立刻出手' : null },
     ] },
   { title: '防守', cpu: 'attack',
-    body: `<p>另一種應對是防守：看到對手大外割或過肩摔的前搖時，<b>按住 <kbd>Shift</kbd></b> 沉腰。擋下後對手會失衡，你也有短暫的反擊機會。</p>
+    body: `<p>另一種應對是防守：看到對手大外割或過肩摔的前搖時，<b>按住 {guard}</b> 沉腰。擋下後對手會失衡，你也有短暫的反擊機會。</p>
 <p>注意：防守每秒消耗 9 點體力；正式比賽中防守姿勢維持超過 3.5 秒，會被判<b>指導</b>。</p>`,
     goals: [{ text: '用防守擋下對手的投技', need: 2, unit: '次', ev: (t, f) => t === 'block' && isP(f) }] },
   { title: '計分與規則', cpu: 'idle',
@@ -1860,14 +1878,14 @@ function tutRender() {
   const L = LESSONS[TUT.i];
   $('#cStep').textContent = `第 ${TUT.i + 1} 課 / ${LESSONS.length}`;
   $('#cTitle').textContent = L.title;
-  $('#cBody').innerHTML = L.body;
+  $('#cBody').innerHTML = fmt(L.body);
   coachEl.classList.toggle('clear', TUT.done);
   $('#cGoals').innerHTML = L.goals.map((g, k) => {
     const cls = k < TUT.g || TUT.done ? 'done' : k === TUT.g ? 'cur' : '';
     let prog = '';
     if (g.need > 1) { const v = k < TUT.g || TUT.done ? g.need : k === TUT.g ? TUT.n : 0; prog = `<em>${g.unit === '公尺' ? v.toFixed(1) : Math.floor(v)} / ${g.need} ${g.unit}</em>`; }
-    return `<li class="${cls}"><span>${g.text}</span>${prog}</li>`;
-  }).join('') + (TUT.done ? `<li class="done"><span>完成！${TUT.i < LESSONS.length - 1 ? '按 Enter 或「下一課」繼續' : ''}</span></li>` : '');
+    return `<li class="${cls}"><span>${fmt(g.text)}</span>${prog}</li>`;
+  }).join('') + (TUT.done ? `<li class="done"><span>完成！${TUT.i < LESSONS.length - 1 ? fmt('{next}') : ''}</span></li>` : '');
   $('#cPrev').disabled = TUT.i === 0;
   const nx = $('#cNext');
   nx.textContent = TUT.done ? (TUT.i < LESSONS.length - 1 ? '下一課 ▶' : '結業 ▶') : '跳過這課';
@@ -2007,7 +2025,7 @@ function startMatch() {
   TUT.on = tutor; coachEl.hidden = !tutor;
   $('#cpuName').textContent = tutor ? '教練陪練' : (CFG.mode === 'train' ? '練習對手 ' : 'CPU ') + AI_LV[CFG.lv].name;
   $('#trainTip').hidden = CFG.mode !== 'train'; tipIdx = 0; tipT = 0;
-  if (CFG.mode === 'train') $('#trainTip').innerHTML = TIPS[0];
+  if (CFG.mode === 'train') $('#trainTip').innerHTML = fmt(TIPS[0]);
   document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
   setUI(true);
   phase = 'intro';
@@ -2040,6 +2058,7 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize); resize();
+window.__ctlReady = true; window.__tutOn = () => TUT.on; fillCtl();
 resetPositions(); setUI(false);
 for (const f of ALL) { animateFree(f, 1); }
 
@@ -2078,7 +2097,7 @@ function frame(now) {
   REF.vel.set(0, 0, 0);
   animateFree(REF, dt);
   if (CFG.mode === 'train' && phase === 'fight') {
-    tipT += dtR; if (tipT > 7) { tipT = 0; tipIdx = (tipIdx + 1) % TIPS.length; $('#trainTip').innerHTML = TIPS[tipIdx]; }
+    tipT += dtR; if (tipT > 7) { tipT = 0; tipIdx = (tipIdx + 1) % TIPS.length; $('#trainTip').innerHTML = fmt(TIPS[tipIdx]); }
   }
   tutUpdate(dt);
   dust.update(dt); sparks.update(dt); updateRings(dt); updateGhosts(dtR); updateCrowd(dtR);
