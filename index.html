@@ -296,7 +296,7 @@ button { cursor: pointer; }
       </div>
     </div>
     <div class="row">
-      <button class="ghost" id="editorBtn" type="button">卡片編輯器</button>
+      <button class="ghost" id="editorBtn" type="button" hidden>卡片編輯器</button>
       <button class="ghost" id="restartBtn" type="button" hidden>重新開始</button>
     </div>
   </header>
@@ -1280,6 +1280,7 @@ const NEED_TEXT = { y1g: "需沒有交往對象", y2f: "需交往中", y2g: "需
 const FIXED = new Set(["p1", "p2", "p3", "p4", "p5", "p6", "y1s", "y2s", "y3s", "y4s", "grad", "x1", "x2", "x3", "x4"]);
 const EDIT_FLAGS = Object.keys(FLAG_INFO).filter((f) => !f.startsWith("club:"));
 const OV_KEY = "cpu-sim-cards-v1";
+const EDITOR_ENABLED = false; // 暫時關閉卡片編輯器入口；改成 true 即恢復
 let OV = {};
 let storeMode = "loading"; // loading | db | local
 let cardsCol = null, canWrite = true;
@@ -1643,7 +1644,9 @@ $editorBtn.addEventListener("click", () => {
 /* ---------- 啟動 ---------- */
 function start(data) {
   if (data && data.view) { S = data.S; view = data.view; draft = data.draft; prevView = data.prevView || "title"; }
-  else if (location.hash === "#editor") { prevView = view; view = "editor"; }
+  else if (EDITOR_ENABLED && location.hash === "#editor") { prevView = view; view = "editor"; }
+  if (!EDITOR_ENABLED && view === "editor") view = prevView === "editor" ? "title" : prevView;
+  $editorBtn.hidden = !EDITOR_ENABLED;
   render();
   initStore();
 }
