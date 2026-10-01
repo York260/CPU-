@@ -333,8 +333,8 @@ button { cursor: pointer; }
     <label class="fb-field" for="fbBug"><span>有 BUG 或機制漏洞？</span><textarea id="fbBug" rows="3" placeholder="發生了什麼、在哪一步"></textarea></label>
     <label class="fb-field" for="fbWho"><span>你是誰？<small>選填，不填就是匿名</small></span><input id="fbWho" maxlength="40"></label>
     <div class="fb-foot">
-      <a class="btn" id="fbSend" href="#" target="_blank" rel="noopener" aria-disabled="true">前往送出</a>
-      <span class="fb-note" id="fbNote">會開新分頁到回饋表單，按「提交」才算送出。</span>
+      <a class="btn" id="fbSend" href="#" target="_blank" rel="noopener" aria-disabled="true">送出</a>
+      <span class="fb-note" id="fbNote">送出後會開一個新分頁，顯示「已收到回覆」就完成了。</span>
     </div>
   </div>
 </div>
@@ -1678,8 +1678,8 @@ $editorBtn.addEventListener("click", () => {
 
 
 /* ---------- 意見回饋（Google 表單） ----------
-   遊戲內填寫，按「前往送出」開新分頁到預先填好的表單，玩家按「提交」完成。 */
-const FB_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfn8V38XqjojWdWw92_Pe_ceaOIwfzA5xQF6c0csKpWMo3UyA/viewform";
+   遊戲內填寫，按「送出」會在新分頁直接提交到 Google 表單（formResponse），新分頁顯示「已收到回覆」即完成。 */
+const FB_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfn8V38XqjojWdWw92_Pe_ceaOIwfzA5xQF6c0csKpWMo3UyA/formResponse";
 const FB_ENTRY = { idea: "entry.232221354", bug: "entry.95667260", who: "entry.494200528" };
 const $fb = { layer: document.getElementById("fbLayer"), card: document.getElementById("fbCard"), idea: document.getElementById("fbIdea"), bug: document.getElementById("fbBug"), who: document.getElementById("fbWho"), send: document.getElementById("fbSend"), note: document.getElementById("fbNote") };
 let fbCardTag = "";
@@ -1696,7 +1696,7 @@ function openFeedback(withCard) {
   if (fbCardTag !== prevTag) { $fb.idea.value = ""; $fb.bug.value = ""; }
   $fb.card.hidden = !fbCardTag;
   $fb.card.textContent = fbCardTag ? `回報卡片：${fbCardTag}，會自動加在你填寫的內容前面。` : "";
-  $fb.note.textContent = "會開新分頁到回饋表單，按「提交」才算送出。";
+  $fb.note.textContent = "送出後會開一個新分頁，顯示「已收到回覆」就完成了。";
   fbReturnFocus = document.activeElement;
   $fb.layer.hidden = false;
   updateFeedbackLink();
@@ -1710,10 +1710,11 @@ function updateFeedbackLink() {
   const idea = $fb.idea.value.trim(), bug = $fb.bug.value.trim(), who = $fb.who.value.trim();
   const tag = (t) => (t && fbCardTag ? fbCardTag + "\n" + t : t);
   const ok = !!(idea || bug);
-  const q = new URLSearchParams({ usp: "pp_url" });
+  const q = new URLSearchParams();
   if (idea) q.set(FB_ENTRY.idea, tag(idea));
   if (bug) q.set(FB_ENTRY.bug, tag(bug));
   if (who) q.set(FB_ENTRY.who, who);
+  q.set("submit", "Submit");
   $fb.send.href = ok ? FB_FORM + "?" + q.toString() : "#";
   $fb.send.setAttribute("aria-disabled", ok ? "false" : "true");
 }
@@ -1724,7 +1725,7 @@ $fb.send.addEventListener("click", (e) => {
   setTimeout(() => {
     $fb.idea.value = ""; $fb.bug.value = "";
     updateFeedbackLink();
-    $fb.note.textContent = "已開啟回饋表單。記得在新分頁按「提交」，謝謝你的回饋！";
+    $fb.note.textContent = "已送出，謝謝你的回饋！新分頁看完可以直接關掉。";
   }, 0);
 });
 $fb.layer.addEventListener("click", (e) => { if (e.target === $fb.layer || e.target.closest("[data-fb='close']")) closeFeedback(); });
