@@ -126,6 +126,22 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes lines { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(2deg) scale(1.03); } }
 .impact { --tc: #fff; position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 4; background: radial-gradient(ellipse at center, rgba(255, 255, 255, .9) 0%, color-mix(in srgb, var(--tc) 60%, transparent) 40%, transparent 75%); mix-blend-mode: screen; }
 .impact.go0 { animation: impact .22s ease-out; }
+.impact.pre1 { animation: impact .2s ease-out; }
+.impact.pre2 { animation: impact .3s ease-out; }
+/* 聚光：大招閃時全暗，空中定格時半暗加放射光（位置跟著兩人） */
+.spot { --sx: 50%; --sy: 50%; --tc: #fff; --rot: 0deg; position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: 0; transition: opacity .18s; background: radial-gradient(circle at var(--sx) var(--sy), transparent 0, transparent 14vmin, rgba(3, 5, 10, .9) 46vmin); }
+.spot::after { content: ""; position: absolute; inset: 0; opacity: 0; background: repeating-conic-gradient(from var(--rot) at var(--sx) var(--sy), color-mix(in srgb, var(--tc) 45%, transparent) 0deg 0.8deg, transparent 0.8deg 7deg); -webkit-mask: radial-gradient(circle at var(--sx) var(--sy), transparent 12vmin, #000 34vmin); mask: radial-gradient(circle at var(--sx) var(--sy), transparent 12vmin, #000 34vmin); transition: opacity .2s; }
+.spot.burst { opacity: 1; transition: opacity .05s; }
+.spot.burst.lv2::after { opacity: 1; }
+.spot.freeze { opacity: .62; }
+.spot.freeze.lv2 { opacity: .78; }
+.spot.freeze.lv2::after { opacity: .85; }
+.spot.freeze.lv1::after { opacity: .4; }
+/* 前迴轉時機：玩家頭上的藍色小提示＋畫面邊緣微光 */
+.rollcue { position: fixed; left: 0; top: 0; transform: translate(-50%, -100%); z-index: 6; pointer-events: none; font-weight: 900; font-size: 13px; color: #fff; padding: 2px 10px; border-radius: 999px; background: rgba(40, 110, 220, .85); border: 1px solid #9CC4FF; box-shadow: 0 0 14px rgba(120, 180, 255, .8); animation: rcPulse .3s ease-in-out infinite alternate; white-space: nowrap; }
+@keyframes rcPulse { from { transform: translate(-50%, -100%) scale(1); } to { transform: translate(-50%, -100%) scale(1.12); } }
+.rollglow { position: fixed; inset: 0; pointer-events: none; z-index: 2; opacity: 0; box-shadow: inset 0 0 60px 6px rgba(110, 170, 255, .55); transition: opacity .12s; }
+.rollglow.on { opacity: 1; }
 .impact.go1 { animation: impact .35s ease-out; }
 .impact.go2 { animation: impact .55s ease-out; }
 @keyframes impact { 0% { opacity: .55; } 100% { opacity: 0; } }
@@ -139,6 +155,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .tname.in { animation: tnIn .32s cubic-bezier(.2, 1.3, .35, 1) forwards; }
 .tname.in::before { animation: tnBar .28s ease-out forwards; }
 .tname.out { animation: tnOut .3s ease-in forwards; }
+.tname.lv2 b { font-size: clamp(32px, 8vw, 64px); text-shadow: 0 3px 0 rgba(0, 0, 0, .6), 0 0 26px var(--tc), 0 0 2px #fff; }
+.tname.lv2::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 2px; height: 3px; background: linear-gradient(90deg, #FFE7A6, var(--tc), transparent); }
 @keyframes tnIn { 0% { opacity: 0; transform: skewX(-12deg) translateX(-40px); } 100% { opacity: 1; transform: skewX(-12deg) translateX(0); } }
 @keyframes tnBar { to { clip-path: inset(0 0 0 0); } }
 @keyframes tnOut { from { opacity: 1; } to { opacity: 0; transform: skewX(-12deg) translateY(10px); } }
@@ -207,7 +225,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .pop { position: fixed; pointer-events: none; font-family: var(--f-display); font-weight: 900; font-size: 30px; color: #FFE08A; text-shadow: 0 2px 10px rgba(0, 0, 0, .7), 0 0 14px rgba(255, 190, 60, .8); animation: popUp .55s ease-out forwards; }
 .pop.hold { color: #9FC0FF; text-shadow: 0 2px 10px rgba(0, 0, 0, .7), 0 0 14px rgba(127, 168, 255, .8); }
 @keyframes popUp { 0% { transform: translate(-50%, 0) scale(.6); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(-50%, -70px) scale(1.15); opacity: 0; } }
-.nw-track.esc.flash i { box-shadow: 0 0 10px #fff; background: #FF8A6B; }
+.nw-track.esc.zap i { box-shadow: 0 0 10px #fff; background: #FF8A6B; }
 
 .quit { position: fixed; left: calc(env(safe-area-inset-left, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 10px); width: 32px; height: 32px; background: var(--panel); border: 1px solid var(--line); border-radius: 50%; padding: 0; font-size: 14px; color: var(--muted); }
 .quit.confirm { width: auto; border-radius: 16px; padding: 0 10px; color: var(--ink); font-size: 12px; }
@@ -314,7 +332,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 <div class="warn" id="warn" hidden><b id="warnMark">!</b><small id="warnName"></small></div>
 <div class="flash" id="flash"></div>
 <div class="cine" id="cine"><i class="tint"></i><i class="vig"></i><i class="lines"></i><i class="bar top"></i><i class="bar bot"></i></div>
+<div class="spot" id="spot"></div>
 <i class="impact" id="impact"></i>
+<div class="rollcue" id="rollcue" hidden>前迴轉！</div>
+<i class="rollglow" id="rollglow"></i>
 <div class="tname" id="tname" hidden><b></b><small></small></div>
 
 <div class="joy" id="joy" hidden><small>移動・推拉</small><i id="knob"></i></div>
@@ -355,7 +376,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>靠近按<b>抓把</b>；對手伸手時按<b>閃避</b>。</li>
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
         <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
-        <li>被丟體、過肩摔、大腰摔起來時，落地前按<b>前迴轉</b>：滾翻卸力，得分降一級，對手也不能壓制。</li>
+        <li>被丟體、過肩摔、大腰摔成<b>有效</b>時，有時會出現<b>前迴轉</b>的機會：畫面稍微變慢、頭上出現藍色提示時按下，滾翻後不算分，對手也不能壓制。半勝以上來不及滾。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打、<b>上四方固</b>按亮起的方向。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
         <li>消極或出界會被判指導，3 次判負。</li>
@@ -402,9 +423,9 @@ $("loading").hidden = true;
 
 /* ---------- 難度 ---------- */
 const DIFFS = [
-  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, mashGain: 3.8, mashDecay: 7, aiEsc: 9, ukemi: 0.1 },
-  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, mashGain: 3.2, mashDecay: 9, aiEsc: 12, ukemi: 0.2 },
-  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, mashGain: 2.7, mashDecay: 11, aiEsc: 15, ukemi: 0.3 },
+  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, mashGain: 3.8, mashDecay: 7, aiEsc: 9, ukemi: 0.3 },
+  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, mashGain: 3.2, mashDecay: 9, aiEsc: 12, ukemi: 0.45 },
+  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, mashGain: 2.7, mashDecay: 11, aiEsc: 15, ukemi: 0.6 },
 ];
 let DIFF = DIFFS[1];
 let MATCH_TIME = 90;
@@ -631,7 +652,10 @@ function makeFighter(side) {
 const W = makeFighter("w"), B = makeFighter("b");
 const other = (f) => (f === W ? B : W);
 const ref = makeFigure({ gi: 0x1b2232, trim: 0xeeeeee, belt: false, suit: true });
-const REF = { x: 0, z: -2.7, cur: clonePose(POSE.R_STAND), tgt: POSE.R_STAND, gestureT: 0, wave: 0 };
+const REF = { x: 0, z: -2.7, a: PI, fade: 1, cur: clonePose(POSE.R_STAND), tgt: POSE.R_STAND, gestureT: 0, wave: 0 };
+// 裁判用自己的材質，鏡頭被擋住時可以淡出
+const refMats = [];
+ref.root.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; refMats.push(o.material); } });
 
 /* ---------- 遊戲狀態 ---------- */
 const G = {
@@ -842,6 +866,7 @@ function resolveReach(f) {
     G.initiative = { who: f, t: 3 };
     for (const x of [W, B]) { if (x.act && x.act.type === "reach") x.act = null; x.pushS = 0; x.push = 0; }
     toast(f.isAI ? "被對手抓住了" : "抓把成功！", f.isAI ? "bad" : "good");
+    GC.q = 0.45; clack();
   } else {
     stagger(f, 0.45);
     toast(f.isAI ? "撥開了對手的手" : "被撥開", f.isAI ? "good" : "bad");
@@ -918,7 +943,7 @@ POSE.G4 = V("LYING", { body: [PI * 1.5] });
 POSE.G4I = V("LYI", { body: [PI * 1.5] });
 const kf = (f, r, yaw, p) => ({ f, r, yaw, p });
 function fwdThrow({ a1, a2, a3, d2, yaw = PI, endF = -0.55 }) {
-  return { kake: 0.52, peak: [0.56, 0.84], keys: [
+  return { kake: 0.52, peak: [0.56, 0.84], apex: 0.66, keys: [
     { t: 0, A: kf(0, 0, 0, "GRIP"), D: kf(0.8, 0, 0, "GRIP") },
     { t: 0.17, A: kf(-0.08, 0, 0, "PULL"), D: kf(0.68, 0, 0, "G0") },
     { t: 0.34, A: kf(0.3, 0.04, yaw * 0.85, a1), D: kf(0.72, 0, 0, "G1") },
@@ -930,7 +955,7 @@ function fwdThrow({ a1, a2, a3, d2, yaw = PI, endF = -0.55 }) {
     { t: 1.45, A: kf(0.42, 0.04, yaw, a3), D: kf(endF, 0, 0, "G4"), ease: "out" },
   ] };
 }
-const OSOTO = { kake: 0.48, peak: [0.5, 0.84], keys: [
+const OSOTO = { kake: 0.48, peak: [0.5, 0.84], apex: 0.64, keys: [
   { t: 0, A: kf(0, 0, 0, "GRIP"), D: kf(0.8, 0, 0, "GRIP") },
   { t: 0.16, A: kf(0.06, 0.04, -0.08, "OS0"), D: kf(0.84, 0, 0, "D0") },
   { t: 0.32, A: kf(0.3, 0.16, -0.25, "OS1"), D: kf(0.92, 0.02, 0, "D1") },
@@ -943,7 +968,7 @@ const OSOTO = { kake: 0.48, peak: [0.5, 0.84], keys: [
 ] };
 const THROWS = {
   osoto: OSOTO, gaeshi: OSOTO, ura: OSOTO,
-  kouchi: { kake: 0.3, peak: [0.32, 0.56], keys: [
+  kouchi: { kake: 0.3, peak: [0.32, 0.56], apex: 0.44, keys: [
     { t: 0, A: kf(0, 0, 0, "GRIP"), D: kf(0.8, 0, 0, "GRIP") },
     { t: 0.15, A: kf(0.1, 0.03, 0.05, "KO0"), D: kf(0.84, 0, 0, "D0") },
     { t: 0.3, A: kf(0.32, 0.05, 0.1, "KO1"), D: kf(0.92, 0, 0, "D1") },
@@ -961,16 +986,22 @@ function startThrow(att, def, tech, result) {
   const u = axis(att, def), T = THROWS[tech];
   const keys = T.keys.map((k) => ({ ...k, A: { ...k.A }, D: { ...k.D } }));
   const imp = keys.find((k) => k.imp).t;
-  const canRoll = !!(TECHS[tech] && TECHS[tech].dir === "fwd");
+  // 前迴轉倒法：只有「有效」的往前倒投技才有空間滾翻，而且不是每次都有機會（約 6 成）
+  const canRoll = !!(TECHS[tech] && TECHS[tech].dir === "fwd") && result === "yuko" && Math.random() < 0.6;
   const an = G.anim = { att, def, tech, result, t: 0, keys, O: { x: att.x, z: att.z }, u, right: { x: -u.z, z: u.x },
     imp, kake: T.kake, peak: T.peak, color: TECH_COLOR[tech] || 0xffffff,
     canRoll, ukemi: false, tried: false, win0: T.peak[0], win1: imp - 0.04, ghostT: 0, ev: {} };
-  // AI 被往前倒的招摔時，依難度用前迴轉倒法卸力
+  // AI 被往前倒的「有效」摔時，依難度用前迴轉倒法卸力
   an.aiRoll = canRoll && def.isAI && Math.random() < DIFF.ukemi;
-  // 演出等級：一本 2、半勝 1、有效 0。被摔的是玩家時，慢動作等前迴轉時機過了才開始，避免洩漏也不改變難度
-  an.lv = an.aiRoll ? 0 : result === "ippon" ? 2 : result === "waza" ? 1 : 0;
+  // 演出等級：一本 2、半勝 1、有效 0（半勝以上不能前迴轉，所以演出不會洩漏任何資訊）
+  an.lv = result === "ippon" ? 2 : result === "waza" ? 1 : 0;
+  const L = an.lv;
+  an.apex = T.apex;
   an.slow0 = T.peak[0];
-  an.slowTs = an.lv === 2 ? 0.22 : an.lv === 1 ? 0.36 : 1;
+  an.slowTs = [1, 0.25, 0.14][L];     // 升空到最高點的慢動作倍率
+  an.flashT = [0, 0.14, 0.32][L];     // 施技瞬間的「大招閃」定格（真實秒數）
+  an.freezeT = [0, 1.0, 1.9][L];      // 空中定格環繞的長度
+  an.sweep = [0, 1.9, 3.7][L];        // 環繞角度（弧度）：約 110° 與 210°
   att.act = def.act = null;
   att.lastAttack = 0;
   G.gripped = false;
@@ -1033,9 +1064,11 @@ function stepThrow(dt) {
     placeFromKey(f, r.k, an, side === "A");
     f.cur = r.pose;
   }
-  // 時間軸事件（音效、字卡、慢動作、殘影都對齊動畫時間）
-  if (cross(an.kake) || (t0 === 0 && an.kake === 0)) { whoosh(an.lv >= 1 ? 0.7 : 1); showTechName(an); }
-  if (an.lv >= 1 && !an.ukemi && cross(an.slow0)) { cineSlowOn(an); }
+  // 時間軸事件（音效、字卡、慢動作、定格、殘影都對齊動畫時間）
+  if (cross(an.kake)) { whoosh(an.lv >= 1 ? 0.7 : 1); showTechName(an); if (an.lv >= 1) superFlash(an); }
+  if (an.lv >= 1 && cross(an.apex)) startFreeze(an);
+  // 前迴轉時機：開啟時小小強調（提示音、玩家頭上的藍色提示、邊緣微光）
+  if (an.def === W && an.canRoll && !an.ukemi && cross(an.win0)) { ping(); }
   if (t >= an.kake - 0.06 && t < an.imp) {
     an.ghostT -= dt;
     if (an.ghostT <= 0) {
@@ -1142,8 +1175,8 @@ function mash() {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 600);
   const esc = $("nwEsc").parentElement;
-  esc.classList.remove("flash"); void esc.offsetWidth; esc.classList.add("flash");
-  setTimeout(() => esc.classList.remove("flash"), 120);
+  esc.classList.remove("zap"); void esc.offsetWidth; esc.classList.add("zap");
+  setTimeout(() => esc.classList.remove("zap"), 120);
   shake = Math.max(shake, 0.05);
 }
 function newPrompt() {
@@ -1312,6 +1345,8 @@ function startMatch() {
     f.cur = clonePose(POSE.STAND);
   }
   G.introBow = false;
+  GC.snap = true; GC.yaw = GC.yawT = 0;
+  Object.assign(REF, { a: PI, x: 0, z: -2.7 });
   REF.tgt = POSE.R_STAND; REF.gestureT = 0; REF.wave = 0;
   Object.assign(G, { state: "intro", t: 0, clock: MATCH_TIME, golden: false, gripped: false, initiative: null, anim: null, post: null, hold: null, end: null, pendingEnd: false });
   $("title").hidden = true; $("result").hidden = true;
@@ -1589,7 +1624,7 @@ function stepFight(dt) {
   // 消極指導
   for (const f of [W, B]) if (f.lastAttack > 30) { if (giveShido(f, "消極")) return; }
 
-  const mv = { x: input.x, z: -input.y };
+  const mv = camRelative(input.x, input.y);
   if (!G.gripped) {
     // 立技・未抓把
     const aim = aiNeutral(dt);
@@ -1712,8 +1747,13 @@ function updateTele() {
   });
 }
 function animateRef(dt) {
-  const mid = { x: (W.x + B.x) / 2 };
-  REF.x = damp(REF.x, clamp(mid.x, -2.5, 2.5) * 0.6, 1.5, dt);
+  // 裁判站在兩人另一側（從遊戲鏡頭看是後方），跟著鏡頭角度慢慢繞；投技演出時不動
+  const mx = clamp((W.x + B.x) / 2, -2.5, 2.5) * 0.6, mz = clamp((W.z + B.z) / 2, -2.5, 2.5) * 0.6;
+  if (G.state !== "throw") {
+    REF.a += wrap(GC.yaw + PI - REF.a) * (1 - Math.exp(-1.5 * dt));
+    REF.x = damp(REF.x, mx + Math.sin(REF.a) * 2.7, 1.5, dt);
+    REF.z = damp(REF.z, mz + Math.cos(REF.a) * 2.7, 1.5, dt);
+  }
   if (REF.gestureT > 0) { REF.gestureT -= dt; if (REF.gestureT <= 0 && REF.tgt !== POSE.R_WIN_W && REF.tgt !== POSE.R_WIN_B) REF.tgt = POSE.R_STAND; }
   const t = clonePose(REF.tgt);
   if (REF.wave) t.rSh[1] = Math.sin(G.time * 9) * 0.4;
@@ -1721,38 +1761,99 @@ function animateRef(dt) {
   dampPose(REF.cur, t, 9, dt);
   applyPose(ref, REF.cur);
   ref.root.position.set(REF.x, 0, REF.z);
-  ref.root.rotation.y = 0;
+  ref.root.rotation.y = REF.a - PI;
 }
 
-/* ---------- 鏡頭 ---------- */
+/* ---------- 鏡頭 ----------
+   遊戲鏡頭（GC）：
+   ・永遠對準兩人中點，從兩人連線的側面看；角色繞圈時跟著轉
+   ・兩個側面中永遠選離目前鏡頭近的那一個，交換位置時不會翻面
+   ・依兩人距離與螢幕寬高比算出剛好裝得下的距離（手機直式也行）
+   ・用臨界阻尼彈簧（smooth damp）追隨：有慣性、不抖、不暈
+   演出鏡頭（CAMX）以權重和遊戲鏡頭混合。 */
 const camT = new THREE.Vector3(0, 0.9, 0), camP = new THREE.Vector3(0, 3, 8);
+const GC = { yaw: 0, yawT: 0, yv: 0, dist: 8, dv: 0, tx: 0, ty: 0.9, tz: 0, vx: 0, vy: 0, vz: 0, q: 0, snap: true };
+function sd(cur, tgt, st, k, T, dt) {
+  const om = 2 / T, x = om * dt, ex = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const ch = cur - tgt, tmp = (st[k] + om * ch) * dt;
+  st[k] = (st[k] - om * tmp) * ex;
+  return tgt + (ch + tmp) * ex;
+}
+function updateGameCam(dt) {
+  const aspect = camera.aspect;
+  const mid = { x: (W.x + B.x) / 2, z: (W.z + B.z) / 2 };
+  const sep = dist(W, B);
+  // 側面方向：兩人連線方向 ±90°，選和目前鏡頭角度差最小的那一個
+  if (sep > 0.35) {
+    const ax = Math.atan2(B.x - W.x, B.z - W.z);
+    const c1 = ax + PI / 2, c2 = ax - PI / 2;
+    GC.yawT = Math.abs(wrap(c1 - GC.yaw)) <= Math.abs(wrap(c2 - GC.yaw)) ? c1 : c2;
+  }
+  // 取景：水平要裝下兩人（加四肢餘裕），垂直要裝下最高的人；直式螢幕下方有按鍵，多留空間
+  const port = aspect < 0.8;
+  const topY = Math.max(W.cur.h, B.cur.h) + 0.85;
+  const halfH = (topY / 2 + 0.3) * (port ? 1.4 : 1.15);
+  const tv = Math.tan((camera.fov * PI) / 360), th = tv * aspect;
+  const need = clamp(Math.max((sep / 2 + 0.75) / th, halfH / tv) * 1.04, 3.0, 26);
+  const ty = topY / 2 - (port ? halfH * 0.12 : 0);
+  if (GC.snap) {
+    Object.assign(GC, { yaw: GC.yawT, yv: 0, dist: need, dv: 0, tx: mid.x, ty, tz: mid.z, vx: 0, vy: 0, vz: 0, snap: false });
+  } else {
+    // 轉向有速度上限（約每秒 100 度），兩人快速繞過彼此時也不會甩得太快
+    GC.yaw = GC.yaw + clamp(sd(0, wrap(GC.yawT - GC.yaw), GC, "yv", 0.55, dt), -1.75 * dt, 1.75 * dt);
+    GC.yv = clamp(GC.yv, -1.75, 1.75);
+    GC.dist = sd(GC.dist, need, GC, "dv", 0.6, dt);
+    GC.tx = sd(GC.tx, mid.x, GC, "vx", 0.22, dt);
+    GC.tz = sd(GC.tz, mid.z, GC, "vz", 0.22, dt);
+    GC.ty = sd(GC.ty, ty, GC, "vy", 0.35, dt);
+  }
+  const pitch = 0.2;
+  camT.set(GC.tx, GC.ty, GC.tz);
+  camP.set(GC.tx + Math.sin(GC.yaw) * Math.cos(pitch) * GC.dist, GC.ty + Math.sin(pitch) * GC.dist, GC.tz + Math.cos(GC.yaw) * Math.cos(pitch) * GC.dist);
+}
+// 搖桿方向轉成以鏡頭為準的世界方向（往右推＝畫面右邊）
+function camRelative(ix, iy) {
+  const y = GC.yaw, R = { x: Math.cos(y), z: -Math.sin(y) }, F = { x: -Math.sin(y), z: -Math.cos(y) };
+  return { x: R.x * ix + F.x * iy, z: R.z * ix + F.z * iy };
+}
 function updateCamera(dt) {
   const aspect = camera.aspect;
-  const mid = new THREE.Vector3((W.x + B.x) / 2, 0.85, (W.z + B.z) / 2);
-  const sep = dist(W, B);
-  const close = G.state === "throw" || G.state === "osaekomi" || G.state === "post";
   const port = Math.max(1, Math.pow(1.25 / aspect, 0.55));
-  let d = (close ? 4.8 : 5.4 + sep * 0.45) * port;
-  if (G.state === "title") { mid.set(0, 0.9, 0); d = 7.2 * port; }
-  const wantP = new THREE.Vector3(mid.x, mid.y + 1.6 + d * 0.16, mid.z + d);
-  if (G.state === "title") { const a = G.time * 0.12; wantP.set(Math.sin(a) * d, 2.4, Math.cos(a) * d); }
-  let fov = camera.aspect < 0.8 ? 46 : 38;
-  if (G.anim) fov -= G.anim.lv === 2 ? 4 : G.anim.lv === 1 ? 2 : 0;
+  if (G.state === "title") {
+    const d = 7.2 * port, a = G.time * 0.12;
+    camT.lerp(new THREE.Vector3(0, 0.9, 0), 1 - Math.exp(-4 * dt));
+    camP.lerp(new THREE.Vector3(Math.sin(a) * d, 2.4, Math.cos(a) * d), 1 - Math.exp(-2.5 * dt));
+    GC.snap = true;
+  } else updateGameCam(dt);
+  let fov = aspect < 0.8 ? 52 : 40;
+  if (G.anim) fov -= G.anim.lv === 2 ? 2 : G.anim.lv === 1 ? 1 : 0;
+  if (CINE.freeze > 0 && G.anim) fov -= G.anim.lv === 2 ? 3 : 2;
   if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = damp(camera.fov, fov, 3, dt); camera.updateProjectionMatrix(); }
-  camT.lerp(mid, 1 - Math.exp(-4 * dt));
-  camP.lerp(wantP, 1 - Math.exp(-2.5 * dt));
   cineCamera(dt, port);
+  // 直式螢幕兩人離很遠時鏡頭會拉得很遠，霧也跟著往後推
+  scene.fog.near = Math.max(13, GC.dist + 3); scene.fog.far = Math.max(30, GC.dist + 18);
   const w = smooth(clamp(CAMX.w, 0, 1));
   camera.position.lerpVectors(camP, CAMX.pos, w);
   const look = new THREE.Vector3().lerpVectors(camT, CAMX.tgt, w);
   if (shake > 0) { const a = shake * 0.22; camera.position.x += (Math.random() - 0.5) * a; camera.position.y += (Math.random() - 0.5) * a; look.y += (Math.random() - 0.5) * a * 0.5; shake = Math.max(0, shake - dt * 1.4); }
+  // 抓把成功的快速晃動（指數衰減，約 0.2 秒消失）
+  if (GC.q > 0.005) { const a = GC.q * 0.12; camera.position.x += (Math.random() - 0.5) * a; camera.position.y += (Math.random() - 0.5) * a; GC.q *= Math.exp(-14 * dt); }
   camera.lookAt(look);
+  // 演出鏡頭期間，遊戲鏡頭的角度跟著實際鏡頭走，交還時不會從另一側穿過角色
+  if (w > 0.01 && G.state !== "title") { GC.yaw = Math.atan2(camera.position.x - GC.tx, camera.position.z - GC.tz); GC.yv *= 1 - w; }
+  // 裁判擋在鏡頭和視線目標之間就淡出
+  const rx = REF.x - camera.position.x, rz = REF.z - camera.position.z, lx = look.x - camera.position.x, lz = look.z - camera.position.z;
+  const ll = Math.hypot(lx, lz) || 1, along = (rx * lx + rz * lz) / ll, perp = Math.abs(rx * lz - rz * lx) / ll;
+  const block = (along > 0.2 && along < ll + 0.3 && perp < 0.75) || (along > -0.5 && along < 2.4 && perp < 1.5);
+  REF.fade = damp(REF.fade, block ? 0.08 : 1, block ? 14 : 5, dt);
+  for (const m of refMats) m.opacity = REF.fade;
+  ref.root.visible = REF.fade > 0.1;
 }
 
 /* ---------- 電影感演出 ----------
    CINE.ts：投技動畫的時間倍率（慢動作）；hitStop：落地停格（真實時間）
    CAMX：演出鏡頭，以權重 w 和遊戲鏡頭平滑混合，結束後自然淡回 */
-const CINE = { ts: 1, hitStop: 0, slow: false, id: 0 };
+const CINE = { ts: 1, hitStop: 0, slow: false, id: 0, flash: 0, freeze: 0, orbit: null };
 // 只結束「這一次」的演出；之後的新投技不受舊計時器影響
 function cineEndLater(ms) { const id = CINE.id; setTimeout(() => { if (CINE.id === id) cineEnd(); }, ms); }
 const CAMX = { w: 0, pos: new THREE.Vector3(), tgt: new THREE.Vector3(), side: 1, init: false };
@@ -1762,8 +1863,8 @@ function cineBegin(an) {
   const v = new THREE.Vector3().subVectors(camP, camT);
   CAMX.side = (an.right.x * v.x + an.right.z * v.z) >= 0 ? 1 : -1;
   CAMX.pos.copy(camera.position); CAMX.tgt.copy(camT); CAMX.init = true;
-  CINE.ts = 1; CINE.hitStop = 0; CINE.slow = false; CINE.id++;
-  $("cine").className = "cine";
+  CINE.ts = 1; CINE.hitStop = 0; CINE.slow = false; CINE.id++; CINE.flash = 0; CINE.freeze = 0; CINE.orbit = null;
+  $("cine").className = "cine"; setSpot("");
   const tn = $("tname"); tn.className = "tname"; tn.hidden = true;
   cloth();
   for (const id of ["joy", "skills", "tech", "kz"]) $(id).style.visibility = "hidden";
@@ -1774,10 +1875,10 @@ function cineSlowOn(an) {
   $("cine").style.setProperty("--tc", hexCss(an.color));
   gasp(an.lv);
 }
-function cineSoft() { CINE.slow = false; $("cine").className = "cine"; }
+function cineSoft() { CINE.slow = false; $("cine").className = "cine"; setSpot(""); }
 function cineEnd() {
-  CINE.slow = false; CINE.ts = 1; CINE.hitStop = 0;
-  $("cine").className = "cine";
+  CINE.slow = false; CINE.ts = 1; CINE.hitStop = 0; CINE.flash = 0; CINE.freeze = 0; CINE.orbit = null;
+  $("cine").className = "cine"; setSpot(""); canvas.style.filter = "";
   for (const id of ["joy", "skills", "tech", "kz"]) $(id).style.visibility = "";
   hideTechName();
 }
@@ -1790,6 +1891,74 @@ function showTechName(an) {
   el.hidden = false; void el.offsetWidth; el.classList.add("in");
 }
 function hideTechName() { const el = $("tname"); el.classList.remove("in"); el.classList.add("out"); setTimeout(() => { if (el.classList.contains("out")) el.hidden = true; }, 350); }
+/* 時間倍率：依演出等級與動畫進度決定（tick 會平滑地逼近這個值） */
+function targetTs(an) {
+  const t = an.t;
+  if (an.ukemi || t >= an.imp) return 1;
+  // 前迴轉時機開著時：輕微放慢到 0.6 倍，讓玩家感覺得到「現在可以滾」
+  if (an.def === W && an.canRoll && !an.tried && t >= an.win0 && t <= an.win1) return 0.6;
+  if (an.lv === 0) return t > an.apex - 0.08 && t < an.apex + 0.06 ? 0.55 : 1;
+  if (t < an.slow0) return 1;
+  if (!an.frozeDone) return an.slowTs;
+  // 定格後的「速度變化」：前半段慢慢落下，後半段加速砸地（一本比真實速度還快）
+  const f = (t - an.apex) / (an.imp - an.apex);
+  return an.lv === 2 ? (f < 0.45 ? 0.3 : 1.4) : (f < 0.5 ? 0.35 : 0.9);
+}
+// 大招閃：施技瞬間整個畫面停住、背景壓暗、聚光在兩人身上
+function superFlash(an) {
+  CINE.flash = an.flashT;
+  $("cine").style.setProperty("--tc", hexCss(an.color));
+  $("cine").className = "cine on" + (an.lv === 2 ? " lv2" : "");
+  setSpot("burst");
+  const imp = $("impact");
+  imp.style.setProperty("--tc", hexCss(an.color));
+  imp.className = "impact"; void imp.offsetWidth; imp.className = "impact pre" + an.lv;
+  shing(an.lv);
+  gasp(an.lv);
+  if (an.lv === 2) shake = Math.max(shake, 0.12);
+}
+function flashEnd() { setSpot(""); }
+// 空中定格環繞：時間完全停止，鏡頭繞著兩人轉，殘影停在空中，光點漂浮
+function startFreeze(an) {
+  CINE.freeze = an.freezeT;
+  CINE.orbit = { t: 0, dur: an.freezeT, sweep: an.sweep, init: false, lv: an.lv };
+  setSpot("freeze");
+  heartbeat(an.lv);
+  // 漂浮光點
+  const n = an.lv === 2 ? 46 : 18;
+  an.def.fig.J.body.getWorldPosition(_hip);
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.MeshBasicMaterial({ color: Math.random() < 0.7 ? an.color : 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const o = new THREE.Mesh(new THREE.SphereGeometry(rand(0.012, 0.03), 6, 4), m);
+    const a = rand(0, PI * 2), r = rand(0.4, 1.7);
+    o.position.set(_hip.x + Math.cos(a) * r, rand(0.1, 2.2), _hip.z + Math.sin(a) * r);
+    scene.add(o);
+    fxList.push({ obj: o, mat: m, t: 0, dur: an.freezeT + 0.7, kind: "mote", v: { x: rand(-0.08, 0.08), y: rand(0.02, 0.15), z: rand(-0.08, 0.08) } });
+  }
+}
+function freezeEnd(an) {
+  an.frozeDone = true;
+  CINE.orbit = null;
+  CINE.ts = an.lv === 2 ? 0.3 : 0.35;
+  setSpot("");
+  whoom(an.lv);
+  // 環繞結束後，演出鏡頭改從目前所在的那一側接著拍，不會繞回去
+  const v = { x: CAMX.pos.x - an.def.x, z: CAMX.pos.z - an.def.z };
+  CAMX.side = (an.right.x * v.x + an.right.z * v.z) >= 0 ? 1 : -1;
+}
+// 聚光遮罩：flash＝全暗聚光，freeze＝半暗聚光加放射光
+function setSpot(mode) { const el = $("spot"); el.className = "spot" + (mode ? " " + mode + " lv" + (G.anim ? G.anim.lv : 0) : ""); }
+function updateSpot() {
+  const el = $("spot");
+  if (!el.className.includes(" ") || !G.anim) return;
+  const an = G.anim;
+  an.def.fig.J.body.getWorldPosition(_hip); an.att.fig.J.body.getWorldPosition(_ahip);
+  vtmp.set((_hip.x + _ahip.x) / 2, (_hip.y + _ahip.y) / 2 + 0.1, (_hip.z + _ahip.z) / 2).project(camera);
+  el.style.setProperty("--sx", ((vtmp.x + 1) / 2 * 100).toFixed(1) + "%");
+  el.style.setProperty("--sy", ((1 - vtmp.y) / 2 * 100).toFixed(1) + "%");
+  el.style.setProperty("--rot", ((G.time * 22) % 360).toFixed(1) + "deg");
+  el.style.setProperty("--tc", hexCss(an.color));
+}
 function spawnGhost(f, color, op) {
   const g = f.fig.root.clone(true);
   const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -1799,9 +1968,19 @@ function spawnGhost(f, color, op) {
 }
 function cineImpact(an) {
   const lv = an.lv, col = an.color, def = an.def;
-  CINE.hitStop = lv === 2 ? 0.2 : lv === 1 ? 0.12 : 0.06;
+  CINE.hitStop = lv === 2 ? 0.26 : lv === 1 ? 0.14 : 0.07;
   CINE.ts = 1; CINE.slow = false;
-  shake = lv === 2 ? 0.6 : lv === 1 ? 0.38 : 0.22;
+  shake = lv === 2 ? 0.75 : lv === 1 ? 0.42 : 0.22;
+  crack();
+  // 一本：反相一格（格鬥遊戲的重擊閃）、光柱、地面裂痕
+  if (lv === 2) {
+    canvas.style.filter = "invert(1) hue-rotate(180deg) contrast(1.3)";
+    setTimeout(() => { canvas.style.filter = "brightness(1.6) contrast(1.2)"; }, 60);
+    setTimeout(() => { canvas.style.filter = ""; }, 140);
+    pillar(def, col);
+    crackDecal(def, col);
+    setTimeout(() => taiko(0.7), 420);
+  }
   const imp = $("impact");
   imp.style.setProperty("--tc", hexCss(col));
   imp.className = "impact"; void imp.offsetWidth; imp.className = "impact go" + lv;
@@ -1818,10 +1997,11 @@ function cineImpact(an) {
   };
   ring(col, 0, lv === 2 ? 10 : lv === 1 ? 7 : 4.5, lv === 2 ? 0.7 : 0.5, 0.18);
   ring(0xffffff, 0.06, lv === 2 ? 6 : 4, 0.45, 0.08);
-  if (lv === 2) ring(col, 0.16, 13, 0.9, 0.1);
+  if (lv >= 1) ring(col, 0.16, lv === 2 ? 13 : 9, 0.9, 0.1);
+  if (lv === 2) ring(0xffffff, 0.3, 16, 1.1, 0.06);
   // 火花（代表色、加法混色）與揚塵
   const sparkM = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending });
-  const nS = lv === 2 ? 46 : lv === 1 ? 28 : 12;
+  const nS = lv === 2 ? 64 : lv === 1 ? 30 : 12;
   for (let i = 0; i < nS; i++) {
     const m = sparkM.clone();
     const o = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, rand(0.12, 0.3)), m);
@@ -1843,17 +2023,57 @@ function cineImpact(an) {
     fxList.push({ obj: o, mat: m, t: 0, dur: rand(0.6, 1.1), kind: "dust", v: { x: Math.cos(a) * sp, y: rand(0.4, 1.2), z: Math.sin(a) * sp } });
   }
 }
+// 一本：從落地點衝上天的光柱
+function pillar(def, col) {
+  const c = document.createElement("canvas"); c.width = 4; c.height = 128;
+  const g = c.getContext("2d"), gr = g.createLinearGradient(0, 0, 0, 128);
+  gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(0.6, "rgba(255,255,255,.55)"); gr.addColorStop(1, "rgba(255,255,255,1)");
+  g.fillStyle = gr; g.fillRect(0, 0, 4, 128);
+  const tex = new THREE.CanvasTexture(c);
+  const m = new THREE.MeshBasicMaterial({ color: col, map: tex, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const o = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.62, 6, 32, 1, true), m);
+  o.position.set(def.x, 3, def.z); scene.add(o);
+  fxList.push({ obj: o, mat: m, t: 0, dur: 0.6, kind: "pillar", tex });
+}
+// 一本：地面裂痕（只畫一次，之後重複使用貼圖）
+let crackTex = null;
+function crackDecal(def, col) {
+  if (!crackTex) {
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const g = c.getContext("2d"); g.translate(128, 128); g.lineCap = "round";
+    for (let i = 0; i < 14; i++) {
+      let a = (i / 14) * PI * 2 + rand(-0.15, 0.15), r = rand(10, 18), x = Math.cos(a) * r, y = Math.sin(a) * r;
+      g.beginPath(); g.moveTo(x, y);
+      const len = rand(60, 118);
+      while (r < len) { r += rand(10, 20); a += rand(-0.25, 0.25); x = Math.cos(a) * r; y = Math.sin(a) * r; g.lineTo(x, y); }
+      g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = rand(2, 4); g.stroke();
+    }
+    const rg = g.createRadialGradient(0, 0, 0, 0, 0, 40); rg.addColorStop(0, "rgba(255,255,255,.8)"); rg.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = rg; g.fillRect(-40, -40, 80, 80);
+    crackTex = new THREE.CanvasTexture(c);
+  }
+  const m = new THREE.MeshBasicMaterial({ color: col, map: crackTex, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending });
+  const o = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), m);
+  o.rotation.x = -PI / 2; o.rotation.z = rand(0, PI); o.position.set(def.x, 0.02, def.z); scene.add(o);
+  fxList.push({ obj: o, mat: m, t: 0, dur: 1.8, kind: "decal" });
+}
 function stepFx(dt) {
   for (let i = fxList.length - 1; i >= 0; i--) {
-    const f = fxList[i]; f.t += dt;
+    const f = fxList[i];
+    // 定格時殘影停在空中不淡出
+    f.t += f.kind === "ghost" && CINE.freeze > 0 ? 0 : dt;
     const k = clamp(f.t / f.dur, 0, 1);
     if (f.kind === "ghost") f.mat.opacity = f.op * (1 - k);
+    else if (f.kind === "mote") { f.obj.position.x += f.v.x * dt; f.obj.position.y += f.v.y * dt; f.obj.position.z += f.v.z * dt; f.mat.opacity = 0.9 * Math.min(1, f.t / 0.3) * (1 - Math.max(0, (k - 0.7) / 0.3)); }
+    else if (f.kind === "pillar") { const sc = 1 + k * 1.2; f.obj.scale.set(sc, 1 + k * 0.4, sc); f.mat.opacity = 0.6 * (1 - k); }
+    else if (f.kind === "decal") { f.mat.opacity = k < 0.15 ? 1 : 1 - (k - 0.15) / 0.85; }
     else if (f.kind === "ring") { const sc = 1 + (f.max - 1) * (1 - Math.pow(1 - k, 3)); f.obj.scale.set(sc, sc, sc); f.mat.opacity = f.t < 0 ? 0 : 0.95 * (1 - k); }
     else if (f.kind === "spark") { f.v.y -= 9 * dt; f.obj.position.x += f.v.x * dt; f.obj.position.y = Math.max(0.03, f.obj.position.y + f.v.y * dt); f.obj.position.z += f.v.z * dt; f.mat.opacity = 1 - k; }
     else { f.v.y -= 2.5 * dt; f.obj.position.x += f.v.x * dt; f.obj.position.y = Math.max(0.04, f.obj.position.y + f.v.y * dt); f.obj.position.z += f.v.z * dt; f.v.x *= 0.97; f.v.z *= 0.97; f.obj.scale.setScalar(1 + k * 1.5); f.mat.opacity = 0.7 * (1 - k); }
     if (f.t >= f.dur) {
       scene.remove(f.obj);
       if (f.kind !== "ghost") f.obj.geometry.dispose();
+      if (f.tex) f.tex.dispose();
       f.mat.dispose();
       fxList.splice(i, 1);
     }
@@ -1874,12 +2094,37 @@ function cineCamera(dt, port) {
     const mid = { x: (an.att.x + an.def.x) / 2, z: (an.att.z + an.def.z) / 2 };
     // 落地方向（相對取）：用來把鏡頭往那一側偏
     const dirL = Math.sign(land - 0.4) || 1;
-    const dist = an.lv === 2 ? 3.0 : an.lv === 1 ? 3.3 : 3.7;
+    const dist = an.lv === 2 ? 3.3 : an.lv === 1 ? 3.5 : 3.7;
     const low = an.lv === 2 ? 0.38 : an.lv === 1 ? 0.48 : 0.7;
     let p, tg;
+    const o = CINE.orbit;
+    if (o && CINE.freeze > 0) {
+      // 空中定格環繞：從目前角度出發，繞著兩人重心轉，高度先低後高（轉播的子彈時間）
+      if (!o.init) {
+        const dx = CAMX.pos.x - c.x, dz = CAMX.pos.z - c.z, a0 = Math.atan2(dx, dz);
+        // 繞的方向：停下來的位置離裁判越遠越好（之後的鏡頭不會被裁判擋）
+        const ra = Math.atan2(REF.x - c.x, REF.z - c.z), endGap = (d) => Math.abs(wrap(a0 + d * o.sweep - ra));
+        const dir = Math.abs(endGap(1) - endGap(-1)) < 0.2 ? (Math.random() < 0.5 ? 1 : -1) : endGap(1) > endGap(-1) ? 1 : -1;
+        Object.assign(o, { init: true, c: { ...c }, a0, r0: Math.hypot(dx, dz), y0: CAMX.pos.y, dir });
+      }
+      const k = clamp(o.t / o.dur, 0, 1), e = k * k * (3 - 2 * k), b = smooth(clamp(k / 0.25, 0, 1));
+      const a = o.a0 + o.dir * o.sweep * e;
+      // 半徑依視角算：被摔者在空中、施技者彎腰，整組約 2.6 公尺高、2.4 公尺寬，要完整入鏡
+      const tv = Math.tan((camera.fov * PI) / 360), th = tv * camera.aspect;
+      const r = lerp(o.r0, Math.max((o.lv === 2 ? 1.3 : 1.42) / tv, 1.25 / th), b);
+      const yy = o.lv === 2 ? 0.35 + 1.05 * Math.sin(PI * k) : 0.5 + 0.45 * Math.sin(PI * k);
+      CAMX.pos.set(o.c.x + Math.sin(a) * r, lerp(o.y0, yy, b), o.c.z + Math.cos(a) * r);
+      CAMX.tgt.set(o.c.x, Math.max(0.6, o.c.y * 0.85 + 0.2), o.c.z);
+      CAMX.w = 1;
+      return;
+    }
     if (an.t < an.kake - 0.1) {
       p = { x: mid.x + n.x * 3.6 - u.x * 0.2, y: 1.05, z: mid.z + n.z * 3.6 - u.z * 0.2 };
       tg = { x: mid.x, y: 0.95, z: mid.z };
+    } else if (an.t < an.imp && an.frozeDone) {
+      // 砸地鏡頭：定格結束後甩到落地點旁、貼近地面
+      p = { x: ld.x + n.x * (an.lv === 2 ? 3.3 : 3.5) + u.x * 0.9 * dirL, y: an.lv === 2 ? 0.3 : 0.42, z: ld.z + n.z * (an.lv === 2 ? 3.3 : 3.5) + u.z * 0.9 * dirL };
+      tg = { x: lerp(ld.x, c.x, 0.4), y: 0.6, z: lerp(ld.z, c.z, 0.4) };
     } else if (an.t < an.imp) {
       p = { x: c.x + n.x * dist + u.x * 0.55 * dirL, y: low, z: c.z + n.z * dist + u.z * 0.55 * dirL };
       tg = { x: c.x + u.x * 0.15 * dirL, y: Math.max(0.55, c.y * 0.85 + 0.15), z: c.z + u.z * 0.15 * dirL };
@@ -1890,7 +2135,7 @@ function cineCamera(dt, port) {
       tg = { x: cx, y: lerp(0.4, 0.55, k), z: cz };
     }
     const want = new THREE.Vector3(tg.x + (p.x - tg.x) * port, p.y, tg.z + (p.z - tg.z) * port);
-    const rate = an.t < an.kake ? 4 : 6;
+    const rate = an.t < an.kake ? 4 : an.frozeDone && an.t < an.imp ? 10 : 6;
     CAMX.pos.lerp(want, 1 - Math.exp(-rate * dt));
     CAMX.tgt.lerp(new THREE.Vector3(tg.x, tg.y, tg.z), 1 - Math.exp(-(rate + 2) * dt));
   }
@@ -1905,6 +2150,68 @@ function cloth() {
     const s = actx.createBufferSource(), hp = actx.createBiquadFilter(), g = actx.createGain();
     s.buffer = n; hp.type = "highpass"; hp.frequency.value = 1800; g.gain.value = 0.35;
     s.connect(hp).connect(g).connect(actx.destination); s.start(t);
+  } catch (e) {}
+}
+// 大招閃：金屬感的「鏘」
+function shing(lv) {
+  if (!actx) return;
+  try {
+    const t = actx.currentTime;
+    for (const [f, d, gv] of [[2600, 0.5, 0.18], [3900, 0.35, 0.08]]) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = "triangle"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.6, t + d);
+      g.gain.setValueAtTime(gv * (lv === 2 ? 1.4 : 1), t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d);
+    }
+    if (lv === 2) boom(1);
+  } catch (e) {}
+}
+// 定格時的心跳（一本）或低鳴（半勝）
+function heartbeat(lv) {
+  if (!actx) return;
+  try {
+    const t0 = actx.currentTime;
+    const beats = lv === 2 ? [0, 0.22, 0.95, 1.17] : [0, 0.22];
+    for (const b of beats) {
+      const t = t0 + b, o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
+      g.gain.setValueAtTime(0.75, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.25);
+    }
+  } catch (e) {}
+}
+// 定格結束、時間恢復：反向吸氣的「呼——」
+function whoom(lv) {
+  if (!actx) return;
+  try {
+    const t = actx.currentTime, len = lv === 2 ? 0.42 : 0.3;
+    const n = actx.createBuffer(1, actx.sampleRate * len, actx.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(i / d.length, 2);
+    const s = actx.createBufferSource(), bp = actx.createBiquadFilter(), g = actx.createGain();
+    s.buffer = n; bp.type = "bandpass"; bp.Q.value = 1.4; bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(2600, t + len);
+    g.gain.value = lv === 2 ? 0.9 : 0.6;
+    s.connect(bp).connect(g).connect(actx.destination); s.start(t);
+  } catch (e) {}
+}
+// 落地的榻榻米拍擊聲
+function crack() {
+  if (!actx) return;
+  try {
+    const t = actx.currentTime, n = actx.createBuffer(1, actx.sampleRate * 0.08, actx.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const s = actx.createBufferSource(), hp = actx.createBiquadFilter(), g = actx.createGain();
+    s.buffer = n; hp.type = "highpass"; hp.frequency.value = 900; g.gain.value = 0.8;
+    s.connect(hp).connect(g).connect(actx.destination); s.start(t);
+  } catch (e) {}
+}
+// 前迴轉時機的提示音
+function ping() {
+  if (!actx) return;
+  try {
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(1320, t);
+    g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.2);
   } catch (e) {}
 }
 // 觀眾驚呼（升空時）
@@ -2069,6 +2376,18 @@ function updateHUD(dt) {
     $("warnName").textContent = isT ? TECH[B.act.tech] : "";
     warn.style.setProperty("--wc", isT ? hexCss(TECH_COLOR[B.act.tech]) : "#C27C1E");
   }
+  // 前迴轉時機提示（小小強調）
+  const an2 = G.anim;
+  const rollOn = G.state === "throw" && an2 && an2.def === W && an2.canRoll && !an2.tried && !an2.ukemi && an2.t >= an2.win0 && an2.t <= an2.win1;
+  $("rollcue").hidden = !rollOn;
+  $("rollglow").classList.toggle("on", !!rollOn);
+  // 演出時按鍵都藏起來，只有可以前迴轉時留著技能鍵（手機才按得到）
+  if (G.state === "throw" && an2) $("skills").style.visibility = an2.def === W && an2.canRoll && !an2.tried && !an2.ukemi ? "" : "hidden";
+  if (rollOn) {
+    W.fig.J.neck.getWorldPosition(vtmp); vtmp.y += 0.35; vtmp.project(camera);
+    $("rollcue").style.left = ((vtmp.x + 1) / 2 * innerWidth) + "px";
+    $("rollcue").style.top = ((1 - vtmp.y) / 2 * innerHeight) + "px";
+  }
   // 寢技面板
   const h = G.hold;
   const showNw = G.state === "osaekomi" && h && h.phase === "on";
@@ -2119,7 +2438,7 @@ function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  camera.fov = w / h < 0.8 ? 46 : 38;
+  camera.fov = w / h < 0.8 ? 52 : 40;
   camera.updateProjectionMatrix();
 }
 addEventListener("resize", resize);
@@ -2142,13 +2461,15 @@ function tick(dt) {
     case "throw": {
       G.clock = G.golden ? G.clock + dt : Math.max(0, G.clock - dt); if (!G.golden && G.clock <= 0) G.pendingEnd = true;
       const an = G.anim;
-      // 慢動作：在 peak 區間平順地降速；落地停格以真實時間計算
-      const inSlow = an && CINE.slow && an.t >= an.slow0 && an.t < an.imp;
-      // 玩家被往前摔、前迴轉時機還開著時只放慢到 0.6 倍，時機過了才進入完整慢動作
-      const rollOpen = an && an.def === W && an.canRoll && !an.tried && an.t < an.win1;
-      CINE.ts = damp(CINE.ts, inSlow ? (rollOpen ? Math.max(0.6, an.slowTs) : an.slowTs) : 1, inSlow ? 16 : 30, dt);
-      let adt = dt * CINE.ts;
-      if (CINE.hitStop > 0) { CINE.hitStop -= dt; adt = 0; }
+      let adt;
+      if (CINE.flash > 0) { CINE.flash -= dt; adt = 0; if (CINE.flash <= 0) flashEnd(); }
+      else if (CINE.freeze > 0) { CINE.freeze -= dt; if (CINE.orbit) CINE.orbit.t += dt; adt = 0; if (CINE.freeze <= 0) freezeEnd(an); }
+      else if (CINE.hitStop > 0) { CINE.hitStop -= dt; adt = 0; }
+      else {
+        const tt = targetTs(an);
+        CINE.ts = damp(CINE.ts, tt, tt > CINE.ts ? 24 : 14, dt);
+        adt = dt * CINE.ts;
+      }
       stepThrow(adt);
       break;
     }
@@ -2166,6 +2487,7 @@ function tick(dt) {
   animateRef(dt);
   stepFx(dt);
   updateTele();
+  updateSpot();
   banner.visible = false;
   updateCamera(dt);
   updateHUD(dt);
