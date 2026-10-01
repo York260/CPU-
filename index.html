@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>警大學生模擬器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 左側學生證（數值、獎懲），右側為「公文」樣式的事件卡；頂部六階段進度。 */
+:root {
+  --paper: #EEF1F5;
+  --card: #FFFFFF;
+  --ink: #14213D;
+  --muted: #5A6579;
+  --line: #CBD3DE;
+  --navy: #1B3A6B;
+  --on-navy: #FFFFFF;
+  --tint: #E3E9F2;
+  --gold: #A9822A;
+  --stamp: #B42318;
+  --good: #1F7A4D;
+  --f-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1420; --card: #152035; --ink: #E5EAF3; --muted: #94A1B9; --line: #2B3955;
+    --navy: #8FB2EA; --on-navy: #0D1420; --tint: #1D2A44; --gold: #D6B25C; --stamp: #F26B5E; --good: #5CC795;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1420; --card: #152035; --ink: #E5EAF3; --muted: #94A1B9; --line: #2B3955;
+  --navy: #8FB2EA; --on-navy: #0D1420; --tint: #1D2A44; --gold: #D6B25C; --stamp: #F26B5E; --good: #5CC795;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.7; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; }
+
+/* 頁首 */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand svg { width: 38px; height: 38px; flex: none; }
+.brand-name { font-family: var(--f-display); font-weight: 900; font-size: 20px; letter-spacing: .04em; line-height: 1.2; }
+.brand-sub { font-size: 12px; color: var(--muted); letter-spacing: .12em; }
+.ghost { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 4px 12px; font-size: 13px; color: var(--muted); }
+.ghost:hover { border-color: var(--navy); color: var(--ink); }
+
+.timeline { list-style: none; margin: 18px 0 22px; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.timeline li { border-top: 3px solid var(--line); padding-top: 6px; font-size: 13px; color: var(--muted); min-width: 0; }
+.timeline li .n { font-family: var(--f-mono); font-size: 11px; display: block; letter-spacing: .05em; }
+.timeline li.done { border-color: var(--navy); color: var(--ink); }
+.timeline li.now { border-color: var(--gold); color: var(--ink); font-weight: 700; }
+
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 840px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* 學生證 */
+.idcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.id-band { background: var(--navy); color: var(--on-navy); padding: 8px 16px; display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .14em; }
+.id-main { padding: 16px; display: grid; gap: 14px; }
+.id-head { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: center; }
+.avatar { width: 56px; height: 64px; border: 1px solid var(--line); background: var(--tint); display: grid; place-items: center; font-family: var(--f-display); font-weight: 900; font-size: 26px; color: var(--navy); }
+.id-name { font-family: var(--f-display); font-weight: 900; font-size: 20px; line-height: 1.3; }
+.id-meta { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.id-meta .mono { font-family: var(--f-mono); }
+.section-label { font-size: 11px; color: var(--muted); letter-spacing: .16em; margin: 0 0 6px; }
+.stats { display: grid; gap: 6px; }
+.stat { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) 2.2em; align-items: center; gap: 8px; font-size: 13px; }
+.stat .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.bar { height: 6px; background: var(--tint); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--navy); transition: width .4s ease; }
+.bar > i.low { background: var(--stamp); }
+.recs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.rec { border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; font-size: 12px; display: flex; justify-content: space-between; }
+.rec b { font-family: var(--f-mono); font-weight: 600; }
+.rec.bad b { color: var(--stamp); }
+.rec.ok b { color: var(--good); }
+.meter-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.meter-note.warn { color: var(--stamp); }
+.flags { display: flex; flex-wrap: wrap; gap: 4px; }
+.flag { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; color: var(--muted); }
+
+/* 公文事件卡 */
+.doc { background: var(--card); border: 1px solid var(--line); border-radius: 3px; padding: 26px clamp(18px, 4vw, 36px) 28px; position: relative; animation: rise .35s ease both; }
+@keyframes rise { from { transform: translateY(6px); } to { transform: none; } }
+.doc-meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.doc h2 { font-family: var(--f-display); font-weight: 900; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.35; margin: 18px 0 10px; text-wrap: balance; }
+.doc .body { font-size: 16px; line-height: 1.95; max-width: 40em; margin: 0 0 20px; }
+.choices { display: grid; gap: 8px; }
+.choice { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; transition: border-color .15s, background .15s; }
+.choice:hover { border-color: var(--navy); background: var(--tint); }
+.choice .mk { font-family: var(--f-display); font-weight: 900; color: var(--gold); font-size: 17px; }
+.choice .tag { font-size: 11px; font-family: var(--f-mono); color: var(--muted); border: 1px dashed var(--line); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.choice.danger .tag { color: var(--stamp); border-color: var(--stamp); }
+
+.result-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 18px 0 8px; }
+.you-chose { font-size: 13px; color: var(--muted); }
+.stamp { display: inline-block; border: 2px solid var(--stamp); color: var(--stamp); font-family: var(--f-display); font-weight: 900; padding: 2px 10px; transform: rotate(-4deg); letter-spacing: .12em; font-size: 15px; }
+.stamp.ok { border-color: var(--good); color: var(--good); }
+.deltas { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 22px; }
+.chip { font-size: 13px; border-radius: 4px; padding: 2px 8px; background: var(--tint); font-variant-numeric: tabular-nums; }
+.chip.up { color: var(--good); }
+.chip.down { color: var(--stamp); }
+.chip.rec-bad { background: transparent; border: 1px solid var(--stamp); color: var(--stamp); }
+.chip.rec-ok { background: transparent; border: 1px solid var(--good); color: var(--good); }
+.report { border-left: 3px solid var(--gold); padding: 4px 0 4px 14px; margin: 0 0 18px; display: grid; gap: 2px; font-size: 15px; }
+
+.btn { background: var(--navy); color: var(--on-navy); border: 0; border-radius: 6px; padding: 10px 22px; font-weight: 700; letter-spacing: .06em; }
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.line { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.log { margin-top: 18px; }
+.log summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.log ol { margin: 8px 0 0; padding-left: 1.4em; font-size: 13px; color: var(--muted); display: grid; gap: 2px; }
+.log li span { color: var(--ink); }
+
+/* 封面 */
+.cover { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; align-items: center; padding-block: 24px; }
+@media (max-width: 760px) { .cover { grid-template-columns: minmax(0, 1fr); } }
+.cover h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(40px, 7vw, 72px); line-height: 1.1; margin: 0 0 14px; letter-spacing: .02em; text-wrap: balance; }
+.cover h1 em { font-style: normal; color: var(--gold); }
+.cover p.lead { font-size: 17px; max-width: 30em; margin: 0 0 22px; color: var(--muted); }
+.route { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-left: 2px solid var(--line); }
+.route li { padding: 8px 0 8px 18px; position: relative; }
+.route li::before { content: ""; position: absolute; left: -7px; top: 15px; width: 12px; height: 12px; border-radius: 50%; background: var(--card); border: 2px solid var(--navy); }
+.route li:last-child::before { background: var(--gold); border-color: var(--gold); }
+.route b { font-family: var(--f-display); font-size: 17px; }
+.route small { display: block; color: var(--muted); font-size: 13px; }
+.unlocked { margin-top: 18px; font-size: 13px; color: var(--muted); }
+
+/* 角色建立 */
+.form { display: grid; gap: 22px; }
+.field-label { font-family: var(--f-display); font-weight: 900; font-size: 18px; margin: 0 0 8px; }
+.field-label small { font-family: var(--f-body); font-weight: 400; font-size: 13px; color: var(--muted); margin-left: 6px; }
+.text-in { width: 100%; max-width: 320px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: var(--card); border: 0; padding: 7px 20px; }
+.seg button[aria-pressed="true"] { background: var(--navy); color: var(--on-navy); }
+.pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); gap: 8px; }
+.opt { text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; }
+.opt:hover { border-color: var(--navy); }
+.opt[aria-pressed="true"] { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); background: var(--tint); }
+.opt b { font-size: 15px; }
+.opt span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.preview { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+
+/* 結局派令 */
+.order { text-align: left; }
+.order .big { font-family: var(--f-display); font-weight: 900; font-size: clamp(30px, 5vw, 48px); line-height: 1.2; margin: 14px 0 6px; text-wrap: balance; }
+.order .sub { color: var(--muted); margin: 0 0 18px; }
+.seal { position: absolute; right: clamp(16px, 4vw, 36px); top: 54px; width: 84px; height: 84px; border: 3px solid var(--stamp); color: var(--stamp); display: grid; grid-template-columns: 1fr 1fr; place-items: center; font-family: var(--f-display); font-weight: 900; font-size: 22px; line-height: 1; transform: rotate(6deg); opacity: .9; padding: 6px; }
+.order .big, .order .sub { padding-right: 96px; }
+@media (max-width: 520px) { .seal { position: static; margin-top: 12px; } .order .big, .order .sub { padding-right: 0; } }
+.order-text { font-size: 16px; line-height: 1.95; max-width: 40em; }
+.order-text p { margin: 0 0 10px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 8px; margin: 18px 0; }
+.summary div { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.summary small { display: block; font-size: 12px; color: var(--muted); }
+.summary b { font-family: var(--f-mono); font-size: 18px; font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M20 2 L35 8 V20 C35 29 28 35 20 38 C12 35 5 29 5 20 V8 Z" fill="var(--navy)"/>
+        <path d="M20 10 l2.6 5.4 5.9.8-4.3 4.1 1 5.8L20 23.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8Z" fill="var(--gold)"/>
+      </svg>
+      <div>
+        <div class="brand-name">警大學生模擬器</div>
+        <div class="brand-sub">CENTRAL POLICE UNIVERSITY · 115 學年度</div>
+      </div>
+    </div>
+    <button class="ghost" id="restartBtn" type="button" hidden>重新開始</button>
+  </header>
+  <ol class="timeline" id="timeline" hidden></ol>
+  <main id="app"></main>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- 基本資料 ---------- */
+const STAGES = ["預備教育", "一年級", "二年級", "三年級", "四年級", "特考"];
+const STAT_KEYS = ["fit", "aca", "mor", "men", "soc"];
+const STAT_NAME = { fit: "體能", aca: "學業", mor: "品德", men: "心理", soc: "人緣" };
+const REC_GOOD = ["嘉獎", "小功", "大功"];
+const REC_BAD = ["申誡", "小過", "大過"];
+const REC_PTS = { 嘉獎: 1, 小功: 3, 大功: 9, 申誡: 1, 小過: 3, 大過: 9 };
+const EXPEL_AT = 27; // 相當於三大過
+const CN_NUM = ["零", "乙", "兩", "三", "四", "五"];
+
+const DEPTS = [
+  { id: "adm", name: "行政警察學系", b: { mor: 5, soc: 3 }, cat: "行政警察人員", unit: "市政府警察局分局", role: "巡官" },
+  { id: "crm", name: "刑事警察學系", b: { men: 5, aca: 3 }, cat: "刑事警察人員", unit: "市政府警察局刑事警察大隊", role: "巡官" },
+  { id: "for", name: "鑑識科學學系", b: { aca: 8 }, cat: "刑事鑑識人員", unit: "刑事警察局鑑識科", role: "鑑識官" },
+  { id: "fir", name: "消防學系", b: { fit: 8 }, cat: "消防警察人員", unit: "縣市消防局外勤大隊", role: "分隊長" },
+  { id: "trf", name: "交通學系", b: { aca: 4, mor: 4 }, cat: "交通警察人員", unit: "市政府警察局交通警察大隊", role: "巡官" },
+  { id: "inf", name: "資訊管理學系", b: { aca: 6, soc: 2 }, cat: "警察資訊管理人員", unit: "刑事警察局科技犯罪防制中心", role: "巡官" },
+  { id: "brd", name: "國境警察學系", b: { soc: 5, aca: 3 }, cat: "國境警察人員", unit: "航空警察局", role: "巡官" },
+  { id: "mar", name: "水上警察學系", b: { fit: 6, men: 2 }, cat: "水上警察人員", unit: "海洋委員會海巡署", role: "分隊長" },
+  { id: "frn", name: "外事警察學系", b: { soc: 6, aca: 2 }, cat: "外事警察人員", unit: "市政府警察局外事科", role: "巡官" },
+  { id: "cpr", name: "犯罪防治學系", b: { men: 4, soc: 4 }, cat: "犯罪防治人員", unit: "市政府警察局少年警察隊", role: "巡官" },
+  { id: "pub", name: "公共安全學系", b: { mor: 4, men: 4 }, cat: "國家安全情報人員", unit: "國家安全局", role: "情報官" },
+  { id: "law", name: "法律學系", b: { aca: 6, mor: 2 }, cat: "警察法制人員", unit: "市政府警察局法制室", role: "巡官" },
+  { id: "mgt", name: "行政管理學系", b: { aca: 3, soc: 5 }, cat: "行政管理人員", unit: "市政府警察局人事室", role: "巡官" },
+];
+
+const BACKGROUNDS = [
+  { id: "family", name: "警察世家", d: "父母都穿過這身制服", b: { mor: 6, men: 3 } },
+  { id: "athlete", name: "體育班出身", d: "跑步是你的母語", b: { fit: 12, aca: -4 } },
+  { id: "scholar", name: "明星高中學霸", d: "考試從沒怕過", b: { aca: 12, fit: -4 } },
+  { id: "social", name: "社團風雲人物", d: "認識誰都能聊", b: { soc: 10, aca: -2 } },
+  { id: "tough", name: "早熟的單親孩子", d: "很早就學會自己扛", b: { men: 10, soc: -2 } },
+];
+
+const NAMES = ["陳冠宇", "林品妤", "張承恩", "黃詩涵", "李柏翰", "王郁婷", "吳宗翰", "劉芷晴", "蔡宇軒", "楊于萱", "許家豪", "鄭雅筑"];
+
+const FLAG_NAME = {
+  leader: "區隊幹部", buddy: "室友阿凱", partner: "交往中", injury: "舊傷",
+  cheated: "作弊前科", bribe: "收過紅包", prep: "特考準備", phone: "私藏手機", front: "志在外勤", staff: "志在幕僚",
+};
+const CLUB_NAME = { martial: "國術社", honor: "儀隊", band: "熱音社", service: "慈幼社" };
+
+/* ---------- 事件 ----------
+   ch: 選項 { t 文字, e 數值變化, rec 獎懲, set/unset 旗標, r 結果, chk 判定 {s 數值, dc 難度, ok, no}, end 結局, fn 自訂 } */
+const EV = {
+  /* 預備教育 */
+  p1: { when: "第 1 週・報到", where: "桃園龜山・校門", title: "報到日",
+    text: "你拖著行李走進校門，迎接你的不是學長姐的笑臉，而是一聲「立正！」。區隊長宣布：所有手機統一保管，放假才發還。",
+    ch: [
+      { t: "乖乖交出手機", e: { mor: 3, men: -2 }, r: "你把手機放進收納箱。少了訊息通知，世界突然安靜得有點可怕。" },
+      { t: "把一支舊手機藏進行李夾層", chk: { s: "men", dc: 55,
+        ok: { e: { men: 5, mor: -4 }, set: ["phone"], r: "沒被發現。熄燈後躲在棉被裡回訊息，成了你唯一的喘息。" },
+        no: { e: { men: -4, mor: -4 }, rec: { 申誡: 1 }, r: "內務檢查時被翻了出來。區隊長沒罵你，只在本子上記了一筆。" } } },
+      { t: "舉手問能不能先打給家人報平安", chk: { s: "soc", dc: 45,
+        ok: { e: { soc: 4, men: 3 }, r: "區隊長看了你一眼：「給你一分鐘。」電話那頭，媽媽的聲音有點哽咽。" },
+        no: { e: { men: -3 }, r: "「這裡不是夏令營。」全隊的視線落在你身上。" } } },
+    ] },
+  p2: { when: "第 1 週・晚間", where: "學生寢室", title: "豆腐乾棉被",
+    text: "學長示範如何把棉被摺成稜角分明的「豆腐乾」。明早六點內務檢查，不合格的整間寢室一起罰站。",
+    ch: [
+      { t: "熄燈後偷偷起來反覆練習", chk: { s: "mor", dc: 50,
+        ok: { e: { mor: 4, men: -2 }, rec: { 嘉獎: 1 }, r: "你的棉被被拿去當示範。區隊長說：「這才叫內務。」" },
+        no: { e: { mor: 2, men: -3, fit: -2 }, r: "練到凌晨兩點，棉被還行，眼睛卻睜不開。" } } },
+      { t: "請手巧的室友教你", e: { soc: 5, mor: 1 }, set: ["buddy"], r: "室友阿凱邊示範邊碎念，你們成了在這裡的第一個朋友。" },
+      { t: "差不多就好，反正才第一天", e: { mor: -3, men: -3, soc: -4 }, r: "整間寢室被罰站到早點名。室友的眼神比罰站還難受。" },
+    ] },
+  p3: { when: "第 2 週・05:55", where: "學生寢室", title: "早點名倒數五分鐘",
+    text: "起床號響完五分鐘，隔壁床的同學還在打呼。06:00 樓下集合點名，遲到者整寢連坐。",
+    ch: [
+      { t: "掀開他的棉被，拖著他一起衝", chk: { s: "fit", dc: 50,
+        ok: { e: { soc: 6, fit: 2 }, r: "你們在最後一秒滑進隊伍。他喘著說：「欠你一次。」" },
+        no: { e: { soc: 4, men: -2 }, rec: { 申誡: 1 }, r: "還是晚了十秒，兩人一起記申誡。但他從此把你當兄弟。" } } },
+      { t: "自己先下樓，不想被連坐", e: { soc: -6, mor: 1 }, r: "你準時到了。他遲到被罰，之後好幾天不太跟你說話。" },
+      { t: "向區隊長報告他身體不適", chk: { s: "soc", dc: 60,
+        ok: { e: { soc: 3, mor: -5 }, r: "區隊長半信半疑地放過了。你心裡有點不踏實。" },
+        no: { e: { mor: -6, soc: -2 }, rec: { 小過: 1 }, r: "醫務室根本沒有他的就診紀錄。謊報被拆穿，記小過乙次。" } } },
+    ] },
+  p4: { when: "第 4 週・體能戰技", where: "田徑場", title: "3000 公尺測驗",
+    text: "預備教育最重要的關卡之一。操場上的熱氣在扭曲，起跑線旁已經有同學臉色發白。",
+    ch: [
+      { t: "全力衝刺，拚區隊前段", chk: { s: "fit", dc: 55,
+        ok: { e: { fit: 6, men: 3 }, rec: { 嘉獎: 1 }, r: "12 分 40 秒抵達終點，名列區隊前五。" },
+        no: { e: { fit: 3, men: -5 }, r: "最後一圈腿突然沒了力。你勉強及格，趴在草地上吐了。" } } },
+      { t: "穩定配速，安全過關", e: { fit: 3, men: 1 }, r: "14 分整，不上不下，但你知道自己還有餘力。" },
+      { t: "陪快撐不住的同學一起跑", e: { soc: 6, mor: 4, fit: 1 }, r: "你們在時限前 20 秒並肩衝線。那位同學後來逢人就說你的好。" },
+    ] },
+  p5: { when: "第 6 週・熄燈後", where: "學生寢室", title: "想家的夜",
+    text: "你盯著天花板。全身痠痛、被罵、被罰，你開始懷疑自己為什麼要來這裡。隔壁床傳來壓抑的啜泣聲。",
+    ch: [
+      { t: "寫一封信回家", e: { men: 7 }, r: "寫到一半你就哭了。寄出去之後，心裡輕了一點。" },
+      { t: "隔天找區隊長談談", e: { men: 8, mor: 2, soc: 2 }, r: "區隊長說他當年也想過退訓：「撐過預備教育的人，什麼都撐得過。」" },
+      { t: "輕聲安慰隔壁床的同學", e: { men: 3, soc: 5 }, r: "你們聊到凌晨，發現彼此留下來的理由其實差不多。" },
+      { t: "遞出退訓申請書", danger: "將結束遊戲", end: "quit" },
+    ] },
+  p6: { when: "第 8 週・結訓典禮", where: "大禮堂", title: "第一次戴上大盤帽",
+    text: "八週預備教育結束，你在結訓典禮上第一次正式戴上大盤帽。典禮後，區隊長宣布新學期要選出實習區隊幹部。",
+    ch: [
+      { t: "自願擔任實習區隊長", e: { mor: 4, soc: 3, men: -3 }, set: ["leader"], r: "責任很重，但你的名字開始被隊職官記住。" },
+      { t: "推薦一路照顧大家的同學", e: { soc: 6 }, r: "大家都看在眼裡，你推薦人的眼光也被認可。" },
+      { t: "低調當個普通學生就好", e: { men: 5 }, r: "你只想好好喘口氣。" },
+    ] },
+
+  /* 一年級 */
+  y1s: { when: "一年級上・開學", where: "中正堂前廣場", title: "社團博覽會",
+    text: "正式成為一年級新生。國術社、儀隊、熱音社、慈幼社的學長姐賣力招生。課業和勤務之外，你想把剩下的時間放在哪裡？",
+    ch: [
+      { t: "國術社：柔道、跆拳道", e: { fit: 6, men: 2 }, club: "martial", r: "每週三晚上在道館摔到全身瘀青，但越來越扎實。" },
+      { t: "儀隊：校慶的門面", e: { mor: 4, fit: 3, men: -2 }, club: "honor", r: "操槍練到手起水泡，制服卻一次比一次挺。" },
+      { t: "熱音社：釋放壓力", e: { men: 6, soc: 3, mor: -1 }, club: "band", r: "鼓棒敲下去的那一刻，你覺得自己還是自己。" },
+      { t: "慈幼社：服務偏鄉孩童", e: { soc: 4, mor: 4 }, club: "service", r: "放假帶著物資上山，孩子們叫你「警察哥哥姐姐」。" },
+      { t: "不參加，專心讀書", e: { aca: 5 }, r: "晚自習的座位成了你的固定基地。" },
+    ] },
+  y1a: { when: "一年級・晚自習後", where: "寢室走廊", title: "學長的宵夜",
+    text: "一位學長把你叫到走廊：「學弟，幫我去買個宵夜。」福利社已經打烊，要買只能翻牆出去。",
+    ch: [
+      { t: "婉拒，說快熄燈了", chk: { s: "soc", dc: 50,
+        ok: { e: { mor: 3, soc: 1 }, r: "學長愣了一下，笑著說：「有原則，不錯。」" },
+        no: { e: { mor: 3, soc: -5 }, r: "學長冷冷地說：「好，我記住了。」接下來一個月你被盯得很緊。" } } },
+      { t: "照做，翻牆出去買", chk: { s: "fit", dc: 50,
+        ok: { e: { soc: 5, mor: -5 }, r: "你順利帶回鹹酥雞。學長對你另眼相看，但你知道這不對。" },
+        no: { e: { mor: -5 }, rec: { 小過: 1 }, r: "翻牆時被巡查的教官逮個正著。學長全程沒有出現。" } } },
+      { t: "向區隊長反映", e: { mor: 5, soc: -6 }, r: "學長被約談。你做了對的事，但走廊上開始有人對你冷淡。" },
+    ] },
+  y1b: { when: "一年級・期中考週", where: "教學大樓", title: "刑法總則期中考",
+    text: "明天就要考刑法總則，「故意與過失」「未遂犯」你還一知半解。",
+    ch: [
+      { t: "通宵苦讀", e: { aca: 7, men: -5, fit: -2 }, r: "天亮時你終於分得清直接故意與未必故意，代價是兩個黑眼圈。" },
+      { t: "加入學霸同學的讀書會", e: { aca: 5, soc: 3 }, r: "互相出題比自己死背有效多了。" },
+      { t: "猜考古題，賭一把", chk: { s: "aca", dc: 50,
+        ok: { e: { aca: 3, men: 3 }, r: "考古題押中七成，你暗自慶幸。" },
+        no: { e: { aca: -2, men: -4 }, r: "題目全換了。你在答案卷上寫滿了心虛。" } } },
+      { t: "把法條抄在手臂上", danger: "高風險", chk: { s: "men", dc: 65,
+        ok: { e: { aca: 2, mor: -10 }, set: ["cheated"], r: "沒被發現。但之後每次看到「誠信」兩個字，你都會想起那支原子筆。" },
+        no: { e: { mor: -10, men: -6 }, rec: { 大過: 1 }, r: "監考老師當場要你捲起袖子。考場舞弊，記大過乙次。" } } },
+    ] },
+  y1c: { when: "一年級・術科", where: "綜合逮捕術教室", title: "對練",
+    text: "教官要你和體型大你一號的同學對練。對方出手很重，你的手腕隱隱作痛。",
+    ch: [
+      { t: "咬牙繼續練", chk: { s: "fit", dc: 55,
+        ok: { e: { fit: 6, men: 3 }, r: "你抓到破綻一個過肩摔，教官點頭：「這才像樣。」" },
+        no: { e: { fit: -4, men: -3 }, set: ["injury"], r: "手腕扭傷，打了兩週石膏。" } } },
+      { t: "舉手報告教官，要求調整強度", e: { fit: 2, mor: 2 }, r: "教官調整了配對，並提醒全班控制力道。" },
+      { t: "下一回合出重手回敬", e: { fit: 3, mor: -4, soc: -3 }, r: "對練變成打架，兩人一起被罰伏地挺身一百下。" },
+    ] },
+  y1d: { when: "一年級・凌晨 02:00", where: "大樓安全士官桌", title: "夜間衛哨",
+    text: "你輪值凌晨的安全士官。連續幾天睡眠不足，眼皮重得像鉛塊。",
+    ch: [
+      { t: "站起來來回走動提神", e: { mor: 3, fit: 1, men: -2 }, r: "兩個小時走了兩千步，平安交班。" },
+      { t: "靠著牆閉眼五分鐘就好", chk: { s: "men", dc: 55,
+        ok: { e: { men: 3, mor: -3 }, r: "五分鐘變成二十分鐘，幸好沒人經過。" },
+        no: { e: { mor: -5 }, rec: { 小過: 1 }, r: "睜開眼，值星官就站在你面前。衛哨睡覺，記小過乙次。" } } },
+      { t: "默背警察法規撐過去", e: { aca: 4, men: -2 }, r: "交班時你已經能背出警察職權行使法前十條。" },
+    ] },
+  y1e: { when: "一年級・週末", where: "校外", title: "難得的放假",
+    text: "同學提議去台北的夜店放鬆，另一群人要回家，還有人約去圖書館。",
+    ch: [
+      { t: "跟去夜店", chk: { s: "mor", dc: 45,
+        ok: { e: { men: 7, soc: 5, mor: -2 }, r: "玩得很盡興，也準時在收假前回到學校。" },
+        no: { e: { men: 3, mor: -4 }, rec: { 申誡: 1 }, r: "玩過頭了，收假晚了半小時。" } } },
+      { t: "回家吃家裡煮的飯", e: { men: 8 }, r: "家裡的味道讓你充了好幾天的電。" },
+      { t: "去圖書館讀書", e: { aca: 5, men: -1 }, r: "安靜的週末，扎實的進度。" },
+      { t: "去健身房加練", e: { fit: 5, men: 1 }, r: "臥推重量又往上加了一片。" },
+    ] },
+  y1f: { when: "一年級・寢室", where: "學生寢室", title: "消失的兩千元",
+    text: "室友的錢包裡少了兩千元，寢室氣氛很僵。有人小聲說，昨晚看到某位同學在大家洗澡時進出寢室。",
+    ch: [
+      { t: "冷靜蒐證，像警察一樣辦案", chk: { s: "aca", dc: 55,
+        ok: { e: { aca: 3, soc: 5, mor: 3 }, rec: { 嘉獎: 1 }, r: "你比對點名和門禁紀錄，發現錢其實掉在洗衣房，被送到失物招領。誤會解開。" },
+        no: { e: { soc: -3, men: -2 }, r: "你的推理錯了，還讓一位無辜的同學難堪。" } } },
+      { t: "交給區隊長處理", e: { mor: 3 }, r: "程序走完，錢在失物招領處找到了。" },
+      { t: "跟著大家一起孤立那位同學", e: { soc: 2, mor: -6 }, r: "後來真相大白，那位同學再也沒跟你說過話。" },
+    ] },
+  y1g: { when: "一年級・聯誼", where: "台北市區", title: "交換 IG",
+    need: (s) => !s.flags.partner,
+    text: "系上和附近大學辦聯誼。有位對象跟你聊得很投機，散場前問你要不要交換聯絡方式。",
+    ch: [
+      { t: "交換聯絡方式", e: { men: 6, soc: 3 }, set: ["partner"], r: "你們開始趁放假拿回手機的時候聊天。" },
+      { t: "婉拒，現在想專心適應學校", e: { aca: 3 }, r: "回程的車上你有點後悔，但也鬆了口氣。" },
+      { t: "說平常不能用手機，問對方願不願意寫信", e: { men: 5, mor: 2 }, set: ["partner"], r: "對方笑你老派，隔週卻真的寄來一封信。" },
+    ] },
+  y1h: { when: "一年級・服儀檢查前夜", where: "學生寢室", title: "頭髮長了一公分",
+    text: "明天服儀檢查，你發現頭髮比規定長了一點，皮鞋也還沒擦。",
+    ch: [
+      { t: "請室友幫忙推頭、熬夜擦鞋", e: { mor: 3, soc: 2, men: -1 }, r: "寢室變成理髮廳，大家互相推頭到半夜。" },
+      { t: "賭隊職官不會看那麼細", chk: { s: "men", dc: 55,
+        ok: { e: { men: 2 }, r: "隊職官從你面前走過，沒有停下。" },
+        no: { e: { mor: -3 }, rec: { 申誡: 1 }, r: "隊職官停在你面前，掀了掀你的帽簷。" } } },
+      { t: "把皮鞋擦到能照鏡子", chk: { s: "mor", dc: 55,
+        ok: { e: { mor: 4 }, rec: { 嘉獎: 1 }, r: "隊職官把你的鞋拿來當示範。" },
+        no: { e: { mor: 2 }, r: "鞋很亮，但頭髮還是被唸了兩句。" } } },
+    ] },
+  y1i: { when: "一年級・家書", where: "公用電話", title: "家裡的電話",
+    text: "家人來電，說家裡的生意出了狀況，經濟吃緊。你每個月有一點公費零用金。",
+    ch: [
+      { t: "省下零用金寄回家", e: { mor: 4, men: -3 }, r: "你戒掉了福利社的飲料，每月省下一筆。" },
+      { t: "假日偷偷去打工", chk: { s: "men", dc: 60,
+        ok: { e: { mor: -4, men: -2 }, r: "沒被發現，但每個假日都累得像沒放假。" },
+        no: { e: { mor: -3 }, rec: { 小過: 1 }, r: "公費生不得兼職。被同學看到後檢舉，記小過乙次。" } } },
+      { t: "找學生輔導中心申請急難救助", e: { men: 5, soc: 2 }, r: "學校的急難救助金幫了大忙。" },
+    ] },
+
+  /* 二年級 */
+  y2s: { when: "二年級上・新生入學", where: "預備教育營區", title: "輪到你當學長姐",
+    text: "新一屆學弟妹入學，你被派去擔任輔導幹部。一位學弟內務一塌糊塗，還當眾頂嘴。",
+    ch: [
+      { t: "嚴格要求，立下規矩", e: { mor: 2, soc: -3, men: 2 }, r: "學弟怕你，但內務確實進步了。" },
+      { t: "耐心示範，私下聊他的狀況", e: { soc: 6, mor: 3, men: -2 }, r: "他說他其實很想家。後來他成了全隊內務最整齊的人。" },
+      { t: "罰他做體能做到吐", e: { mor: -5, soc: -3 }, rec: { 小過: 1 }, r: "不當管教被家長投訴，記小過乙次。" },
+    ] },
+  y2a: { when: "二年級・射擊課", where: "靶場", title: "第一次實彈射擊",
+    text: "手槍在手上比想像中重。25 公尺外的靶紙在風中微微晃動。",
+    ch: [
+      { t: "屏住呼吸，慢慢壓扳機", chk: { s: "men", dc: 55,
+        ok: { e: { men: 4 }, rec: { 嘉獎: 1 }, r: "五發全進黑心，教官把你的靶紙貼在佈告欄上。" },
+        no: { e: { men: -2 }, r: "後座力讓你縮手，兩發脫靶。" } } },
+      { t: "照著教官口令按部就班", e: { men: 2, mor: 2 }, r: "成績中規中矩，安全規定一條都沒違反。" },
+      { t: "想耍帥單手射擊", e: { mor: -5 }, rec: { 申誡: 1 }, r: "教官立刻收回你的槍：「槍不是玩具。」" },
+    ] },
+  y2b: { when: "二年級・術科檢定", where: "游泳池", title: "救生游泳",
+    text: "踩水、拖帶假人、50 公尺自由式。你從小就不太會游泳。",
+    ch: [
+      { t: "每天晚上去泳池加練", chk: { s: "fit", dc: 45,
+        ok: { e: { fit: 7, men: 1 }, r: "檢定那天你一次過關。" },
+        no: { e: { fit: 4, men: -3 }, r: "差了三秒，下週補考才過。" } } },
+      { t: "請水性好的同學帶你練", e: { fit: 4, soc: 3 }, r: "對方教你換氣節奏，你請對方喝了一個月的飲料。" },
+      { t: "考前請病假拖延", e: { mor: -4, men: 2 }, r: "拖得了一時，補考還是在等你。" },
+    ] },
+  y2c: { when: "二年級・校慶前一個月", where: "大操場", title: "分列式操練",
+    text: "校慶分列式即將登場，每天下午都要頂著大太陽操練。",
+    ch: [
+      { t: "全力投入操練", chk: { s: "fit", dc: 50,
+        ok: { e: { fit: 4, mor: 4, men: -2 }, rec: { 嘉獎: 1 }, r: "分列式整齊劃一，你們區隊獲得校長嘉許。" },
+        no: { e: { fit: 2, men: -4 }, r: "你在預演時中暑，被抬到樹蔭下。" } } },
+      { t: "主動擔任後勤，準備水和毛巾", e: { soc: 6, mor: 2 }, r: "大家記住了你遞來的那瓶冰水。" },
+      { t: "找理由請公差，躲掉操練", e: { men: 4, soc: -4, mor: -2 }, r: "你在冷氣房裡整理文件，同學在外面曬成黑炭。" },
+    ] },
+  y2d: { when: "二年級・放假夜", where: "匿名論壇", title: "那篇抱怨文",
+    text: "你在匿名論壇看到有人抱怨學校規定不合理，底下留言吵翻天。你也有一肚子話想說。",
+    ch: [
+      { t: "發長文痛批學校", chk: { s: "men", dc: 60,
+        ok: { e: { men: 6, soc: 3 }, r: "文章被轉了上千次，沒人知道是你寫的。" },
+        no: { e: { men: -3, mor: -4 }, rec: { 小過: 1 }, r: "文章被截圖，學校查出帳號，你被約談並記小過乙次。" } } },
+      { t: "透過學生自治會理性反映", e: { mor: 4, soc: 3 }, r: "自治會把你的建議帶進會議，晚自習時間真的調整了。" },
+      { t: "滑過就好", e: { men: -1 }, r: "你關掉手機，把那口氣吞了回去。" },
+    ] },
+  y2e: { when: "二年級・報告前夜", where: "圖書館", title: "犯罪學分組報告",
+    text: "四人一組，兩個組員完全失聯。明天就要上台。",
+    ch: [
+      { t: "一個人扛下來", e: { aca: 6, men: -5 }, r: "簡報做到凌晨四點，上台講得意外流暢。" },
+      { t: "直接去寢室把人挖起來", chk: { s: "soc", dc: 50,
+        ok: { e: { soc: 3, aca: 3 }, r: "兩人一臉愧疚地扛下後半段。" },
+        no: { e: { soc: -4, men: -2 }, r: "他們說「有事啦」，門又關上了。" } } },
+      { t: "向老師說明實際分工", e: { mor: 3, soc: -3, aca: 2 }, r: "老師按貢獻度給分，那兩位同學從此看你不順眼。" },
+    ] },
+  y2f: { when: "二年級・放假前", where: "公用電話", title: "我到底算什麼",
+    need: (s) => !!s.flags.partner,
+    text: "交往的對象抱怨你一週只能聯絡兩天，假日還常留校：「我到底算什麼？」",
+    ch: [
+      { t: "每次放假都先去找對方", e: { men: 5, aca: -3, soc: 2 }, r: "感情穩了，讀書時間少了。" },
+      { t: "坦白溝通，約定好規則", chk: { s: "soc", dc: 50,
+        ok: { e: { men: 6 }, r: "對方說：「好，我等你畢業。」" },
+        no: { e: { men: -6 }, unset: ["partner"], r: "談到最後，你們和平分手了。" } } },
+      { t: "冷處理，專心在學校", e: { men: -8, aca: 3 }, unset: ["partner"], r: "訊息越來越少，有一天就再也沒有了。" },
+    ] },
+  y2g: { when: "二年級・晚自習後", where: "教學大樓頂樓", title: "頂樓的告白",
+    need: (s) => !s.flags.partner,
+    text: "同區隊的同學把你叫到頂樓：「我注意你很久了。」",
+    ch: [
+      { t: "答應交往", e: { men: 7, soc: 2 }, set: ["partner"], r: "校內戀愛得低調，但每次早點名對上眼都會偷笑。" },
+      { t: "委婉拒絕", e: { soc: -1, men: -1 }, r: "之後見面有點尷尬，好在時間會沖淡一切。" },
+      { t: "說先當朋友", e: { soc: 3 }, r: "你們成了最好的讀書夥伴。" },
+    ] },
+  y2h: { when: "二年級・學生幹部改選", where: "學生活動中心", title: "要不要出來選",
+    text: "學生自治會改選，有學長姐鼓勵你出來競選。",
+    ch: [
+      { t: "參選並認真跑政見", chk: { s: "soc", dc: 55,
+        ok: { e: { soc: 5, mor: 3, men: -3 }, rec: { 嘉獎: 1 }, set: ["leader"], r: "你高票當選，任內推動了寢室冷氣汰換。" },
+        no: { e: { men: -4, soc: 2 }, r: "差幾票落選，但很多人因此認識了你。" } } },
+      { t: "幫朋友輔選", e: { soc: 5 }, r: "朋友當選了，慶功宴上第一杯敬你。" },
+      { t: "沒興趣，回去讀書", e: { aca: 3 }, r: "選舉很熱鬧，你的筆記也很充實。" },
+    ] },
+  y2i: { when: "二年級・晨跑", where: "校園環道", title: "被甩開的晨跑",
+    text: "晨跑時你發現自己被同學甩開，教官在旁邊默默記錄。",
+    ch: [
+      { t: "每天提早半小時自主訓練", e: { fit: 7, men: -2 }, r: "一個月後，你重新跑回前段班。" },
+      { t: "研究運動科學，調整訓練方式", e: { fit: 4, aca: 2 }, r: "間歇跑加核心訓練，進步得很有效率。" },
+      { t: "算了，又不是體育系", e: { fit: -3, men: 2 }, r: "教官在紀錄表上畫了一個問號。" },
+    ] },
+
+  /* 三年級 */
+  y3s: { when: "三年級・暑期實習", where: "派出所轄區・凌晨 01:00", title: "我認識你們分局長",
+    text: "你跟著帶班學長巡邏，攔下一台蛇行的機車。騎士滿身酒氣，嘴裡嚷著：「我認識你們分局長！」",
+    ch: [
+      { t: "依規定酒測、製作筆錄", chk: { s: "aca", dc: 50,
+        ok: { e: { mor: 5, aca: 3 }, rec: { 嘉獎: 1 }, r: "程序完整，學長說你的筆錄比正式員警還乾淨。" },
+        no: { e: { aca: 2, mor: 2 }, r: "筆錄漏了告知權利事項，學長幫你補上，提醒你下次注意。" } } },
+      { t: "先安撫情緒，再勸他配合", chk: { s: "soc", dc: 50,
+        ok: { e: { soc: 5, mor: 3 }, r: "他冷靜下來，乖乖吹了酒測。" },
+        no: { e: { men: -3 }, r: "他越講越激動，學長出手壓制，你在旁邊手足無措。" } } },
+      { t: "聽到分局長就猶豫了，看學長怎麼處理", e: { mor: -3, men: -2 }, r: "學長照規定開罰，回程時說：「我們只認法，不認人。」" },
+    ] },
+  y3a: { when: "三年級・實習", where: "民宅", title: "家暴報案",
+    text: "現場一位婦人臉上有傷，卻堅持說是自己跌倒，丈夫在旁邊瞪著她。",
+    ch: [
+      { t: "把雙方分開，單獨詢問婦人", chk: { s: "soc", dc: 55,
+        ok: { e: { soc: 4, mor: 5, men: -2 }, rec: { 嘉獎: 1 }, r: "她終於說出實情，你協助她聲請保護令。" },
+        no: { e: { men: -4 }, r: "她還是不肯說。離開時你回頭，看到窗簾後的那雙眼睛。" } } },
+      { t: "依程序通報社工", e: { mor: 4, aca: 2 }, r: "完成責任通報，社工隔天就去訪視。" },
+      { t: "當事人否認，就結案吧", e: { mor: -5, men: -5 }, r: "一週後，同一個地址又打來了。" },
+    ] },
+  y3b: { when: "三年級・實習最後一晚", where: "熱炒店", title: "桌上的紅包",
+    text: "所裡幾位員警約你去吃飯，席間有人塞了一個紅包給你：「業者的一點心意，大家都有。」",
+    ch: [
+      { t: "當場婉拒並離席", e: { mor: 8, soc: -4 }, r: "你走出熱炒店，夜風很冷，心裡很踏實。" },
+      { t: "收下，再私下交給督察", chk: { s: "men", dc: 55,
+        ok: { e: { mor: 6 }, rec: { 小功: 1 }, r: "督察肯定你的作法，案子後續移送。記小功乙次。" },
+        no: { e: { mor: 4, soc: -6, men: -5 }, r: "消息走漏，你被所裡的人排擠。但你沒有後悔。" } } },
+      { t: "收下，反正大家都有", e: { mor: -12, men: -3 }, set: ["bribe"], r: "你把紅包塞進口袋。那天晚上你一直睡不好。" },
+    ] },
+  y3c: { when: "三年級・專題研究", where: "教授研究室", title: "選題",
+    text: "專題研究要決定題目，指導教授給了三個方向。",
+    ch: [
+      { t: "跟著教授做大型研究案", e: { aca: 7, men: -3 }, r: "資料多到看不完，但你學會了真正的研究方法。" },
+      { t: "選有興趣的冷門題目", e: { aca: 5, men: 3 }, r: "寫得很開心，口試委員也覺得新鮮。" },
+      { t: "挑最好寫的", e: { aca: 2, men: 2 }, r: "準時交差，沒什麼記憶點。" },
+    ] },
+  y3d: { when: "三年級・颱風過後", where: "鄰近社區", title: "清淤",
+    text: "颱風重創鄰近社區，學校徵召學生協助救災。",
+    ch: [
+      { t: "自願報名，最早到最晚走", e: { fit: 5, mor: 5, soc: 3, men: -2 }, rec: { 嘉獎: 1 }, r: "阿嬤硬塞了一袋芭樂給你。" },
+      { t: "負責物資登記與聯絡", e: { aca: 2, soc: 4, mor: 3 }, r: "你做的物資表後來被里長拿去當範本。" },
+      { t: "留在學校準備期末考", e: { aca: 4, soc: -2 }, r: "考得不錯，但聽同學講救災的事時，你插不上話。" },
+    ] },
+  y3e: { when: "三年級・深夜來電", where: "學生寢室", title: "幫我作證",
+    text: "好友放假時和人起衝突，對方報警說被推倒受傷。好友打給你：「你那天也在場，幫我說是對方先動手好不好？」但先推人的明明是他。",
+    ch: [
+      { t: "照實說出你看到的", e: { mor: 6, soc: -5, men: -3 }, r: "好友很久沒跟你說話，但你做了警察該做的事。" },
+      { t: "配合他的說法", danger: "高風險", chk: { s: "men", dc: 65,
+        ok: { e: { soc: 3, mor: -10 }, r: "案子不了了之。你們都沒再提起這件事。" },
+        no: { e: { mor: -10 }, rec: { 大過: 1 }, r: "監視器畫面推翻了你的說法。作偽證，記大過乙次。" } } },
+      { t: "勸他主動道歉和解", chk: { s: "soc", dc: 50,
+        ok: { e: { soc: 5, mor: 4 }, r: "對方接受道歉撤告，好友後來謝謝你攔住他。" },
+        no: { e: { soc: -2, men: -2 }, r: "他聽不進去，你們吵了一架。" } } },
+    ] },
+  y3f: { when: "三年級・畢業門檻", where: "語言中心", title: "英檢中高級",
+    text: "畢業前得通過英語檢定門檻，你的成績還差一點。",
+    ch: [
+      { t: "報名補習班", e: { aca: 5, men: -2 }, r: "週末都耗在補習班，分數穩定上升。" },
+      { t: "每天背單字、聽英文廣播", e: { aca: 4 }, r: "早點名前十分鐘，成了你的單字時間。" },
+      { t: "找外事系同學練口說", e: { aca: 3, soc: 4 }, r: "你們約好只用英文吵架，進步神速。" },
+    ] },
+  y3g: { when: "三年級・校園", where: "行政大樓走廊", title: "記者的麥克風",
+    text: "電視台來學校拍專題，記者攔住你，問你對「基層警察過勞」新聞的看法。",
+    ch: [
+      { t: "照實分享學長姐的辛苦", chk: { s: "soc", dc: 55,
+        ok: { e: { soc: 5, men: 2 }, r: "你的回答平實誠懇，學校公關室還特地來道謝。" },
+        no: { e: { mor: -3 }, rec: { 申誡: 1 }, r: "剪接後的片段讓學校很尷尬，你被記申誡乙次。" } } },
+      { t: "禮貌地請對方洽詢學校公關室", e: { mor: 3 }, r: "記者有點失望，但你沒有說錯話。" },
+      { t: "開玩笑說「念警大就是在練過勞」", e: { soc: 3, mor: -4 }, rec: { 申誡: 1 }, r: "這句話上了晚間新聞跑馬燈。" },
+    ] },
+  y3h: { when: "三年級・學期中", where: "學生寢室", title: "失眠",
+    text: "課業、勤務和社團把你壓得喘不過氣，你開始整夜失眠。",
+    ch: [
+      { t: "去學生輔導中心晤談", e: { men: 10 }, r: "說出口之後，你才發現自己撐了多久。" },
+      { t: "規律運動，把壓力跑掉", e: { men: 6, fit: 4 }, r: "每晚十圈操場，睡眠慢慢回來了。" },
+      { t: "硬撐，大家都這樣", e: { men: -6, aca: 2 }, r: "你照鏡子時，覺得裡面的人有點陌生。" },
+    ] },
+
+  /* 四年級 */
+  y4s: { when: "四年級上・畢業實習", where: "實習單位", title: "你畢業後想去哪？",
+    text: "你被分到實務單位進行畢業實習。第一天，帶你的督導就問：「你畢業後想去哪裡？」",
+    ch: [
+      { t: "「想去最辛苦的第一線」", e: { fit: 4, mor: 4 }, set: ["front"], r: "督導笑了：「好，那就從今晚的勤務開始。」" },
+      { t: "「想走專業幕僚」", e: { aca: 5 }, set: ["staff"], r: "督導丟給你一疊公文：「先學會寫簽呈。」" },
+      { t: "「還沒想好，先把眼前的事做好」", e: { men: 4 }, r: "督導點點頭：「這個答案也不錯。」" },
+    ] },
+  y4b: { when: "四年級・突如其來", where: "廉政署", title: "那個紅包",
+    text: "廉政署找上門。三年級實習時收下的那個紅包，牽出了一整條業者行賄案。",
+    ch: [
+      { t: "坦承一切，全力配合調查", e: { mor: 6, men: -6 }, rec: { 大過: 1 }, unset: ["bribe"], r: "因為主動坦承，你保住了學籍，但記了大過乙次。" },
+      { t: "堅稱不知情", danger: "高風險", chk: { s: "men", dc: 70,
+        ok: { e: { mor: -6, men: -6 }, r: "證據不足，你沒有被移送。但良心上的帳永遠都在。" },
+        no: { e: { mor: -8 }, rec: { 大過: 2 }, r: "帳冊上清楚寫著你的名字。記大過兩次。" } } },
+    ] },
+  y4a: { when: "四年級・特考倒數", where: "圖書館", title: "距離特考不到一年",
+    text: "同學開始組讀書會、買函授課程。",
+    ch: [
+      { t: "報名補習班函授", e: { aca: 7, men: -3 }, set: ["prep"], r: "每晚兩小時的函授，筆記堆成一座小山。" },
+      { t: "組讀書會互相出題", e: { aca: 5, soc: 3 }, set: ["prep"], r: "每週三次讀書會，誰缺席誰請飲料。" },
+      { t: "等畢業後再說", e: { men: 3 }, r: "你想先好好享受最後一年。" },
+    ] },
+  y4c: { when: "四年級・寒假前", where: "寢室", title: "畢業旅行",
+    text: "同學提議畢業旅行去墾丁，但時間剛好撞到你排好的讀書週。",
+    ch: [
+      { t: "去！四年才一次", e: { men: 8, soc: 5, aca: -2 }, r: "南灣的夕陽下，大家一起唱了校歌。" },
+      { t: "留下來讀書", e: { aca: 5, soc: -2 }, r: "群組裡的照片很好看，你的筆記也很好看。" },
+      { t: "去兩天就回來", e: { men: 4, soc: 2, aca: 1 }, r: "兩邊都顧到，也兩邊都有點可惜。" },
+    ] },
+  y4d: { when: "四年級・學期末", where: "校門口的麵店", title: "替我穿上那身制服",
+    text: "一起走過預備教育的好友，因為學業成績不及格面臨退學，他想在離開前跟你吃頓飯。",
+    ch: [
+      { t: "陪他吃飯、聊整晚", e: { soc: 5, men: -2 }, r: "他說：「替我穿上那身制服。」" },
+      { t: "幫他查轉學和重考的管道", e: { soc: 4, aca: 2, mor: 2 }, r: "半年後，他考上了另一所大學的法律系。" },
+      { t: "太忙了，傳訊息打氣就好", e: { soc: -3 }, r: "他回了一個貼圖。你們之後很少聯絡。" },
+    ] },
+  y4e: { when: "四年級・放假", where: "老家客廳", title: "回來家鄉好不好",
+    text: "家人開始問你分發的事：「回來家鄉附近工作好不好？」",
+    ch: [
+      { t: "答應盡量填家鄉", e: { men: 4, soc: 2 }, r: "媽媽那天多煮了兩道菜。" },
+      { t: "說想先去都會區磨練", e: { men: 2, aca: 2 }, r: "爸爸沉默了一下：「你自己決定就好。」" },
+      { t: "好好跟家人談你的理想", chk: { s: "soc", dc: 45,
+        ok: { e: { men: 6 }, r: "聊到最後，換家人安慰你別太累。" },
+        no: { e: { men: -3 }, r: "越講越僵，晚餐在沉默中結束。" } } },
+    ] },
+  y4f: { when: "四年級・畢業考", where: "教學大樓", title: "岌岌可危的必修",
+    text: "畢業學分檢核時，你發現有一門必修的分數岌岌可危。",
+    ch: [
+      { t: "拚命補救", e: { aca: 6, men: -4 }, r: "期末考你拿了全班第三。" },
+      { t: "找教授討論補強作業", chk: { s: "soc", dc: 50,
+        ok: { e: { aca: 3, soc: 2 }, r: "教授給了你一份報告題目，你認真寫完。" },
+        no: { e: { aca: 1, men: -2 }, r: "教授說：「考試見。」" } } },
+      { t: "擺爛，應該會過吧", e: { aca: -4, men: 3 }, r: "希望如此。" },
+    ] },
+  y4g: { when: "四年級・新生講座", where: "大禮堂", title: "對學弟妹說幾句話",
+    text: "學校請你在新生講座上分享四年的心得。",
+    ch: [
+      { t: "分享真實的低潮和撐過來的方法", e: { soc: 6, men: 4 }, r: "講完後，好幾個學弟妹來找你聊。" },
+      { t: "講官方版的勵志故事", e: { mor: 3 }, r: "掌聲很整齊。" },
+      { t: "婉拒，你不擅長上台", e: { men: 1 }, r: "你坐在台下，聽別人講你也經歷過的事。" },
+    ] },
+  grad: { when: "四年級・畢業典禮", where: "大操場", title: "拋起大盤帽",
+    text: "家長坐滿看台。你穿上畢業制服，聽著校歌，想起報到那天的那聲「立正」。",
+    ch: [
+      { t: "把大盤帽高高拋起", e: { men: 6, soc: 2 }, r: "帽子落下時，你已經不是當年那個拖著行李的新生了。" },
+      { t: "跟區隊長敬最後一個禮", e: { mor: 4, men: 3 }, r: "區隊長回禮：「去吧，外面需要你。」" },
+    ] },
+
+  /* 特考 */
+  x1: { when: "特考・倒數三個月", where: "書桌前", title: "衝刺期",
+    text: "距離警察特考三等只剩三個月。考科包括憲法與英文、警察學與警察勤務、警察法規、犯罪偵查，再加上你的專業科目。",
+    ch: [
+      { t: "閉關苦讀，每天十二小時", e: { aca: 8, men: -6, fit: -3 }, r: "考古題做了三輪，但你已經好幾週沒看到太陽。" },
+      { t: "和同學在圖書館互相督促", e: { aca: 6, soc: 2, men: -2 }, r: "誰先滑手機誰請宵夜。" },
+      { t: "讀書、運動、休息照表操課", e: { aca: 5, men: 2, fit: 2 }, r: "進度不算快，但很穩。" },
+    ] },
+  x2: { when: "特考・考前一週", where: "家中", title: "偏偏這時候感冒",
+    text: "考前一週，你感冒了，晚上還開始失眠。",
+    ch: [
+      { t: "看醫生、早睡，減少讀書量", e: { men: 5, aca: -1 }, r: "考前兩天，你終於睡了個好覺。" },
+      { t: "吃感冒藥繼續拚", e: { aca: 3, men: -5 }, r: "腦袋昏沉，但進度沒落後。" },
+      { t: "打電話給最重要的人聊聊", e: { men: 6 }, r: "電話那頭說：「考完我們去吃好料。」" },
+    ] },
+  x3: { when: "特考・考試當天", where: "考場", title: "申論題第三題",
+    text: "「試論警察職權行使法中，身分查證之要件與界限。」你對這題只有模糊的印象。",
+    ch: [
+      { t: "冷靜寫出架構，有多少寫多少", chk: { s: "men", dc: 50,
+        ok: { bonus: 6, r: "你從法律保留、比例原則一路寫下來，越寫越清楚。" },
+        no: { bonus: 1, r: "架構有了，內容卻寫得零零落落。" } } },
+      { t: "先寫會的題目，最後回頭補", chk: { s: "aca", dc: 50,
+        ok: { bonus: 7, r: "回頭時你突然想起第六條和第七條，順利補完。" },
+        no: { bonus: -2, r: "時間到了，第三題只寫了一半。" } } },
+      { t: "腦袋一片空白", e: { men: -5 }, bonus: -6, r: "你盯著題目直到鐘聲響起。" },
+    ] },
+  x4: { when: "特考・放榜日", where: "考選部榜單", title: "放榜",
+    text: "早上九點，考選部網站上線。你深吸一口氣，輸入准考證號碼。",
+    ch: [ { t: "查看榜單", fn: "exam" } ] },
+};
+
+const POOLS = {
+  1: ["y1a", "y1b", "y1c", "y1d", "y1e", "y1f", "y1g", "y1h", "y1i"],
+  2: ["y2a", "y2b", "y2c", "y2d", "y2e", "y2f", "y2g", "y2h", "y2i"],
+  3: ["y3a", "y3b", "y3c", "y3d", "y3e", "y3f", "y3g", "y3h"],
+  4: ["y4a", "y4c", "y4d", "y4e", "y4f", "y4g"],
+};
+
+/* ---------- 狀態 ---------- */
+const SAVE_KEY = "cpu-sim-save-v1";
+const ENDINGS_KEY = "cpu-sim-endings-v1";
+let S = null;      // 遊戲狀態
+let view = "title";
+let draft = null;  // 角色建立草稿
+
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function fetchStore(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function clearStore(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function save() { if (S && !S.ending) store(SAVE_KEY, S); else clearStore(SAVE_KEY); }
+
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const dept = () => DEPTS.find((d) => d.id === S.dept);
+const netDemerit = (rec) => REC_BAD.reduce((n, k) => n + rec[k] * REC_PTS[k], 0) - REC_GOOD.reduce((n, k) => n + rec[k] * REC_PTS[k], 0);
+const chance = (stat, dc) => clamp(50 + (stat - dc) * 2, 10, 95);
+const cnNum = (n) => CN_NUM[n] || String(n);
+
+/* ---------- 角色建立 ---------- */
+function newDraft() {
+  return { name: NAMES[rnd(0, NAMES.length - 1)], gender: "男", dept: "adm", bg: "family", roll: rollDice() };
+}
+function rollDice() { const r = {}; STAT_KEYS.forEach((k) => (r[k] = rnd(-5, 5))); return r; }
+function draftStats(d) {
+  const dp = DEPTS.find((x) => x.id === d.dept), bg = BACKGROUNDS.find((x) => x.id === d.bg);
+  const s = {};
+  STAT_KEYS.forEach((k) => (s[k] = clamp(45 + (dp.b[k] || 0) + (bg.b[k] || 0) + d.roll[k], 5, 95)));
+  return s;
+}
+function startGame() {
+  const d = draft;
+  const idx = DEPTS.findIndex((x) => x.id === d.dept);
+  S = {
+    name: d.name.trim() || "無名新生", gender: d.gender, dept: d.dept, bg: d.bg,
+    sid: "115" + String(idx + 1).padStart(2, "0") + String(rnd(1, 120)).padStart(3, "0"),
+    stats: draftStats(d), rec: { 嘉獎: 0, 小功: 0, 大功: 0, 申誡: 0, 小過: 0, 大過: 0 },
+    flags: d.bg === "family" ? { family: true } : {}, club: null,
+    stage: 0, queue: [], idx: 0, log: [], strikes: 0, bonus: 0,
+    stageStart: null, result: null, ending: null, yearReport: null,
+  };
+  beginStage(0);
+  view = "event";
+  save(); render();
+}
+
+function beginStage(n) {
+  S.stage = n; S.idx = 0; S.stageStart = { ...S.stats };
+  let q;
+  const draw = (pool, k) => shuffle(POOLS[pool].filter((id) => !EV[id].need || EV[id].need(S))).slice(0, k);
+  if (n === 0) q = ["p1", "p2", "p3", "p4", "p5", "p6"];
+  else if (n >= 1 && n <= 3) q = [["y1s", "y2s", "y3s"][n - 1], ...draw(n, 4), "yend"];
+  else if (n === 4) q = ["y4s", ...(S.flags.bribe ? ["y4b"] : []), ...draw(4, 4), "yend", "grad"];
+  else q = ["x1", "x2", "x3", "x4"];
+  S.queue = q;
+}
+
+/* ---------- 選擇 ---------- */
+function currentEvent() {
+  const id = S.queue[S.idx];
+  if (id === "yend") return yearEndEvent();
+  return EV[id];
+}
+
+function yearEndEvent() {
+  const y = S.stage;
+  return { when: STAGES[y] + "・學年末", where: "教務處佈告欄", title: STAGES[y] + "學年考核",
+    text: "學年結束。學科成績、體能測驗與操行成績即將公布。及格標準一年比一年嚴格，不及格要補考，補考仍未通過將留下紀錄；累計兩次將被退學。",
+    ch: [{ t: "查看成績單", fn: "yearEnd" }] };
+}
+
+function choose(i) {
+  const ev = currentEvent(), c = ev.ch[i];
+  const out = { label: c.t, e: {}, rec: {}, r: c.r || "", roll: null, report: null };
+  const merge = (src) => {
+    if (!src) return;
+    if (src.e) for (const k in src.e) out.e[k] = (out.e[k] || 0) + src.e[k];
+    if (src.rec) for (const k in src.rec) out.rec[k] = (out.rec[k] || 0) + src.rec[k];
+    if (src.set) src.set.forEach((f) => (S.flags[f] = true));
+    if (src.unset) src.unset.forEach((f) => delete S.flags[f]);
+    if (src.bonus) S.bonus += src.bonus;
+    if (src.r) out.r = src.r;
+  };
+  if (c.end) { finish(c.end); return; }
+  merge(c);
+  if (c.club) S.club = c.club;
+  if (c.chk) {
+    const p = chance(S.stats[c.chk.s], c.chk.dc);
+    const ok = Math.random() * 100 < p;
+    out.roll = { s: c.chk.s, p, ok };
+    merge(ok ? c.chk.ok : c.chk.no);
+  }
+  if (c.fn === "yearEnd") yearEnd(out);
+  if (c.fn === "exam") { exam(); return; }
+  apply(out);
+  S.log.push({ st: STAGES[S.stage], ev: ev.title, c: c.t });
+  S.result = out;
+  view = "result";
+  save(); render();
+}
+
+function apply(out) {
+  for (const k in out.e) S.stats[k] = clamp(S.stats[k] + out.e[k], 0, 100);
+  for (const k in out.rec) S.rec[k] += out.rec[k];
+}
+
+function yearEnd(out) {
+  const y = S.stage, lines = [];
+  const checks = [
+    { k: "aca", name: "學科成績", thr: 30 + y * 5, fix: { aca: 6, men: -4 } },
+    { k: "fit", name: "體能測驗", thr: 30 + y * 5, fix: { fit: 6, men: -3 } },
+    { k: "mor", name: "操行成績", thr: 25, fix: { mor: 5, men: -2 } },
+  ];
+  checks.forEach((c) => {
+    const v = S.stats[c.k];
+    if (v >= c.thr) { lines.push(`${c.name}：${v}（標準 ${c.thr}）及格`); return; }
+    const p = clamp(55 + (S.stats.men - 50), 20, 90);
+    const pass = Math.random() * 100 < p;
+    for (const k in c.fix) out.e[k] = (out.e[k] || 0) + c.fix[k];
+    if (pass) lines.push(`${c.name}：${v}（標準 ${c.thr}）不及格，寒假留校補考後通過`);
+    else { S.strikes++; lines.push(`${c.name}：${v}（標準 ${c.thr}）補考仍未通過，列入學籍紀錄`); }
+  });
+  if (S.stats.aca >= 80) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 2; lines.push("學業成績名列前茅，獲頒書卷獎，嘉獎兩次"); }
+  if (S.stats.fit >= 80) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 1; lines.push("體能測驗成績優異，嘉獎乙次"); }
+  if (S.flags.leader) { out.rec.嘉獎 = (out.rec.嘉獎 || 0) + 1; lines.push("擔任學生幹部盡責，嘉獎乙次"); }
+  out.report = lines;
+  out.r = S.strikes ? `目前累計未通過紀錄：${S.strikes} 次（達 2 次即退學）。` : "全數通過，順利升級。";
+}
+
+function exam() {
+  const s = S.stats, d = dept();
+  const score = Math.round(s.aca * 0.55 + s.men * 0.2 + s.mor * 0.1 + s.fit * 0.08 + s.soc * 0.07 + S.bonus + (S.flags.prep ? 4 : 0) + rnd(-6, 6));
+  S.examScore = score;
+  S.log.push({ st: "特考", ev: "放榜", c: "總成績 " + score });
+  finish(score >= 52 ? "pass" : "failExam");
+}
+
+function continueOn() {
+  S.result = null;
+  if (checkFatal()) return;
+  S.idx++;
+  if (S.idx >= S.queue.length) { view = "stageEnd"; }
+  else view = "event";
+  save(); render();
+}
+function checkFatal() {
+  if (S.stats.men <= 0) { finish("breakdown"); return true; }
+  if (netDemerit(S.rec) >= EXPEL_AT) { finish("expel"); return true; }
+  if (S.strikes >= 2) { finish("academic"); return true; }
+  return false;
+}
+function nextStage() { beginStage(S.stage + 1); view = "event"; save(); render(); }
+
+/* ---------- 結局 ---------- */
+function topStat() { return STAT_KEYS.reduce((a, k) => (S.stats[k] > S.stats[a] ? k : a), STAT_KEYS[0]); }
+const EPITHET = { fit: "鐵人", aca: "學霸", mor: "模範生", men: "鋼鐵心臟", soc: "人氣王" };
+
+function finish(kind) {
+  const d = dept(), f = S.flags, extra = [];
+  let E;
+  if (kind === "quit") E = { key: "quit", seal: "退訓", head: "退訓申請", big: "你在第六週離開了", sub: "預備教育・自請退訓",
+    p: ["區隊長收下申請書，沉默了很久，最後只說了一句：「想清楚就好。」", "你換回便服走出校門，警衛向你點了點頭。這條路不適合每個人，承認這點也需要勇氣。"] };
+  else if (kind === "breakdown") E = { key: "breakdown", seal: "休學", head: "休學通知", big: "你需要停下來", sub: STAGES[S.stage] + "・身心狀況亮紅燈",
+    p: ["長期的壓力壓垮了你。輔導老師陪你辦了休學手續，建議你先好好休息。", "放下不代表失敗。如果哪天想回來，學校的大門還在。"] };
+  else if (kind === "expel") E = { key: "expel", seal: "退學", head: "學生獎懲委員會決議", big: "功過相抵後滿三大過", sub: STAGES[S.stage] + "・依學生獎懲規定退學",
+    p: ["獎懲委員會的決議送到寢室時，室友們都低著頭。", `你累積了申誡 ${S.rec.申誡}、小過 ${S.rec.小過}、大過 ${S.rec.大過}，扣除獎勵後仍達三大過。警察的第一課是紀律，你沒有通過這一課。`] };
+  else if (kind === "academic") E = { key: "academic", seal: "退學", head: "教務處通知", big: "學業考核未通過", sub: STAGES[S.stage] + "・累計兩次補考未過",
+    p: ["成績單上的紅字比任何訓話都安靜。", "你收拾寢室的時候，在抽屜裡翻到預備教育時寫的那封家書。"] };
+  else if (kind === "failExam") E = { key: "failExam", seal: "落榜", head: "考選部榜單", big: "榜單上沒有你的名字", sub: `警察特考三等・${d.cat}・總成績 ${S.examScore}`,
+    p: ["你把准考證號碼輸入了三次，結果都一樣。", "警大公費生畢業後必須通過特考才能任官；你決定明年再戰。一起畢業的同學陸續報到，你在群組裡看他們分享第一天上班的照片。", "這一年會很難熬，但你已經撐過四年了。"] };
+  else {
+    const t = topStat();
+    const top = S.examScore >= 80;
+    const vale = S.stats.aca >= 85 && S.stats.mor >= 75;
+    let unit = d.unit, role = d.role;
+    if (f.front && d.id === "adm") unit = "市政府警察局保安警察大隊";
+    if (f.staff && d.id === "adm") unit = "內政部警政署";
+    E = { key: top ? "top" : "pass", seal: "派令", head: "內政部警政署派令",
+      big: (top ? "特考榜首・" : "") + EPITHET[t] + role,
+      sub: `警察特考三等・${d.cat}・總成績 ${S.examScore}`,
+      p: [`茲派 ${S.name} 為 ${unit}${role}，警正四階。`] };
+    if (top) extra.push("你的名字掛在全國榜單的第一行。報到那天，局長親自跟你握了手。");
+    if (vale) extra.push("你同時拿下畢業總成績前段的榮譽，在畢業典禮上代表全體畢業生致詞。");
+    const flav = {
+      fit: "第一次出勤就追上了逃逸的嫌犯，學長說你跑起來像預備教育時那場 3000 公尺。",
+      aca: "你寫的第一份簽呈被長官原封不動地往上呈，從此你的桌上總是堆滿最難的案子。",
+      mor: "報到第一週，就有業者想「意思意思」。你把信封推回去，同事們看你的眼神多了一分敬意。",
+      men: "第一個大夜班遇到重大事故，你是現場最冷靜的那個人。",
+      soc: "不到一個月，轄區的里長、店家和巡守隊都叫得出你的名字。",
+    };
+    extra.push(flav[t]);
+    if (f.partner) extra.push("那個說要等你畢業的人，在授階典禮的台下哭得比你還兇。");
+    if (f.buddy) extra.push("室友阿凱分發到隔壁分局，你們約好每個月吃一次宵夜。");
+    if (S.club) extra.push(`${CLUB_NAME[S.club]}的學弟妹送來一張大合照，背面寫著「學長姐加油」。`);
+    if (f.cheated) extra.push("只是偶爾，你還是會想起一年級那支原子筆。");
+    if (f.injury) extra.push("一年級留下的手腕舊傷在下雨天會痛，提醒你走過的每一步。");
+    E.p = E.p.concat(extra);
+  }
+  S.ending = E;
+  const seen = fetchStore(ENDINGS_KEY) || [];
+  if (!seen.includes(E.key)) { seen.push(E.key); store(ENDINGS_KEY, seen); }
+  view = "ending";
+  save(); render();
+}
+
+/* ---------- 畫面 ---------- */
+const $app = document.getElementById("app");
+const $tl = document.getElementById("timeline");
+const $restart = document.getElementById("restartBtn");
+
+function render() {
+  const inGame = S && view !== "title" && view !== "create";
+  $tl.hidden = !inGame;
+  $restart.hidden = !(S && view !== "title");
+  if (inGame) renderTimeline();
+  if (view === "title") $app.innerHTML = titleView();
+  else if (view === "create") $app.innerHTML = createView();
+  else $app.innerHTML = `<div class="layout">${idCard()}<section>${mainView()}</section></div>`;
+  bind();
+  window.scrollTo(0, 0);
+}
+
+function renderTimeline() {
+  const cur = S.stage;
+  $tl.innerHTML = STAGES.map((n, i) => {
+    const cls = i < cur || (view === "stageEnd" && i === cur) ? "done" : i === cur ? "now" : "";
+    return `<li class="${cls}"><span class="n">0${i + 1}</span>${n}</li>`;
+  }).join("");
+}
+
+function titleView() {
+  const saved = fetchStore(SAVE_KEY);
+  const seen = fetchStore(ENDINGS_KEY) || [];
+  return `<div class="cover">
+    <div>
+      <h1>穿上制服之前，<br>先撐過<em>四年</em>。</h1>
+      <p class="lead">建立你的角色，從預備教育一路走到警察特考。每一個選擇都會改變你的體能、學業、品德、心理與人緣，也會留下嘉獎或記過。三大過，你就得離開。</p>
+      <div class="row">
+        <button class="btn" data-act="new" type="button">建立角色</button>
+        ${saved ? `<button class="btn line" data-act="continue" type="button">繼續：${esc(saved.name)}・${STAGES[saved.stage]}</button>` : ""}
+      </div>
+      <p class="unlocked">已解鎖結局：${seen.length} / 7</p>
+    </div>
+    <ol class="route">
+      <li><b>預備教育</b><small>八週入學訓練：內務、早點名、3000 公尺</small></li>
+      <li><b>一年級</b><small>社團、學長制、刑法總則</small></li>
+      <li><b>二年級</b><small>射擊、救生、輪到你帶學弟妹</small></li>
+      <li><b>三年級</b><small>派出所暑期實習，第一次面對民眾</small></li>
+      <li><b>四年級</b><small>畢業實習、畢業典禮</small></li>
+      <li><b>特考</b><small>警察特考三等，決定你的派令</small></li>
+    </ol>
+  </div>`;
+}
+
+function statLine(k, v) {
+  return `<div class="stat"><span>${STAT_NAME[k]}</span><div class="bar"><i class="${v < 25 ? "low" : ""}" style="width:${v}%"></i></div><span class="v">${v}</span></div>`;
+}
+
+function createView() {
+  const d = draft, st = draftStats(d);
+  const bonusText = (b) => Object.entries(b).map(([k, v]) => `${STAT_NAME[k]} ${v > 0 ? "+" : ""}${v}`).join("・");
+  return `<div class="layout">
+    <aside class="preview">
+      <p class="section-label">預覽數值</p>
+      <div class="stats">${STAT_KEYS.map((k) => statLine(k, st[k])).join("")}</div>
+      <div class="row"><button class="btn line" data-act="reroll" type="button">重新擲骰</button></div>
+      <p class="meter-note">基礎 45，加上學系與出身加成，再加 ±5 的隨機值。</p>
+    </aside>
+    <section class="doc">
+      <div class="doc-meta"><span>入學報到表</span><span>115 學年度・大學部四年制</span></div>
+      <h2>新生資料</h2>
+      <div class="form">
+        <div>
+          <p class="field-label"><label for="nameIn">姓名</label></p>
+          <div class="row"><input id="nameIn" class="text-in" maxlength="8" value="${esc(d.name)}"><button class="ghost" data-act="randname" type="button">隨機</button></div>
+        </div>
+        <div>
+          <p class="field-label">性別</p>
+          <div class="seg">${["男", "女"].map((g) => `<button type="button" data-gender="${g}" aria-pressed="${d.gender === g}">${g}</button>`).join("")}</div>
+        </div>
+        <div>
+          <p class="field-label">學系<small>決定特考類科與分發單位</small></p>
+          <div class="pick">${DEPTS.map((x) => `<button type="button" class="opt" data-dept="${x.id}" aria-pressed="${d.dept === x.id}"><b>${x.name}</b><span>${bonusText(x.b)}</span></button>`).join("")}</div>
+        </div>
+        <div>
+          <p class="field-label">出身</p>
+          <div class="pick">${BACKGROUNDS.map((x) => `<button type="button" class="opt" data-bg="${x.id}" aria-pressed="${d.bg === x.id}"><b>${x.name}</b><span>${x.d}<br>${bonusText(x.b)}</span></button>`).join("")}</div>
+        </div>
+        <div class="row"><button class="btn" data-act="start" type="button">完成報到</button><button class="btn line" data-act="back" type="button">返回</button></div>
+      </div>
+    </section>
+  </div>`;
+}
+
+function idCard() {
+  const d = dept(), net = netDemerit(S.rec), left = EXPEL_AT - net;
+  const flags = Object.keys(S.flags).filter((f) => FLAG_NAME[f]).map((f) => `<span class="flag">${FLAG_NAME[f]}</span>`);
+  if (S.club) flags.unshift(`<span class="flag">${CLUB_NAME[S.club]}</span>`);
+  return `<aside class="idcard">
+    <div class="id-band"><span>學生證</span><span>CPU</span></div>
+    <div class="id-main">
+      <div class="id-head">
+        <div class="avatar" aria-hidden="true">${esc(S.name.slice(-1))}</div>
+        <div>
+          <div class="id-name">${esc(S.name)}</div>
+          <div class="id-meta">${d.name}・${S.gender}<br>學號 <span class="mono">${S.sid}</span></div>
+        </div>
+      </div>
+      <div><p class="section-label">能力</p><div class="stats">${STAT_KEYS.map((k) => statLine(k, S.stats[k])).join("")}</div></div>
+      <div>
+        <p class="section-label">獎懲紀錄</p>
+        <div class="recs">${REC_GOOD.map((k) => `<div class="rec ok"><span>${k}</span><b>${S.rec[k]}</b></div>`).join("")}${REC_BAD.map((k) => `<div class="rec bad"><span>${k}</span><b>${S.rec[k]}</b></div>`).join("")}</div>
+        <p class="meter-note ${left <= 9 ? "warn" : ""}">${net > 0 ? `功過相抵後仍有 ${net} 點，距離三大過還差 ${left} 點` : "功過相抵後沒有懲處"}${S.strikes ? `・補考未過 ${S.strikes} 次` : ""}</p>
+      </div>
+      ${flags.length ? `<div><p class="section-label">狀態</p><div class="flags">${flags.join("")}</div></div>` : ""}
+    </div>
+  </aside>`;
+}
+
+function mainView() {
+  if (view === "event") return eventView();
+  if (view === "result") return resultView();
+  if (view === "stageEnd") return stageEndView();
+  if (view === "ending") return endingView();
+  return "";
+}
+
+const MARKS = ["甲", "乙", "丙", "丁", "戊"];
+function docMeta(ev) {
+  return `<div class="doc-meta"><span>${esc(ev.when)}</span><span>${esc(ev.where || "")}</span></div>`;
+}
+function eventView() {
+  const ev = currentEvent();
+  const n = S.idx + 1, total = S.queue.length;
+  return `<article class="doc">
+    ${docMeta(ev)}
+    <h2>${esc(ev.title)}</h2>
+    <p class="body">${esc(ev.text)}</p>
+    <div class="choices">${ev.ch.map((c, i) => {
+      let tag = "";
+      if (c.chk) tag = `判定・${STAT_NAME[c.chk.s]} ${chance(S.stats[c.chk.s], c.chk.dc)}%`;
+      if (c.danger) tag = c.danger + (c.chk ? `・${STAT_NAME[c.chk.s]} ${chance(S.stats[c.chk.s], c.chk.dc)}%` : "");
+      return `<button type="button" class="choice ${c.danger ? "danger" : ""}" data-choice="${i}"><span class="mk">${MARKS[i]}</span><span>${esc(c.t)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
+    }).join("")}</div>
+    ${logView(`${STAGES[S.stage]}・第 ${n} / ${total} 件`)}
+  </article>`;
+}
+
+function resultView() {
+  const ev = currentEvent(), o = S.result;
+  const chips = [];
+  for (const k of STAT_KEYS) if (o.e[k]) chips.push(`<span class="chip ${o.e[k] > 0 ? "up" : "down"}">${STAT_NAME[k]} ${o.e[k] > 0 ? "+" : ""}${o.e[k]}</span>`);
+  for (const k of REC_GOOD) if (o.rec[k]) chips.push(`<span class="chip rec-ok">${k}${cnNum(o.rec[k])}次</span>`);
+  for (const k of REC_BAD) if (o.rec[k]) chips.push(`<span class="chip rec-bad">${k}${cnNum(o.rec[k])}次</span>`);
+  const stamp = o.roll ? `<span class="stamp ${o.roll.ok ? "ok" : ""}">${o.roll.ok ? "判定成功" : "判定失敗"}</span>` : "";
+  return `<article class="doc">
+    ${docMeta(ev)}
+    <h2>${esc(ev.title)}</h2>
+    <div class="result-head"><span class="you-chose">你選擇：${esc(o.label)}</span>${stamp}</div>
+    ${o.report ? `<div class="report">${o.report.map((l) => `<span>${esc(l)}</span>`).join("")}</div>` : ""}
+    <p class="body">${esc(o.r)}</p>
+    ${chips.length ? `<div class="deltas">${chips.join("")}</div>` : ""}
+    <button class="btn" data-act="next" type="button">繼續</button>
+  </article>`;
+}
+
+function stageEndView() {
+  const n = S.stage, prev = S.stageStart;
+  const rows = STAT_KEYS.map((k) => {
+    const d = S.stats[k] - prev[k];
+    return `<div><small>${STAT_NAME[k]}</small><b>${S.stats[k]}</b> <span class="chip ${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? "+" : ""}${d}</span></div>`;
+  }).join("");
+  const label = n === 0 ? "預備教育結訓" : n === 4 ? "四年級畢業" : STAGES[n] + "結束";
+  return `<article class="doc">
+    <div class="doc-meta"><span>階段結算</span><span>${STAGES[n]}</span></div>
+    <h2>${label}</h2>
+    <p class="body">${n === 4 ? "四年的校園生活畫下句點。接下來，只剩最後一關。" : "這個階段告一段落。以下是你這段時間的變化。"}</p>
+    <div class="summary">${rows}</div>
+    <button class="btn" data-act="stage" type="button">進入${STAGES[n + 1]}</button>
+  </article>`;
+}
+
+function endingView() {
+  const E = S.ending, sealChars = (E.seal + "結局").slice(0, 4).split("");
+  const summary = STAT_KEYS.map((k) => `<div><small>${STAT_NAME[k]}</small><b>${S.stats[k]}</b></div>`).join("")
+    + `<div><small>嘉獎／功</small><b>${S.rec.嘉獎}／${S.rec.小功 + S.rec.大功}</b></div>`
+    + `<div><small>申誡／過</small><b>${S.rec.申誡}／${S.rec.小過 + S.rec.大過}</b></div>`;
+  return `<article class="doc order">
+    <div class="doc-meta"><span>${esc(E.head)}</span><span>學號 ${S.sid}</span></div>
+    <div class="seal" aria-hidden="true">${sealChars.map((c) => `<span>${c}</span>`).join("")}</div>
+    <p class="big">${esc(E.big)}</p>
+    <p class="sub">${esc(E.sub)}</p>
+    <div class="order-text">${E.p.map((x) => `<p>${esc(x)}</p>`).join("")}</div>
+    <div class="summary">${summary}</div>
+    <div class="row"><button class="btn" data-act="again" type="button">再玩一次</button><button class="btn line" data-act="home" type="button">回到封面</button></div>
+    ${logView("這一路的選擇", true)}
+  </article>`;
+}
+
+function logView(label, open) {
+  if (!S.log.length) return `<p class="meter-note">${label}</p>`;
+  return `<details class="log" ${open ? "open" : ""}><summary>${label}・回顧 ${S.log.length} 個選擇</summary><ol>${S.log.map((l) => `<li>${esc(l.st)}・${esc(l.ev)}：<span>${esc(l.c)}</span></li>`).join("")}</ol></details>`;
+}
+
+/* ---------- 事件綁定 ---------- */
+function bind() {
+  $app.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => choose(+b.dataset.choice)));
+  $app.querySelectorAll("[data-gender]").forEach((b) => b.addEventListener("click", () => { draft.gender = b.dataset.gender; render(); }));
+  $app.querySelectorAll("[data-dept]").forEach((b) => b.addEventListener("click", () => { draft.dept = b.dataset.dept; keepName(); render(); }));
+  $app.querySelectorAll("[data-bg]").forEach((b) => b.addEventListener("click", () => { draft.bg = b.dataset.bg; keepName(); render(); }));
+  const nameIn = document.getElementById("nameIn");
+  if (nameIn) nameIn.addEventListener("input", () => (draft.name = nameIn.value));
+  $app.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => act(b.dataset.act)));
+}
+function keepName() { const n = document.getElementById("nameIn"); if (n) draft.name = n.value; }
+
+function act(a) {
+  if (a === "new") { draft = newDraft(); view = "create"; render(); }
+  else if (a === "continue") { S = fetchStore(SAVE_KEY); view = S.result ? "result" : S.idx >= S.queue.length ? "stageEnd" : "event"; render(); }
+  else if (a === "reroll") { keepName(); draft.roll = rollDice(); render(); }
+  else if (a === "randname") { draft.name = NAMES[rnd(0, NAMES.length - 1)]; render(); }
+  else if (a === "start") { keepName(); startGame(); }
+  else if (a === "back" || a === "home") { if (S && S.ending) S = null; view = "title"; render(); }
+  else if (a === "next") continueOn();
+  else if (a === "stage") nextStage();
+  else if (a === "again") { S = null; draft = newDraft(); view = "create"; render(); }
+}
+
+$restart.addEventListener("click", () => {
+  if ($restart.dataset.confirm === "1") {
+    clearStore(SAVE_KEY); S = null; draft = null; view = "title";
+    $restart.dataset.confirm = ""; $restart.textContent = "重新開始"; render();
+  } else {
+    $restart.dataset.confirm = "1"; $restart.textContent = "確定放棄目前進度？";
+    setTimeout(() => { $restart.dataset.confirm = ""; $restart.textContent = "重新開始"; }, 3000);
+  }
+});
+
+/* ---------- 啟動 ---------- */
+function start(data) {
+  if (data && data.view) { S = data.S; view = data.view; draft = data.draft; }
+  render();
+}
+window.claude?.hot?.snapshot?.(() => ({ S, view, draft }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
