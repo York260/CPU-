@@ -1592,7 +1592,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && !$('#rules').hidden) { $('#rules').hidden = true; return; }
   if (e.code === 'Escape' || e.code === 'KeyP') { togglePause(); e.preventDefault(); return; }
   if (e.code === 'KeyM') { toggleMute(); return; }
-  if (e.code === 'Enter' && TUT.on && TUT.done && !paused) { e.preventDefault(); tutNext(); return; }
+  if (e.code === 'Enter' && TUT.on && !paused && (TUT.done || !TUT.ready)) { e.preventDefault(); if (TUT.done) tutNext(); else tutReady(); return; }
   if (KEYMAP[e.code]) { e.preventDefault(); if (!paused) queueAction(F[0], KEYMAP[e.code]); }
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
 });
@@ -1881,7 +1881,7 @@ class TutorAI {
     f.st = 100; f.fatigue = 0; f.passive = 0;
     f.moveIn.set(0, 0, 0);
     f.guardHeld = this.behavior === 'guard';
-    if (this.behavior !== 'attack' || !f.canAct()) return;
+    if (this.behavior !== 'attack' || !TUT.ready || !f.canAct()) return;
     const ax = axisTo(f, o, new V3()), d = distF(f, o);
     if (!f.grip) {
       this.holdT = 0;
@@ -1902,15 +1902,15 @@ function tutRender() {
   $('#cBody').innerHTML = fmt(L.body);
   coachEl.classList.toggle('clear', TUT.done);
   $('#cGoals').innerHTML = L.goals.map((g, k) => {
-    const cls = k < TUT.g || TUT.done ? 'done' : k === TUT.g ? 'cur' : '';
+    const cls = k < TUT.g || TUT.done ? 'done' : k === TUT.g && TUT.ready ? 'cur' : '';
     let prog = '';
     if (g.need > 1) { const v = k < TUT.g || TUT.done ? g.need : k === TUT.g ? TUT.n : 0; prog = `<em>${g.unit === '公尺' ? v.toFixed(1) : Math.floor(v)} / ${g.need} ${g.unit}</em>`; }
     return `<li class="${cls}"><span>${fmt(g.text)}</span>${prog}</li>`;
-  }).join('') + (TUT.done ? `<li class="done fin"><span>完成！${TUT.i < LESSONS.length - 1 ? fmt('{next}') : ''}</span></li>` : '');
+  }).join('') + (!TUT.ready ? `<li class="cur fin"><span>${fmt(touchMode ? '看完說明後，點「看完了，開始對練」，對手才會開始進攻' : '看完說明後，按 Enter 或「看完了，開始對練」，對手才會開始進攻')}</span></li>` : '') + (TUT.done ? `<li class="done fin"><span>完成！${TUT.i < LESSONS.length - 1 ? fmt('{next}') : ''}</span></li>` : '');
   $('#cPrev').disabled = TUT.i === 0;
   const nx = $('#cNext');
-  nx.textContent = TUT.done ? (TUT.i < LESSONS.length - 1 ? '下一課 ▶' : '結業 ▶') : '跳過這課';
-  nx.classList.toggle('go', TUT.done);
+  nx.textContent = TUT.done ? (TUT.i < LESSONS.length - 1 ? '下一課 ▶' : '結業 ▶') : !TUT.ready ? '看完了，開始對練 ▶' : '跳過這課';
+  nx.classList.toggle('go', TUT.done || !TUT.ready);
 }
 function tutAdvanceGoal() {
   TUT.g++; TUT.n = 0; TUT.circle = 0;
@@ -1937,7 +1937,7 @@ function tutFold() {
 }
 function tutUpdate(dt) {
   if (!TUT.on) return;
-  if (TUT.autoFold && phase === 'fight' && (TUT.foldT -= dt) <= 0) tutFold();
+  if (TUT.autoFold && TUT.ready && phase === 'fight' && (TUT.foldT -= dt) <= 0) tutFold();
   const p = F[0];
   if (!TUT.done && phase === 'fight') {
     const g = tutGoal();
@@ -1958,6 +1958,7 @@ function tutUpdate(dt) {
 function tutGo(i) {
   TUT.i = clamp(i, 0, LESSONS.length - 1); TUT.g = 0; TUT.n = 0; TUT.done = false;
   const L = LESSONS[TUT.i];
+  TUT.ready = L.cpu !== 'attack';
   ai.behavior = L.cpu; ai.grabCD = 1.6; ai.holdT = 0;
   coachEl.classList.remove('collapsed'); $('#cTog').textContent = '收合';
   TUT.autoFold = touchMode && innerWidth <= 760; TUT.foldT = 9;
@@ -1994,7 +1995,11 @@ function tutFinish() {
 }
 $('#cPrev').addEventListener('click', () => { if (TUT.i > 0) tutGo(TUT.i - 1); });
 $('#cRetry').addEventListener('click', () => tutGo(TUT.i));
-$('#cNext').addEventListener('click', () => tutNext());
+function tutReady() {
+  TUT.ready = true; tutRender();
+  call('開始', 'HAJIME', 'hajime', 0.9); sfx.bell();
+}
+$('#cNext').addEventListener('click', () => { if (!TUT.done && !TUT.ready) tutReady(); else tutNext(); });
 $('#cHead').addEventListener('click', () => { TUT.autoFold = false; const c = coachEl.classList.toggle('collapsed'); $('#cTog').textContent = c ? '說明 ▾' : '收合'; });
 $('#touch').addEventListener('pointerdown', () => { if (TUT.on && phase === 'fight') tutFold(); });
 
