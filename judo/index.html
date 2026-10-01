@@ -135,6 +135,31 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sk.t-def { border-color: rgba(127, 168, 255, .7); }
 .sk.empty { visibility: hidden; }
 
+/* 抓把中技術面板：綠＝後方技，金＝前方技 */
+.tech { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 14px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); width: 246px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.tb { position: relative; height: 58px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, .22); background: rgba(20, 26, 38, .88); display: grid; place-content: center; text-align: center; line-height: 1.15; touch-action: none; transition: transform .08s, opacity .15s; padding: 0; }
+.tb b { font-size: 15px; font-weight: 900; }
+.tb small { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 1px; }
+.tb kbd { position: absolute; top: 2px; right: 5px; font-family: var(--f-body); font-size: 9px; color: var(--muted); opacity: .6; }
+.tb.back { border-color: rgba(61, 190, 122, .6); }
+.tb.fwd { border-color: rgba(227, 179, 65, .55); }
+.tb.back.hot { border-color: var(--green); box-shadow: 0 0 16px rgba(61, 190, 122, .6); }
+.tb.back.hot small { color: #8FE3B5; }
+.tb.fwd.hot { border-color: var(--gold); box-shadow: 0 0 16px rgba(227, 179, 65, .6); }
+.tb.fwd.hot small { color: #F2CF7A; }
+.tb.brace { grid-column: 1 / -1; height: 44px; border-color: rgba(127, 168, 255, .7); display: flex; gap: 8px; align-items: center; justify-content: center; }
+.tb.brace small { margin: 0; }
+.tb.brace.hot { border-color: #7FA8FF; background: rgba(40, 60, 110, .9); animation: glow .3s infinite alternate; }
+@keyframes glow { from { box-shadow: 0 0 6px rgba(127, 168, 255, .5); } to { box-shadow: 0 0 22px rgba(127, 168, 255, 1); } }
+.tb.off { opacity: .35; }
+.tb.down { transform: scale(.93); }
+
+/* 袈裟固連打鍵 */
+.mash { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: min(520px, calc(100vw - 32px)); height: 110px; border-radius: 20px; border: 2px solid var(--gold); background: rgba(40, 30, 10, .82); color: #fff; display: grid; place-content: center; gap: 4px; touch-action: manipulation; box-shadow: 0 0 26px rgba(227, 179, 65, .45); transition: transform .06s; }
+.mash b { font-size: 28px; font-weight: 900; letter-spacing: .1em; }
+.mash small { font-size: 12px; color: var(--muted); }
+.mash.pulse { transform: translateX(-50%) scale(.95); background: rgba(80, 60, 15, .9); }
+
 .quit { position: fixed; left: calc(env(safe-area-inset-left, 0px) + 10px); top: calc(env(safe-area-inset-top, 0px) + 10px); width: 32px; height: 32px; background: var(--panel); border: 1px solid var(--line); border-radius: 50%; padding: 0; font-size: 14px; color: var(--muted); }
 .quit.confirm { width: auto; border-radius: 16px; padding: 0 10px; color: var(--ink); font-size: 12px; }
 
@@ -183,6 +208,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .pad button { height: 76px; }
   .joy { width: 120px; height: 120px; }
   .skills { transform: scale(.88); transform-origin: right bottom; }
+  .tech { transform: scale(.92); transform-origin: right bottom; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -225,6 +251,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
   <button type="button" class="sk s1" data-slot="1"><kbd>K</kbd><b></b><small></small></button>
   <button type="button" class="sk s2" data-slot="2"><kbd>L</kbd><b></b><small></small></button>
 </div>
+<div class="tech" id="tech" hidden>
+  <button type="button" class="tb brace" data-tech="brace"><b>防禦</b><small>對手出招時按</small><kbd>K</kbd></button>
+  <button type="button" class="tb back" data-tech="kouchi"><b>小內割</b><small>0%</small><kbd>1</kbd></button>
+  <button type="button" class="tb back" data-tech="osoto"><b>大外割</b><small>0%</small><kbd>2</kbd></button>
+  <button type="button" class="tb fwd" data-tech="taiotoshi"><b>丟體</b><small>0%</small><kbd>3</kbd></button>
+  <button type="button" class="tb fwd" data-tech="seoi"><b>過肩摔</b><small>0%</small><kbd>4</kbd></button>
+  <button type="button" class="tb fwd" data-tech="ogoshi"><b>大腰</b><small>0%</small><kbd>5</kbd></button>
+  <button type="button" class="tb fwd" data-tech="kubinage"><b>抱頭摔</b><small>0%</small><kbd>6</kbd></button>
+</div>
+<button type="button" class="mash" id="mash" hidden><b>連打掙脫！</b><small>也可以用力搖手機</small></button>
 <button type="button" class="quit" id="quit" aria-label="離開比賽" hidden>✕</button>
 
 <div class="overlay ov" id="title" hidden>
@@ -245,10 +281,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <ol>
           <li><b>移動</b>：左下搖桿（電腦：WASD／方向鍵）。</li>
           <li><b>抓把</b>：靠近對手按「抓把」(J)。對手伸手時按「閃避」(K)，他會撲空露出破綻。</li>
-          <li><b>崩し</b>：抓把後用搖桿推拉。<span class="g">往前推</span> → 對手後傾 → <span class="g">大外割</span>。<span class="y">推一陣子後突然放開或往回拉</span>，對手會被自己的反抗力帶向前 → <span class="y">大腰</span>。</li>
-          <li><b>大腰成功率極低</b>，但成功時最容易拿一本。按鈕上會即時顯示成功率。</li>
+          <li><b>崩し</b>：抓把後用搖桿推拉。<span class="g">往前推</span> → 對手後傾 → <span class="g">綠色後方技</span>。<span class="y">推一陣子後突然放開或往回拉</span>，對手會被自己的反抗力帶向前 → <span class="y">金色前方技</span>。按鈕上會即時顯示成功率。</li>
+          <li><span class="g">小內割</span>輕微後傾就能用、多半只拿有效，失敗自己會倒地；<span class="g">大外割</span>要明顯後傾。<span class="y">丟體</span>抓把時繞圈移動會加成；<span class="y">過肩摔</span>要明顯前傾、容易一本；<span class="y">大腰</span>成功率極低但最容易一本；<span class="y">抱頭摔</span>對手越用力往前頂越好用，失敗很容易被反摔。</li>
           <li><b>對手頭上出現紅色「!」</b>代表他要出招，按「防禦」(K) 擋下，接著 1 秒內出招成功率大增。</li>
-          <li><b>壓制</b>：摔倒對手後立刻按「壓制」接袈裟固，照提示方向撥搖桿或按方向鍵壓住他。被壓制時照提示方向逃脫。</li>
+          <li><b>壓制</b>：摔倒對手後立刻選壓制技。<b>袈裟固</b>是連打比拚，被壓時拚命連打（或用力搖手機）掙脫；<b>上四方固</b>是方向攻防，按亮起的方向。</li>
         </ol>
       </div>
       <div class="card">
@@ -303,9 +339,9 @@ $("loading").hidden = true;
 
 /* ---------- 難度 ---------- */
 const DIFFS = [
-  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24 },
-  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19 },
-  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15 },
+  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, holdWin: 0.8, holdLoss: 16, escGain: 24, mashGain: 3.8, mashDecay: 7, aiEsc: 9 },
+  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, holdWin: 0.66, holdLoss: 21, escGain: 19, mashGain: 3.2, mashDecay: 9, aiEsc: 12 },
+  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, holdWin: 0.52, holdLoss: 26, escGain: 15, mashGain: 2.7, mashDecay: 11, aiEsc: 15 },
 ];
 let DIFF = DIFFS[1];
 let MATCH_TIME = 90;
@@ -484,6 +520,25 @@ const POSE = {
   G1: P({ h: 0.9, body: [0.35], spine: [0.25], neck: [-0.2], lSh: [-1.5, 0, 0.1], rSh: [-1.5, 0, -0.1], lEl: [-0.3], rEl: [-0.3], lHip: [0.15], lKnee: [0.3], rHip: [0.1], rKnee: [0.2] }),
   G2: P({ h: 1.38, body: [1.6], spine: [0.15], neck: [0.2], lSh: [-1.2, 0, 0.6], rSh: [-1.2, 0, -0.6], lHip: [0.3], lKnee: [0.4], rHip: [0.15], rKnee: [0.3] }),
   G3: P({ h: 1.0, body: [3.3], spine: [0.15], neck: [0.35], lSh: [-0.5, 0, 1.1], rSh: [-0.5, 0, -1.1], lHip: [-0.6], lKnee: [0.4], rHip: [-0.3], rKnee: [0.2] }),
+  // 單臂過肩摔（取）
+  SE1: P({ h: 0.62, spine: [0.35], neck: [-0.1], lSh: [-1.2, 0, 0.45], lEl: [-0.8], rSh: [-2.3, 0, -0.2], rEl: [-1.9], lHip: [-0.8, 0, 0.2], lKnee: [1.5], rHip: [-0.8, 0, -0.2], rKnee: [1.5] }),
+  SE2: P({ h: 0.86, spine: [1.25], neck: [-0.4], lSh: [-0.6, 0, 0.5], lEl: [-1.4], rSh: [-2.0, 0, -0.2], rEl: [-1.6], lHip: [-0.25, 0, 0.15], lKnee: [0.35], rHip: [-0.25, 0, -0.15], rKnee: [0.35] }),
+  SE3: P({ h: 0.78, spine: [0.85], neck: [-0.2], lSh: [-0.5, 0, 0.4], lEl: [-1.1], rSh: [-1.0, 0, -0.3], rEl: [-0.8], lHip: [-0.4, 0, 0.15], lKnee: [0.65], rHip: [-0.4, 0, -0.15], rKnee: [0.65] }),
+  // 丟體（取）：右腳橫伸擋住
+  TO1: P({ h: 0.78, spine: [0.35], neck: [-0.2], lSh: [-1.1, 0, 0.5], lEl: [-1.2], rSh: [-1.4, 0, -0.3], rEl: [-0.6], lHip: [-0.6, 0, 0.15], lKnee: [1.0], rHip: [-0.15, 0, -0.75], rKnee: [0.05] }),
+  TO2: P({ h: 0.74, spine: [0.65], neck: [-0.3], lSh: [-0.6, 0, 0.6], lEl: [-1.5], rSh: [-0.9, 0, -0.3], rEl: [-1.0], lHip: [-0.6, 0, 0.15], lKnee: [1.05], rHip: [-0.15, 0, -0.75], rKnee: [0.05] }),
+  // 抱頭摔（取）：右臂繞過頸部
+  KU1: P({ h: 0.74, spine: [0.25], neck: [-0.1], lSh: [-1.2, 0, 0.45], lEl: [-0.7], rSh: [-2.6, 0, -0.6], rEl: [-2.0], lHip: [-0.6, 0, 0.18], lKnee: [1.1], rHip: [-0.6, 0, -0.18], rKnee: [1.1] }),
+  KU2: P({ h: 0.9, spine: [0.95], neck: [-0.35], lSh: [-0.8, 0, 0.65], lEl: [-1.3], rSh: [-2.2, 0, -0.6], rEl: [-1.8], lHip: [-0.15, 0, 0.15], lKnee: [0.2], rHip: [-0.15, 0, -0.15], rKnee: [0.2] }),
+  // 捨身小內割（取）：勾內側腳跟、整個人壓下去
+  KO1: P({ h: 0.85, spine: [0.45], neck: [-0.3], lSh: [-1.4, 0, 0.1], lEl: [-0.6], rSh: [-1.4, 0, -0.1], rEl: [-0.6], lHip: [-0.3, 0, 0.05], lKnee: [0.6], rHip: [-0.5, 0, 0.25], rKnee: [0.3] }),
+  KO2: P({ h: 0.6, body: [0.9], spine: [0.4], neck: [-0.3], lSh: [-1.6, 0, 0.1], lEl: [-0.4], rSh: [-1.6, 0, -0.1], rEl: [-0.4], lHip: [-0.4], lKnee: [0.8], rHip: [0.6, 0, 0.2], rKnee: [0.4] }),
+  KO3: P({ h: 0.3, body: [1.35], spine: [0.2], neck: [-0.4], lSh: [-1.6, 0, 0.3], lEl: [-0.6], rSh: [-1.6, 0, -0.3], rEl: [-0.6], lHip: [-0.2], lKnee: [0.5], rHip: [-0.1], rKnee: [0.3] }),
+  // 受：飛越高度不同的版本
+  G2L: P({ h: 1.02, body: [1.5], spine: [0.15], neck: [0.2], lSh: [-1.2, 0, 0.6], rSh: [-1.2, 0, -0.6], lHip: [0.2], lKnee: [0.3], rHip: [-0.1], rKnee: [0.2] }),
+  G2H: P({ h: 1.55, body: [1.75], spine: [0.1], neck: [0.25], lSh: [-1.2, 0, 0.7], rSh: [-1.2, 0, -0.7], lHip: [0.35], lKnee: [0.5], rHip: [0.2], rKnee: [0.4] }),
+  // 上四方固（取）：跪在對手頭上方、胸口壓住
+  KAMI: P({ h: 0.42, body: [0.55], spine: [1.0], neck: [-0.5], lSh: [-1.4, 0, 0.5], lEl: [-1.2], rSh: [-1.4, 0, -0.5], rEl: [-1.2], lHip: [-1.5, 0, 0.3], lKnee: [2.2], rHip: [-1.5, 0, -0.3], rKnee: [2.2] }),
   // 裁判
   R_STAND: P({ spine: [0.02], lSh: [0.02, 0, 0.1], rSh: [0.02, 0, -0.1], lEl: [-0.1], rEl: [-0.1] }),
   R_HAJIME: P({ spine: [0.05], lSh: [0.02, 0, 0.1], rSh: [-1.5, 0, -0.1], rEl: [-0.05] }),
@@ -520,7 +575,27 @@ const G = {
   state: "title", t: 0, clock: 90, golden: false, gripped: false, initiative: null,
   anim: null, post: null, hold: null, end: null, reset: null, slots: [], time: 0, pendingEnd: false,
 };
-const TECH = { osoto: "大外割", ogoshi: "大腰", gaeshi: "大外返", ura: "後腰" };
+/* 技術表
+   dir：back＝對手後傾時有效（綠），fwd＝對手前傾時有效（金）
+   base(k, att, def)：依受方重心 k 算出的基本成功率；ideal：越理想越容易拿一本；bias：一本傾向 */
+const TECHS = {
+  kouchi:    { name: "捨身小內割", short: "小內割", dir: "back", cost: 12, wind: 0.24, bias: -0.3, sutemi: true, fail: "小內割沒勾到，自己倒地了",
+    base: (k) => (k < -0.05 ? Math.min(0.5, 0.12 + (-k - 0.05) * 0.45) : 0.06), ideal: (k) => clamp(-k - 0.05, 0, 1) },
+  osoto:     { name: "大外割", short: "大外割", dir: "back", cost: 16, wind: 0.28, bias: 0, fail: "大外割沒掃動",
+    base: (k) => Math.min(0.78, k < -0.25 ? 0.1 + (-k - 0.25) * 0.75 : k > 0.3 ? 0.03 : 0.1), ideal: (k) => clamp(-k - 0.25, 0, 1) },
+  taiotoshi: { name: "丟體", short: "丟體", dir: "fwd", cost: 16, wind: 0.3, bias: 0, fail: "丟體被跨過去了",
+    base: (k) => Math.min(0.52, (k > 0.15 ? 0.06 + (k - 0.15) * 0.4 : 0.05) + (G.circle || 0) * 0.22), ideal: (k) => clamp(k - 0.15 + (G.circle || 0) * 0.5, 0, 1) },
+  seoi:      { name: "單臂過肩摔", short: "過肩摔", dir: "fwd", cost: 20, wind: 0.34, bias: 0.12, fail: "過肩摔沒能背起來",
+    base: (k) => (k > 0.3 ? Math.min(0.55, 0.05 + (k - 0.3) * 0.55) : 0.04), ideal: (k) => clamp(k - 0.3, 0, 1) },
+  ogoshi:    { name: "大腰", short: "大腰", dir: "fwd", cost: 22, wind: 0.36, bias: 0.22, fail: "大腰沒能入身",
+    base: (k) => Math.min(0.3, k > 0.45 ? 0.02 + (k - 0.45) * 0.35 : 0.02), ideal: (k) => clamp(k - 0.45, 0, 1) },
+  kubinage:  { name: "抱頭摔", short: "抱頭摔", dir: "fwd", cost: 20, wind: 0.32, bias: 0.2, risky: true, fail: "抱頭摔被看穿了",
+    base: (k, a, d) => Math.min(0.42, 0.03 + Math.max(0, Math.max(d.pushS, k) - 0.5) * 0.55), ideal: (k, a, d) => clamp(Math.max(d.pushS, k) - 0.5, 0, 1) },
+};
+const TECH_ORDER = ["kouchi", "osoto", "taiotoshi", "seoi", "ogoshi", "kubinage"];
+const TECH = { gaeshi: "大外返", ura: "後腰" };
+for (const k in TECHS) TECH[k] = TECHS[k].name;
+const HOLD_NAME = { kesa: "袈裟固", kami: "上四方固" };
 
 /* ---------- UI ---------- */
 let callTimer = 0, toastTimer = 0;
@@ -571,6 +646,15 @@ window.addEventListener("keydown", (e) => {
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
   if (e.repeat) return;
   input.keys.add(k);
+  if (G.state === "osaekomi" && G.hold && G.hold.type === "kesa") { if ("jkl ".includes(k)) mash(); return; }
+  if (G.state === "fight" && G.gripped) {
+    const n = "123456".indexOf(k);
+    if (n >= 0) pressTech(TECH_ORDER[n]);
+    else if (k === "k" || k === " ") pressTech("brace");
+    else if (k === "j") pressTech("osoto");
+    else if (k === "l") pressTech("ogoshi");
+    return;
+  }
   if (k === "j" || k === " ") pressSlot(0);
   if (k === "k") pressSlot(1);
   if (k === "l") pressSlot(2);
@@ -614,15 +698,8 @@ const outOfArea = (f) => Math.abs(f.x) > AREA || Math.abs(f.z) > AREA;
 
 /* ---------- 成功率 ---------- */
 function throwChance(att, def, tech) {
-  const k = def.lean;
-  let c;
-  if (tech === "osoto") {
-    c = k < -0.25 ? 0.1 + (-k - 0.25) * 0.75 : k > 0.3 ? 0.03 : 0.1;
-    c = Math.min(c, 0.78);
-  } else {
-    c = k > 0.45 ? 0.02 + (k - 0.45) * 0.35 : 0.02;
-    c = Math.min(c, 0.3);
-  }
+  const T = TECHS[tech];
+  let c = T.base(def.lean, att, def);
   if (att.stamina < 30) c *= 0.7;
   if (def.stamina < 30) c *= 1.25;
   if (G.initiative && G.initiative.who === att && G.initiative.t > 0) c += 0.06;
@@ -631,9 +708,9 @@ function throwChance(att, def, tech) {
   if (att.isAI) c *= DIFF.mult;
   return clamp(c, 0, 0.92);
 }
-function grade(tech, k) {
-  const ex = tech === "ogoshi" ? clamp(k - 0.45, 0, 1) : clamp(-k - 0.25, 0, 1);
-  const q = Math.random() * 0.65 + ex * 0.35 + (tech === "ogoshi" ? 0.22 : 0);
+function grade(tech, att, def) {
+  const T = TECHS[tech];
+  const q = Math.random() * 0.65 + T.ideal(def.lean, att, def) * 0.35 + T.bias;
   return q > 0.74 ? "ippon" : q > 0.44 ? "waza" : "yuko";
 }
 
@@ -662,9 +739,9 @@ function tryBrace(f) {
 }
 function tryThrow(f, tech) {
   if (busy(f) || f.cool > 0 || !G.gripped) return;
-  spend(f, tech === "ogoshi" ? 22 : 16);
+  spend(f, TECHS[tech].cost);
   f.lastAttack = 0;
-  const wind = f.isAI ? DIFF.wind : tech === "ogoshi" ? 0.36 : 0.28;
+  const wind = f.isAI ? DIFF.wind : TECHS[tech].wind;
   setAct(f, "throwWind", wind, { tech });
   const o = other(f);
   if (o.isAI && !busy(o) && Math.random() < DIFF.braceP) o.ai.braceAt = Math.min(DIFF.tau * 0.7, wind - 0.05);
@@ -709,20 +786,34 @@ function resolveThrow(f) {
     haptic(f.isAI ? "block" : "blocked");
     return;
   }
-  const c = throwChance(f, o, tech);
+  const c = throwChance(f, o, tech), T = TECHS[tech];
   if (Math.random() < c) {
-    startThrow(f, o, tech, grade(tech, o.lean));
-  } else {
-    stagger(f, tech === "ogoshi" ? 0.9 : 0.7);
-    spend(f, 8);
-    const wrongTiming = tech === "osoto" ? o.lean > 0.25 : o.lean < 0.2;
-    if (f.isAI) { W.counterT = 1.0; toast("對手失手！反擊機會", "good"); return; }
-    toast(tech === "ogoshi" ? "大腰沒能入身" : "大外割沒掃動", "bad");
-    haptic("fail");
-    if (wrongTiming && Math.random() < 0.3 * DIFF.mult) {
-      const g = Math.random() < 0.7 ? "yuko" : "waza";
-      setTimeout(() => { if (G.state === "fight" && G.gripped) startThrow(B, W, tech === "osoto" ? "gaeshi" : "ura", g); }, 250);
+    startThrow(f, o, tech, grade(tech, f, o));
+    return;
+  }
+  spend(f, 8);
+  // 捨身技失敗：自己倒地，對手可能直接壓制
+  if (T.sutemi) {
+    stagger(f, 1.2);
+    toast(f.isAI ? "對手倒地了！快壓制" : T.fail, f.isAI ? "good" : "bad");
+    if (!f.isAI) {
+      haptic("fail");
+      if (Math.random() < 0.35 * DIFF.mult) { G.gripped = false; setTimeout(() => { if (G.state === "fight") startHold(B, W, Math.random() < 0.5 ? "kesa" : "kami"); }, 300); }
+    } else {
+      G.gripped = false; B.act = null; B.tgt = POSE.LYING;
+      G.state = "post"; G.post = { att: W, def: B, t: 0, win: 1.1, aiFollow: false };
     }
+    return;
+  }
+  stagger(f, T.dir === "fwd" ? 0.9 : 0.7);
+  if (f.isAI) { W.counterT = T.risky ? 1.5 : 1.0; toast(T.risky ? "抱頭摔失手！大好反擊機會" : "對手失手！反擊機會", "good"); return; }
+  toast(T.fail, "bad");
+  haptic("fail");
+  const wrongTiming = T.dir === "back" ? o.lean > 0.25 : o.lean < 0.2;
+  const p = T.risky ? 0.45 : wrongTiming ? 0.3 : 0;
+  if (Math.random() < p * DIFF.mult) {
+    const g = Math.random() < (T.risky ? 0.5 : 0.7) ? "yuko" : "waza";
+    setTimeout(() => { if (G.state === "fight" && G.gripped) startThrow(B, W, T.dir === "back" ? "gaeshi" : "ura", g); }, 250);
   }
 }
 
@@ -749,6 +840,28 @@ const THROWS = {
 POSE.G4 = P({ ...Object.fromEntries(JOINTS.map((j) => [j, POSE.LYING[j]])), h: 0.14, body: [PI * 1.5] });
 THROWS.gaeshi = THROWS.osoto;
 THROWS.ura = THROWS.osoto;
+// 前方投技：取轉身入身，受從取的背／腰／腳上翻過去，仰躺落地
+function fwdKeys({ a1, a2, a3, d2 = "G2", yaw = PI, endF = -0.55, speed = 1 }) {
+  const ks = [
+    { t: 0, A: { f: 0, r: 0, yaw: 0, p: "GRIP" }, D: { f: 0.8, r: 0, yaw: 0, p: "GRIP" } },
+    { t: 0.3, A: { f: 0.46, r: 0.04, yaw, p: a1 }, D: { f: 0.9, r: 0, yaw: 0, p: "G1" } },
+    { t: 0.58, A: { f: 0.48, r: 0.04, yaw, p: a2 }, D: { f: 0.6, r: 0, yaw: 0, p: d2 } },
+    { t: 0.88, A: { f: 0.45, r: 0.04, yaw, p: a3 }, D: { f: (0.6 + endF) / 2, r: 0, yaw: 0, p: "G3" } },
+    { t: 1.12, A: { f: 0.42, r: 0.04, yaw, p: a3 }, D: { f: endF, r: 0, yaw: 0, p: "G4" } },
+    { t: 1.6, A: { f: 0.42, r: 0.04, yaw, p: a3 }, D: { f: endF, r: 0, yaw: 0, p: "G4" } },
+  ];
+  return ks.map((k) => ({ ...k, t: k.t * speed }));
+}
+THROWS.seoi = fwdKeys({ a1: "SE1", a2: "SE2", a3: "SE3", d2: "G2H", endF: -0.6 });
+THROWS.taiotoshi = fwdKeys({ a1: "TO1", a2: "TO2", a3: "TO2", d2: "G2L", yaw: PI * 0.7, endF: -0.35, speed: 0.92 });
+THROWS.kubinage = fwdKeys({ a1: "KU1", a2: "KU2", a3: "OG3", d2: "G2H", endF: -0.6, speed: 0.9 });
+THROWS.kouchi = [
+  { t: 0, A: { f: 0, r: 0, yaw: 0, p: "GRIP" }, D: { f: 0.8, r: 0, yaw: 0, p: "GRIP" } },
+  { t: 0.2, A: { f: 0.3, r: 0.05, yaw: 0.1, p: "KO1" }, D: { f: 0.9, r: 0, yaw: 0, p: "D1" } },
+  { t: 0.45, A: { f: 0.55, r: 0.05, yaw: 0.1, p: "KO2" }, D: { f: 1.1, r: 0, yaw: 0, p: "D2" } },
+  { t: 0.75, A: { f: 0.85, r: 0.05, yaw: 0.1, p: "KO3" }, D: { f: 1.55, r: 0, yaw: 0, p: "LYING" } },
+  { t: 1.3, A: { f: 0.85, r: 0.05, yaw: 0.1, p: "KO3" }, D: { f: 1.55, r: 0, yaw: 0, p: "LYING" } },
+];
 
 function startThrow(att, def, tech, result) {
   const u = axis(att, def);
@@ -811,19 +924,38 @@ function scoreCall(r, f, techName) {
   else { call("有効", `有效・${techName}`, cls, 1.5); refGesture("R_YUKO", 1.5); }
 }
 
-/* ---------- 寢技 ---------- */
-function startHold(holder, held) {
-  G.post = null;
+/* ---------- 寢技 ----------
+   袈裟固：雙方連打（或搖手機）比拚；上四方固：方向攻防 */
+function startHold(holder, held, type = "kesa") {
+  G.post = null; G.gripped = false;
+  for (const f of [holder, held]) f.act = null;
   const yD = held.yaw;
   const head = { x: -Math.sin(yD), z: -Math.cos(yD) };
   const chest = { x: held.x + head.x * 0.32, z: held.z + head.z * 0.32 };
-  const side = { x: head.z, z: -head.x };
-  const s = dist({ x: chest.x + side.x, z: chest.z + side.z }, holder) < dist({ x: chest.x - side.x, z: chest.z - side.z }, holder) ? 1 : -1;
-  const to = { x: chest.x + side.x * 0.5 * s, z: chest.z + side.z * 0.5 * s };
-  G.hold = { holder, held, t: 0, esc: 0, phase: "in", inT: 0, from: { x: holder.x, z: holder.z, yaw: holder.yaw, pose: clonePose(holder.cur) }, to, toYaw: Math.atan2(chest.x - to.x, chest.z - to.z), prompt: null, next: 0.7, fb: 0 };
+  let to, toYaw;
+  if (type === "kami") {
+    to = { x: held.x + head.x * 1.02, z: held.z + head.z * 1.02 };
+    toYaw = Math.atan2(held.x - to.x, held.z - to.z);
+  } else {
+    const side = { x: head.z, z: -head.x };
+    const s = dist({ x: chest.x + side.x, z: chest.z + side.z }, holder) < dist({ x: chest.x - side.x, z: chest.z - side.z }, holder) ? 1 : -1;
+    to = { x: chest.x + side.x * 0.5 * s, z: chest.z + side.z * 0.5 * s };
+    toYaw = Math.atan2(chest.x - to.x, chest.z - to.z);
+  }
+  G.hold = { type, holder, held, t: 0, esc: 0, phase: "in", inT: 0, from: { x: holder.x, z: holder.z, yaw: holder.yaw, pose: clonePose(holder.cur) }, to, toYaw, prompt: null, next: 0.7, fb: 0, taps: 0, pulse: 0 };
   G.state = "osaekomi";
-  call("抑え込み", "壓制開始", holder === W ? "" : "blue", 1.2);
+  call("抑え込み", "壓制・" + HOLD_NAME[type], holder === W ? "" : "blue", 1.2);
   refGesture("R_OSAE", 99);
+}
+// 袈裟固連打：被壓時增加逃脫，壓人時降低對手逃脫
+function mash() {
+  const h = G.hold;
+  if (G.state !== "osaekomi" || !h || h.phase !== "on" || h.type !== "kesa") return;
+  if (h.held === W) h.esc += DIFF.mashGain;
+  else h.esc = Math.max(0, h.esc - 2.6);
+  h.taps++; h.pulse = 0.12;
+  h.jolt = h.held === W ? 1 : -0.6;
+  haptic("tap");
 }
 function newPrompt() {
   const h = G.hold;
@@ -832,7 +964,7 @@ function newPrompt() {
   h.prompt = { dir, t: 0, win: playerHolds ? DIFF.holdWin : 0.95, done: false };
 }
 function onDir(dir) {
-  if (G.state !== "osaekomi" || !G.hold || G.hold.phase !== "on") return;
+  if (G.state !== "osaekomi" || !G.hold || G.hold.phase !== "on" || G.hold.type !== "kami") return;
   const h = G.hold, p = h.prompt;
   if (!p || p.done) return;
   p.done = true;
@@ -854,9 +986,9 @@ function stepHold(dt) {
     const s = smooth(clamp(h.inT / 0.6, 0, 1));
     h.holder.x = lerp(h.from.x, h.to.x, s); h.holder.z = lerp(h.from.z, h.to.z, s);
     h.holder.yaw = h.from.yaw + wrap(h.toYaw - h.from.yaw) * s;
-    h.holder.cur = mixPose(h.from.pose, POSE.HOLD, s);
+    h.holder.cur = mixPose(h.from.pose, h.type === "kami" ? POSE.KAMI : POSE.HOLD, s);
     dampPose(h.held.cur, POSE.HELD, 6, dt);
-    if (h.inT >= 0.6) { h.phase = "on"; newPrompt(); }
+    if (h.inT >= 0.6) { h.phase = "on"; if (h.type === "kami") newPrompt(); }
     return;
   }
   h.t += dt;
@@ -867,10 +999,16 @@ function stepHold(dt) {
   const target = clonePose(POSE.HELD);
   target.body[2] = wig; target.lHip[0] += Math.sin(G.time * 5) * 0.3; target.rHip[0] += Math.cos(G.time * 4.3) * 0.3;
   dampPose(h.held.cur, target, 10, dt);
-  const hp = clonePose(POSE.HOLD); hp.body[2] = -wig * 0.5;
+  const hp = clonePose(h.type === "kami" ? POSE.KAMI : POSE.HOLD); hp.body[2] = -wig * 0.5;
+  if (h.pulse > 0) h.pulse -= dt;
   dampPose(h.holder.cur, hp, 10, dt);
-  // 提示
-  const p = h.prompt;
+  // 袈裟固：連打比拚
+  if (h.type === "kesa") {
+    if (h.held === W) h.esc = Math.max(0, h.esc - DIFF.mashDecay * dt);
+    else h.esc += DIFF.aiEsc * (0.6 + 0.8 * Math.pow(Math.sin(h.t * 1.7), 2)) * dt;
+  }
+  // 上四方固：方向提示
+  const p = h.type === "kami" ? h.prompt : null;
   if (p) {
     if (!p.done) {
       p.t += dt;
@@ -889,17 +1027,18 @@ function stepHold(dt) {
       }
     }
   }
-  // AI 被壓時自己也會掙扎
-  if (h.holder === W) h.esc += dt * 1.5 * DIFF.mult;
+  // AI 被上四方固壓住時自己也會掙扎
+  if (h.type === "kami" && h.holder === W) h.esc += dt * 1.5 * DIFF.mult;
   const holder = h.holder;
   if (h.t >= 20 || (h.t >= 10 && holder.sc.waza >= 1)) {
     const r = h.t >= 20 ? "ippon" : "awase";
     holder.sc.ippon = 1; if (r === "awase") holder.sc.waza++;
     renderBoard();
-    call(r === "ippon" ? "一本" : "合わせ技", r === "ippon" ? "一勝・袈裟固 20 秒" : "兩次半勝・一本", "gold", 2.2);
+    const hn = HOLD_NAME[h.type];
+    call(r === "ippon" ? "一本" : "合わせ技", r === "ippon" ? `一勝・${hn} 20 秒` : "兩次半勝・一本", "gold", 2.2);
     refGesture("R_IPPON", 2.4);
     G.hold = null;
-    endMatch(holder, r === "ippon" ? "抑え込み一本（袈裟固）" : "合わせ技一本");
+    endMatch(holder, r === "ippon" ? `抑え込み一本（${hn}）` : "合わせ技一本");
     return;
   }
   if (h.esc >= 100) {
@@ -910,8 +1049,9 @@ function stepHold(dt) {
     if (r) {
       const rr = award(holder, r);
       renderBoard();
-      setTimeout(() => scoreCall(rr, holder, "袈裟固"), 900);
-      if (rr === "awase" || G.golden) { setTimeout(() => endMatch(holder, rr === "awase" ? "合わせ技一本" : "黃金得分（袈裟固）"), 900); G.state = "wait"; return; }
+      const hn = HOLD_NAME[h.type];
+      setTimeout(() => scoreCall(rr, holder, hn), 900);
+      if (rr === "awase" || G.golden) { setTimeout(() => endMatch(holder, rr === "awase" ? "合わせ技一本" : `黃金得分（${hn}）`), 900); G.state = "wait"; return; }
     }
     matte(1.0);
   }
@@ -1024,7 +1164,7 @@ function endMatch(win, how) {
   G.end = { win, how, t: 0, from: [W, B].map((f) => ({ x: f.x, z: f.z })) };
   G.gripped = false; G.hold = null; G.post = null; G.anim = null;
   for (const f of [W, B]) { f.act = null; f.cur.body[0] = wrap(f.cur.body[0]); f.tgt = clonePose(f.cur); f.moveAmt = 0; }
-  for (const id of ["kz", "nw", "warn", "pad"]) $(id).hidden = true;
+  for (const id of ["kz", "nw", "warn", "pad", "mash", "tech"]) $(id).hidden = true;
 }
 function stepEnd(dt) {
   const e = G.end; e.t += dt;
@@ -1051,12 +1191,12 @@ function showResult() {
   const row = (f) => `<tr><td>${f === W ? "白（你）" : "藍（" + DIFF.name + "）"}</td><td>${f.sc.ippon}</td><td>${f.sc.waza}</td><td>${f.sc.yuko}</td><td>${f.sc.shido}</td></tr>`;
   $("resTable").innerHTML = `<tr><th></th><th>一本</th><th>半勝</th><th>有效</th><th>指導</th></tr>${row(W)}${row(B)}`;
   $("result").hidden = false;
-  for (const id of ["joy", "skills", "quit", "board", "call", "toast", "pad"]) $(id).hidden = true;
+  for (const id of ["joy", "skills", "quit", "board", "call", "toast", "pad", "mash", "tech"]) $(id).hidden = true;
   callTimer = 0;
 }
 function toTitle() {
   G.state = "title";
-  for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast", "pad"]) $(id).hidden = true;
+  for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast", "pad", "mash", "tech"]) $(id).hidden = true;
   $("title").hidden = false;
   for (const f of [W, B]) { f.x = f === W ? -2 : 2; f.z = 0; f.yaw = f === W ? PI / 2 : -PI / 2; f.tgt = POSE.STAND; f.act = null; f.cur = clonePose(POSE.STAND); }
   REF.tgt = POSE.R_STAND;
@@ -1072,12 +1212,10 @@ function computeSlots() {
     s[0] = { id: "grip", label: "抓把", sub: d > 1.25 ? "再靠近" : "可抓", on: ready, cls: "t-attack" };
     s[1] = { id: "dodge", label: "閃避", sub: "躲抓把", on: ready, cls: "t-def" };
   } else if (st === "fight" && G.gripped) {
-    const a = Math.round(throwChance(W, B, "osoto") * 100), b = Math.round(throwChance(W, B, "ogoshi") * 100);
-    s[0] = { id: "osoto", label: "大外割", sub: a + "%", on: ready, cls: "t-attack", hot: a >= 45 };
-    s[1] = { id: "brace", label: "防禦", sub: "擋招", on: !busy(W), cls: "t-def", hot: B.act && B.act.type === "throwWind" };
-    s[2] = { id: "ogoshi", label: "大腰", sub: b + "%", on: ready, cls: "t-attack", hot: b >= 18 };
+    // 抓把中改用技術面板（#tech）
   } else if (st === "post" && G.post && G.post.att === W) {
-    s[0] = { id: "pin", label: "壓制", sub: "袈裟固", on: true, hot: true };
+    s[0] = { id: "kesa", label: "袈裟固", sub: "連打比拚", on: true, hot: true };
+    s[1] = { id: "kami", label: "上四方", sub: "方向攻防", on: true, hot: true };
   } else if (st === "intro" || st === "reset" || st === "wait" || (st === "post" && G.post && G.post.att !== W)) {
     s[0] = { id: "grip", label: "抓把", sub: "", on: false, cls: "t-attack" };
     s[1] = { id: "dodge", label: "閃避", sub: "", on: false, cls: "t-def" };
@@ -1111,11 +1249,55 @@ function pressSlot(i) {
     case "osoto": if (!busy(W) && W.cool <= 0) haptic("press"); tryThrow(W, "osoto"); break;
     case "ogoshi": if (!busy(W) && W.cool <= 0) haptic("press"); tryThrow(W, "ogoshi"); break;
     case "brace": tryBrace(W); break;
-    case "pin": if (G.state === "post") startHold(W, B); break;
+    case "kesa": if (G.state === "post") startHold(W, B, "kesa"); break;
+    case "kami": if (G.state === "post") startHold(W, B, "kami"); break;
     case "dl": onDir("left"); break;
     case "du": onDir("up"); break;
     case "dr": onDir("right"); break;
   }
+}
+
+/* 抓把中的技術面板 */
+const techBtns = [...document.querySelectorAll("#tech [data-tech]")];
+techBtns.forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); b.classList.add("down"); pressTech(b.dataset.tech); }));
+techBtns.forEach((b) => { const up = () => b.classList.remove("down"); b.addEventListener("pointerup", up); b.addEventListener("pointerleave", up); b.addEventListener("pointercancel", up); });
+function pressTech(id) {
+  if (G.state !== "fight" || !G.gripped) return;
+  ensureAudio();
+  if (id === "brace") { tryBrace(W); return; }
+  if (!busy(W) && W.cool <= 0) haptic("press");
+  tryThrow(W, id);
+}
+let techSig = "";
+function renderTech() {
+  const ready = !busy(W) && W.cool <= 0;
+  const parts = techBtns.map((b) => {
+    const id = b.dataset.tech;
+    if (id === "brace") return { id, on: !busy(W), hot: !!(B.act && B.act.type === "throwWind") };
+    const c = Math.round(throwChance(W, B, id) * 100);
+    const hotAt = id === "ogoshi" ? 18 : id === "kubinage" ? 25 : 40;
+    return { id, on: ready, hot: c >= hotAt, c };
+  });
+  const sig = JSON.stringify(parts);
+  if (sig === techSig) return;
+  techSig = sig;
+  parts.forEach((d, i) => {
+    const b = techBtns[i];
+    b.classList.toggle("off", !d.on);
+    b.classList.toggle("hot", d.hot);
+    if (d.c != null) b.querySelector("small").textContent = d.c + "%";
+  });
+}
+// 搖手機也算連打（部分手機或瀏覽器不提供動作感測）
+let lastShake = 0;
+window.addEventListener("devicemotion", (e) => {
+  const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+  const mag = Math.hypot(a.x, a.y, a.z);
+  const now = performance.now();
+  if (Math.abs(mag - 9.8) > 9 && now - lastShake > 110) { lastShake = now; mash(); }
+});
+function askMotion() {
+  try { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === "function") DeviceMotionEvent.requestPermission().catch(() => {}); } catch (e) {}
 }
 
 /* ---------- AI ---------- */
@@ -1153,11 +1335,11 @@ function aiGrip(dt) {
   f.push = clamp(target, -1, 1);
   if (ai.braceAt != null) { ai.braceAt -= dt; if (ai.braceAt <= 0) { ai.braceAt = null; if (!f.act) tryBrace(f); } }
   if (busy(f) || f.cool > 0) return;
-  const a = throwChance(f, o, "osoto"), b = throwChance(f, o, "ogoshi");
-  const best = a > b ? "osoto" : "ogoshi", bc = Math.max(a, b);
+  let best = "osoto", bc = 0;
+  for (const t of TECH_ORDER) { const c = throwChance(f, o, t); if (c > bc) { bc = c; best = t; } }
   const pass = f.lastAttack > 20 ? 0.35 : 0;
   if (bc > 0.32 && Math.random() < dt * 2.6 * DIFF.aggr) tryThrow(f, best);
-  else if (Math.random() < dt * (0.07 + pass) * DIFF.aggr) tryThrow(f, Math.random() < 0.8 ? "osoto" : "ogoshi");
+  else if (Math.random() < dt * (0.07 + pass) * DIFF.aggr) tryThrow(f, TECH_ORDER[Math.floor(Math.random() * TECH_ORDER.length)]);
   else if (Math.random() < dt * 0.05) { G.gripped = false; toast("對手切開了抓把"); }
 }
 
@@ -1195,6 +1377,7 @@ function stepFight(dt) {
     moveFree(W, mv, dt);
     moveFree(B, aim, dt);
     for (const f of [W, B]) { f.lean = damp(f.lean, 0, 5, dt); f.pushS = damp(f.pushS, 0, 6, dt); }
+    G.circle = 0;
     // 分開避免重疊
     const d = dist(W, B);
     if (d < 0.7) { const u = axis(W, B), k = (0.7 - d) / 2; W.x -= u.x * k; W.z -= u.z * k; B.x += u.x * k; B.z += u.z * k; }
@@ -1221,6 +1404,7 @@ function stepFight(dt) {
     const v = (W.pushS - B.pushS) * 0.9;
     mid.x += u.x * v * dt; mid.z += u.z * v * dt;
     const ang = lIn * 1.1 * dt + (B.ai.mode === "drive" ? 0.2 : 0) * dt * Math.sin(G.time);
+    G.circle = damp(G.circle || 0, Math.min(1, Math.abs(ang / dt) / 1.1), 4, dt);
     const nu = { x: u.x * Math.cos(ang) - u.z * Math.sin(ang), z: u.x * Math.sin(ang) + u.z * Math.cos(ang) };
     W.x = mid.x - nu.x * 0.4; W.z = mid.z - nu.z * 0.4;
     B.x = mid.x + nu.x * 0.4; B.z = mid.z + nu.z * 0.4;
@@ -1253,7 +1437,7 @@ function targetPoseFor(f) {
     if (a.type === "dodge") return POSE.DODGE;
     if (a.type === "brace") return POSE.BLOCK;
     if (a.type === "stagger") return POSE.STAGGER;
-    if (a.type === "throwWind") return a.tech === "ogoshi" ? POSE.OG1 : POSE.OS1;
+    if (a.type === "throwWind") return { ogoshi: POSE.OG1, seoi: POSE.SE1, taiotoshi: POSE.TO1, kubinage: POSE.KU1, kouchi: POSE.KO1 }[a.tech] || POSE.OS1;
   }
   if (G.gripped) {
     const p = clonePose(POSE.GRIP);
@@ -1331,6 +1515,7 @@ const FX = {
   thrown:  { vib: [120, 50, 120], color: "rgba(229,72,60,.95)", shake: 0.32 },
   gripMiss:{ vib: 30, color: "rgba(229,72,60,.45)", sound: "whoosh" },
   hit:     { vib: 15 },
+  tap:     { vib: 8 },
   miss:    { vib: 50, color: "rgba(229,72,60,.5)" },
 };
 function haptic(kind) {
@@ -1407,7 +1592,7 @@ function updateHUD(dt) {
     const place = (el, w, onRight) => { el.style.width = w; el.style.left = onRight ? "auto" : "0"; el.style.right = onRight ? "0" : "auto"; };
     place($("kzBack"), backW, side > 0); place($("kzFwd"), fwdW, side < 0);
     const lab = (el, onRight, text) => { el.style.left = onRight ? "auto" : "6px"; el.style.right = onRight ? "6px" : "auto"; el.textContent = onRight ? text + " ▶" : "◀ " + text; };
-    lab($("kzBackLab"), side > 0, "大外割"); lab($("kzFwdLab"), side < 0, "大腰");
+    lab($("kzBackLab"), side > 0, "後方技"); lab($("kzFwdLab"), side < 0, "前方技");
   }
   // 攻擊預兆
   const warn = $("warn");
@@ -1424,14 +1609,27 @@ function updateHUD(dt) {
   const h = G.hold;
   const showNw = G.state === "osaekomi" && h && h.phase === "on";
   $("nw").hidden = !showNw;
+  const showTech = G.state === "fight" && G.gripped;
   if (G.state !== "title" && !G.end) {
-    $("pad").hidden = !showNw;
+    $("pad").hidden = !(showNw && h.type === "kami");
+    $("mash").hidden = !(showNw && h.type === "kesa");
     $("joy").hidden = showNw;
-    $("skills").hidden = showNw;
+    $("skills").hidden = showNw || showTech;
+    $("tech").hidden = !showTech;
   }
+  if (showTech) renderTech();
   if (showNw) {
     $("nw").style.top = Math.round($("board").getBoundingClientRect().bottom + 8) + "px";
-    $("nwTitle").textContent = h.holder === W ? "袈裟固・按亮起的方向壓住" : "被壓制・按亮起的方向逃脫";
+    const hn = HOLD_NAME[h.type];
+    $("nwTitle").textContent = h.type === "kesa"
+      ? (h.holder === W ? `${hn}・連打壓緊` : `被${hn}・連打或搖手機掙脫`)
+      : (h.holder === W ? `${hn}・按亮起的方向壓住` : `被${hn}・按亮起的方向逃脫`);
+    if (h.type === "kesa") {
+      const m = $("mash");
+      m.querySelector("b").textContent = h.held === W ? "連打掙脫！" : "連打壓緊！";
+      m.querySelector("small").textContent = h.held === W ? "也可以用力搖手機" : "對手正在掙扎";
+      m.classList.toggle("pulse", h.pulse > 0);
+    }
     $("nwTime").textContent = h.t.toFixed(1) + " 秒";
     $("nwTimeBar").style.width = clamp(h.t / 20, 0, 1) * 100 + "%";
     $("nwEsc").style.width = clamp(h.esc, 0, 100) + "%";
@@ -1478,7 +1676,7 @@ function tick(dt) {
     case "throw": G.clock = G.golden ? G.clock + dt : Math.max(0, G.clock - dt); if (!G.golden && G.clock <= 0) G.pendingEnd = true; stepThrow(dt); break;
     case "post": {
       const p = G.post; p.t += dt;
-      if (p.aiFollow && p.t > 0.45) { startHold(B, W); break; }
+      if (p.aiFollow && p.t > 0.45) { startHold(B, W, Math.random() < 0.5 ? "kesa" : "kami"); break; }
       if (p.t > p.win) { G.post = null; matte(0.1); }
       break;
     }
@@ -1500,7 +1698,7 @@ for (const id of ["optDiff", "optTime", "optVib"]) {
     $(id).querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
   });
 }
-$("startBtn").addEventListener("click", startMatch);
+$("startBtn").addEventListener("click", () => { askMotion(); startMatch(); });
 $("againBtn").addEventListener("click", startMatch);
 $("homeBtn").addEventListener("click", toTitle);
 $("quit").addEventListener("click", () => {
