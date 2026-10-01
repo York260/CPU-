@@ -135,7 +135,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sk.t-def { border-color: rgba(127, 168, 255, .7); }
 .sk.empty { visibility: hidden; }
 
-/* 抓把中技術面板：2×2，綠＝後方技，金＝前方技 */
+/* 抓把中技術面板：2×2。以出招者角度：綠＝前方技（往前推），金＝後方技（往後拉） */
 .tech { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 14px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); width: 196px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .tb { position: relative; height: 70px; min-width: 0; border-radius: 14px; border: 2px solid rgba(255, 255, 255, .22); background: rgba(20, 26, 38, .88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; line-height: 1.1; touch-action: none; transition: transform .08s, opacity .15s; padding: 0 4px; overflow: hidden; }
 .tb b { font-size: 17px; font-weight: 900; white-space: nowrap; }
@@ -312,7 +312,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>靠近按<b>抓把</b>；對手伸手時按<b>閃避</b>。</li>
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
         <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
-        <li>被前方技摔起來時，落地前按<b>前迴轉</b>：滾翻卸力，得分降一級，對手也不能壓制。</li>
+        <li>被丟體、過肩摔、大腰、抱頭摔摔起來時，落地前按<b>前迴轉</b>：滾翻卸力，得分降一級，對手也不能壓制。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打、<b>上四方固</b>按亮起的方向。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
         <li>消極或出界會被判指導，3 次判負。</li>
@@ -906,7 +906,7 @@ function startThrow(att, def, tech, result) {
   const canRoll = !!(TECHS[tech] && TECHS[tech].dir === "fwd");
   G.anim = { att, def, tech, result, t: 0, keys, O: { x: att.x, z: att.z }, u, right: { x: -u.z, z: u.x },
     canRoll, ukemi: false, tried: false, win0: keys[2].t * 0.95, win1: keys[3].t + 0.06 };
-  // AI 被前方技摔時，依難度用前迴轉倒法卸力
+  // AI 被往前倒的招（dir: fwd）摔時，依難度用前迴轉倒法卸力
   if (canRoll && def.isAI && Math.random() < DIFF.ukemi) setTimeout(() => { if (G.anim && G.anim.def === B) doRoll(); }, (keys[2].t + 0.05) * 1000);
   att.act = def.act = null;
   att.lastAttack = 0;
@@ -1199,7 +1199,7 @@ function startMatch() {
   prefs.kz = +document.querySelector("#optKz [aria-pressed='true']").dataset.v;
   savePrefs(prefs);
   W.loadout = prefs.loadout.slice();
-  // AI 隨機帶三招，至少一招前方技、一招後方技
+  // AI 隨機帶三招，推的招（前方技）、拉的招（後方技）至少各一
   const backs = TECH_ORDER.filter((t) => TECHS[t].dir === "back"), fwds = TECH_ORDER.filter((t) => TECHS[t].dir === "fwd");
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const aiSet = [pick(backs), pick(fwds)];
@@ -1720,7 +1720,7 @@ function updateHUD(dt) {
     const place = (el, w, onRight) => { el.style.width = w; el.style.left = onRight ? "auto" : "0"; el.style.right = onRight ? "0" : "auto"; };
     place($("kzBack"), backW, side > 0); place($("kzFwd"), fwdW, side < 0);
     const lab = (el, onRight, text) => { el.style.left = onRight ? "auto" : "6px"; el.style.right = onRight ? "6px" : "auto"; el.textContent = onRight ? text + " ▶" : "◀ " + text; };
-    lab($("kzBackLab"), side > 0, "後方技"); lab($("kzFwdLab"), side < 0, "前方技");
+    lab($("kzBackLab"), side > 0, "前方技"); lab($("kzFwdLab"), side < 0, "後方技");
   }
   // 攻擊預兆
   const warn = $("warn");
@@ -1826,7 +1826,7 @@ function renderLoadout() {
   const box = $("loadout");
   box.innerHTML = TECH_ORDER.map((id) => {
     const T = TECHS[id], on = prefs.loadout.includes(id), full = prefs.loadout.length >= 3 && !on;
-    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "後" : "前"}</span><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips">${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
+    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "前" : "後"}</span><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips">${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
   }).join("");
   $("loadCount").textContent = prefs.loadout.length + " / 3";
   $("startBtn").disabled = prefs.loadout.length !== 3;
