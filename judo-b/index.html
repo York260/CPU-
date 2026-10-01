@@ -154,9 +154,6 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .mv.off { opacity: .38; }
 .mv.hot { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(232,181,58,.35); }
 .mv.hot::after { content: "崩"; position: absolute; right: -6px; top: -8px; font: 900 12px/1 var(--f-display); background: var(--gold); color: #10141c; padding: 3px 4px; border-radius: 3px; }
-#hint { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 74px); transform: translateX(-50%); font-size: 12.5px; color: var(--fg); background: rgba(0,0,0,.55); padding: 6px 12px; border-radius: 3px; pointer-events: none; white-space: nowrap; opacity: 0; transition: opacity .2s; }
-#hint.on { opacity: 1; }
-#hint b { color: var(--gold-hi); }
 
 /* ---------- Touch controls ---------- */
 #touch { position: absolute; left: 0; right: 0; bottom: 0; height: 46vh; pointer-events: none; }
@@ -221,9 +218,9 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
 #pause .sheet { justify-self: center; margin: 0; text-align: center; justify-items: center; }
 #pause .big { font: 900 48px/1 var(--f-display); letter-spacing: .2em; }
 #hud, #movebar, #touch, #labels, #hudBtns { transition: opacity .3s; }
-.hide-ui #coach, .hide-ui #hud, .hide-ui #movebar, .hide-ui #touch, .hide-ui #hudBtns, .hide-ui #hint, .hide-ui #trainTip { opacity: 0; pointer-events: none !important; }
+.hide-ui #coach, .hide-ui #hud, .hide-ui #movebar, .hide-ui #touch, .hide-ui #hudBtns, .hide-ui #trainTip { opacity: 0; pointer-events: none !important; }
 .hide-ui #touch * { pointer-events: none !important; }
-.cine #movebar, .cine #touch, .cine #hint { opacity: 0; }
+.cine #movebar, .cine #touch { opacity: 0; }
 #coach { position: absolute; left: 16px; top: calc(env(safe-area-inset-top, 0px) + 112px); width: min(360px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; font-size: 13.5px; line-height: 1.7; transition: opacity .25s; max-height: calc(100vh - 220px); overflow-y: auto; touch-action: pan-y; }
 .c-head { display: flex; align-items: baseline; gap: 10px; cursor: pointer; }
 .c-step { font: 700 11px/1 var(--f-num); letter-spacing: .18em; color: var(--gold); white-space: nowrap; }
@@ -280,8 +277,11 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
   #trainTip { top: calc(env(safe-area-inset-top, 0px) + 112px); font-size: 11.5px; max-width: calc(100vw - 32px); }
   .sheet { margin-left: 0; justify-self: center; }
   .opt { grid-template-columns: 1fr; gap: 6px; }
-  #hint { bottom: calc(env(safe-area-inset-bottom, 0px) + 240px); font-size: 11.5px; }
-  #coach { left: 10px; right: 10px; width: auto; top: calc(env(safe-area-inset-top, 0px) + 136px); padding: 10px 12px; font-size: 12.5px; line-height: 1.6; max-height: 34vh; gap: 7px; }
+  #coach { left: 10px; right: 10px; width: auto; top: calc(env(safe-area-inset-top, 0px) + 136px); padding: 8px 10px; font-size: 12.5px; line-height: 1.6; max-height: 46vh; gap: 6px; }
+  #coach.collapsed { gap: 4px; }
+  #coach.collapsed .c-goals li:not(.cur):not(.fin) { display: none; }
+  #coach.collapsed .c-foot button:not(.go) { display: none; }
+  #coach.collapsed .c-foot:not(:has(.go)) { display: none; }
   .c-title { font-size: 15px; }
   .c-goals li { font-size: 12px; padding: 5px 8px; }
 }
@@ -326,7 +326,6 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
     <ul class="c-goals" id="cGoals"></ul>
     <div class="c-foot"><button id="cPrev">上一課</button><button id="cRetry">重來</button><button id="cNext">跳過這課</button></div>
   </div>
-  <div id="hint">推著對手走 → <b>大外割 / 捨身小內割</b>　拉著對手走 → <b>單臂過肩摔</b></div>
 
   <div id="banner"><div class="slash"></div><div class="kanji"></div><div class="roma"></div></div>
   <div id="call"><div class="m"></div><div class="s"></div><div class="tags"></div></div>
@@ -1706,7 +1705,7 @@ const H_ = [0, 1].map(i => ({
   hp: $('#hp' + i), hpc: $('#hpc' + i), hpn: $('#hpn' + i), st: $('#st' + i), stw: $('#stw' + i), rg: $('#rg' + i), rgn: $('#rgn' + i),
   grip: $('#grip' + i), ctr: $('#ctr' + i), pas: $('#pas' + i), waza: $('#waza' + i), shido: $('#shido' + i), last: {},
 }));
-const timerEl = $('#timer'), clockLbl = $('#clockLbl'), teleEl = $('#tele'), kzEl = $('#kz'), hintEl = $('#hint');
+const timerEl = $('#timer'), clockLbl = $('#clockLbl'), teleEl = $('#tele'), kzEl = $('#kz');
 const mvEls = [...document.querySelectorAll('.mv')], tbEls = [...document.querySelectorAll('#btns button')];
 function fmtTime(t) { t = Math.max(0, t); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
 function updateHUD() {
@@ -1740,7 +1739,6 @@ function updateHUD() {
   const hot = (m) => THROWS.includes(m) && can(m) && ((k && MOVES[m].kuzushi === k) || (m === 'kouchi' && o.state === 'guard') || p.counterT > 0);
   mvEls.forEach(el => { const m = el.dataset.m; el.classList.toggle('off', !can(m)); el.classList.toggle('hot', hot(m)); });
   tbEls.forEach(el => { const m = el.dataset.act; el.classList.toggle('off', !can(m)); el.classList.toggle('hot', hot(m)); });
-  hintEl.classList.toggle('on', phase === 'fight' && p.grip && !k);
   // anchored labels
   const showTele = phase === 'fight' && o.state === 'startup';
   teleEl.hidden = !showTele;
@@ -1885,7 +1883,7 @@ function tutRender() {
     let prog = '';
     if (g.need > 1) { const v = k < TUT.g || TUT.done ? g.need : k === TUT.g ? TUT.n : 0; prog = `<em>${g.unit === '公尺' ? v.toFixed(1) : Math.floor(v)} / ${g.need} ${g.unit}</em>`; }
     return `<li class="${cls}"><span>${fmt(g.text)}</span>${prog}</li>`;
-  }).join('') + (TUT.done ? `<li class="done"><span>完成！${TUT.i < LESSONS.length - 1 ? fmt('{next}') : ''}</span></li>` : '');
+  }).join('') + (TUT.done ? `<li class="done fin"><span>完成！${TUT.i < LESSONS.length - 1 ? fmt('{next}') : ''}</span></li>` : '');
   $('#cPrev').disabled = TUT.i === 0;
   const nx = $('#cNext');
   nx.textContent = TUT.done ? (TUT.i < LESSONS.length - 1 ? '下一課 ▶' : '結業 ▶') : '跳過這課';
@@ -1910,8 +1908,13 @@ function tutEvent(type, f, d) {
     if (msg) later(1.2, () => popup(F[0], msg, 'warn', 2.4));
   }
 }
+function tutFold() {
+  if (!TUT.autoFold) return;
+  TUT.autoFold = false; coachEl.classList.add('collapsed'); $('#cTog').textContent = '說明 ▾';
+}
 function tutUpdate(dt) {
   if (!TUT.on) return;
+  if (TUT.autoFold && phase === 'fight' && (TUT.foldT -= dt) <= 0) tutFold();
   const p = F[0];
   if (!TUT.done && phase === 'fight') {
     const g = tutGoal();
@@ -1934,6 +1937,7 @@ function tutGo(i) {
   const L = LESSONS[TUT.i];
   ai.behavior = L.cpu; ai.grabCD = 1.6; ai.holdT = 0;
   coachEl.classList.remove('collapsed'); $('#cTog').textContent = '收合';
+  TUT.autoFold = touchMode && innerWidth <= 760; TUT.foldT = 9;
   tutRender();
   laterQ = []; TD = null; targetTS = 1;
   document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
@@ -1968,7 +1972,8 @@ function tutFinish() {
 $('#cPrev').addEventListener('click', () => { if (TUT.i > 0) tutGo(TUT.i - 1); });
 $('#cRetry').addEventListener('click', () => tutGo(TUT.i));
 $('#cNext').addEventListener('click', () => tutNext());
-$('#cHead').addEventListener('click', () => { const c = coachEl.classList.toggle('collapsed'); $('#cTog').textContent = c ? '展開說明' : '收合'; });
+$('#cHead').addEventListener('click', () => { TUT.autoFold = false; const c = coachEl.classList.toggle('collapsed'); $('#cTog').textContent = c ? '說明 ▾' : '收合'; });
+$('#touch').addEventListener('pointerdown', () => { if (TUT.on && phase === 'fight') tutFold(); });
 
 /* =========================================================
    Flow: menu, match, pause, result
