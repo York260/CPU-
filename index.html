@@ -183,6 +183,102 @@ button { cursor: pointer; }
 .summary small { display: block; font-size: 12px; color: var(--muted); }
 .summary b { font-family: var(--f-mono); font-size: 18px; font-variant-numeric: tabular-nums; }
 
+
+/* 卡片編輯器 */
+.ed { display: grid; gap: 14px; }
+.ed-bar { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-top: 12px; }
+.ed-title { font-family: var(--f-display); font-weight: 900; font-size: 26px; margin: 0; }
+.ed-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.ed-count { font-size: 13px; color: var(--muted); }
+.ed-count b { color: var(--ink); font-family: var(--f-mono); }
+.ed-export { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.ed-export p { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.ed-export textarea { width: 100%; font-family: var(--f-mono); font-size: 12px; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.ed-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.tab span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+.tab[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--on-navy); }
+.tab[aria-pressed="true"] span { color: inherit; opacity: .8; }
+.ed-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 16px; align-items: start; }
+.ed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; align-content: start; }
+.ed-empty { color: var(--muted); }
+@media (max-width: 900px) {
+  .ed-main { grid-template-columns: minmax(0, 1fr); }
+  .ed-main.has-sel .ed-grid { display: none; }
+  .ed-main:not(.has-sel) .ed-panel { display: none; }
+}
+.ecard { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; cursor: pointer; min-width: 0; }
+.ecard:hover { border-color: var(--navy); }
+.ecard.sel { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.ecard.sys { cursor: default; border-style: dashed; background: transparent; }
+.ec-top { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 11px; }
+.ec-id { font-family: var(--f-mono); color: var(--muted); }
+.ec-kind, .ec-need { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; color: var(--muted); }
+.ec-mod { background: var(--gold); color: var(--on-navy); border-radius: 4px; padding: 0 6px; font-weight: 700; }
+.ec-when { font-size: 12px; color: var(--muted); }
+.ecard h3 { font-family: var(--f-display); font-weight: 900; font-size: 18px; margin: 0; line-height: 1.35; }
+.ec-text { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ec-ch { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ec-ch li { display: grid; grid-template-columns: 1.4em minmax(0, 1fr); gap: 4px; font-size: 13px; }
+.ec-ch .mk { font-family: var(--f-display); font-weight: 900; color: var(--gold); }
+.ec-ct { line-height: 1.5; }
+.ec-danger { font-size: 11px; color: var(--stamp); border: 1px solid var(--stamp); border-radius: 4px; padding: 0 4px; }
+.fx { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.fx .chip { font-size: 11px; padding: 0 6px; }
+.chip.flagc { background: transparent; border: 1px dashed var(--line); color: var(--ink); }
+.fx-branch { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; align-items: center; }
+.fx-tag { font-size: 11px; font-family: var(--f-mono); color: var(--muted); }
+.fx-ok, .fx-no { font-size: 11px; font-weight: 700; margin-right: 2px; }
+.fx-ok { color: var(--good); }
+.fx-no { color: var(--stamp); }
+.fx-none { font-size: 11px; color: var(--muted); margin: 0; }
+
+.ed-panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+@media (max-width: 900px) { .ed-panel { position: static; max-height: none; } }
+.ep-empty { padding: 20px; color: var(--muted); font-size: 14px; }
+.ep-empty b { color: var(--ink); font-family: var(--f-display); font-size: 17px; }
+.ep-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); z-index: 1; font-size: 13px; }
+.ep-head b { font-family: var(--f-mono); }
+.ep-body { border: 0; margin: 0; padding: 12px 14px; display: grid; gap: 10px; min-width: 0; }
+.ep-body input, .ep-body textarea, .ep-body select { width: 100%; border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; background: var(--paper); color: var(--ink); font-size: 14px; min-width: 0; }
+.ep-body textarea { resize: vertical; line-height: 1.6; }
+.ep-body input[type="checkbox"] { width: auto; }
+.field { display: grid; gap: 3px; }
+.field > span, .num > span { font-size: 12px; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ep-h { font-family: var(--f-display); font-weight: 900; font-size: 16px; margin: 6px 0 0; }
+.ep-ch { border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin: 0; display: grid; gap: 8px; min-width: 0; }
+.ep-ch-head { display: grid; grid-template-columns: 1.4em minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.ep-ch-head .mk { font-family: var(--f-display); font-weight: 900; color: var(--gold); font-size: 17px; }
+.ep-mini { display: flex; gap: 2px; }
+.ep-mini button { background: none; border: 1px solid var(--line); border-radius: 4px; width: 26px; height: 26px; padding: 0; font-size: 12px; color: var(--muted); }
+.ep-mini button:disabled { opacity: .35; cursor: not-allowed; }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.oc { border-left: 3px solid var(--tint); padding-left: 8px; display: grid; gap: 6px; min-width: 0; }
+.oc-label { font-size: 12px; font-weight: 700; }
+.oc-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.oc-grid.recg { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.num { display: grid; gap: 1px; min-width: 0; }
+.num input { padding: 4px 6px !important; font-family: var(--f-mono); font-size: 13px !important; }
+.num.wide { min-width: 110px; }
+.oc details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+.oc-sub { margin: 6px 0 2px; font-size: 12px; color: var(--muted); }
+.flagbox { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; }
+.flagbox label { display: inline-flex; gap: 3px; align-items: center; }
+.oc-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 6px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.chk-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.chk-row .num { width: 90px; }
+.chk-row .num.wide { width: 110px; }
+.hint-line { font-size: 12px; color: var(--muted); flex: 1 1 180px; }
+.branches { display: grid; gap: 8px; }
+.ep-foot { position: sticky; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ep-msg { font-size: 12px; color: var(--muted); }
+.ep-msg.ok { color: var(--good); }
+.ep-msg.warn { color: var(--stamp); }
+.ep.ro .ep-body { opacity: .75; }
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -199,7 +295,10 @@ button { cursor: pointer; }
         <div class="brand-sub">CENTRAL POLICE UNIVERSITY · 115 學年度</div>
       </div>
     </div>
-    <button class="ghost" id="restartBtn" type="button" hidden>重新開始</button>
+    <div class="row">
+      <button class="ghost" id="editorBtn" type="button">卡片編輯器</button>
+      <button class="ghost" id="restartBtn" type="button" hidden>重新開始</button>
+    </div>
   </header>
   <ol class="timeline" id="timeline" hidden></ol>
   <main id="app"></main>
@@ -932,12 +1031,15 @@ function finish(kind) {
 const $app = document.getElementById("app");
 const $tl = document.getElementById("timeline");
 const $restart = document.getElementById("restartBtn");
+const $editorBtn = document.getElementById("editorBtn");
 
 function render(keepScroll) {
-  const inGame = S && view !== "title" && view !== "create";
+  const inGame = S && view !== "title" && view !== "create" && view !== "editor";
   $tl.hidden = !inGame;
-  $restart.hidden = !(S && view !== "title");
+  $restart.hidden = !(S && view !== "title" && view !== "editor");
+  $editorBtn.textContent = view === "editor" ? "返回遊戲" : "卡片編輯器";
   if (inGame) renderTimeline();
+  if (view === "editor") { $app.innerHTML = editorView(); if (!keepScroll) window.scrollTo(0, 0); return; }
   if (view === "title") $app.innerHTML = titleView();
   else if (view === "create") $app.innerHTML = createView();
   else $app.innerHTML = `<div class="layout">${idCard()}<section>${mainView()}</section></div>`;
@@ -1166,12 +1268,386 @@ $restart.addEventListener("click", () => {
   }
 });
 
+
+/* ---------- 卡片編輯器 ----------
+   原始卡片內容保留在 BASE；設計師的修改存在 OV（有共享資料庫時存在 db 的 cards 集合，否則存在本機），
+   套用後直接覆寫 EV，遊戲下一次抽到該卡就會使用新內容。 */
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const NEEDS = {};
+for (const id in EV) if (EV[id].need) NEEDS[id] = EV[id].need;
+const BASE = clone(EV);
+const NEED_TEXT = { y1g: "需沒有交往對象", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
+const FIXED = new Set(["p1", "p2", "p3", "p4", "p5", "p6", "y1s", "y2s", "y3s", "y4s", "grad", "x1", "x2", "x3", "x4"]);
+const EDIT_FLAGS = Object.keys(FLAG_INFO).filter((f) => !f.startsWith("club:"));
+const OV_KEY = "cpu-sim-cards-v1";
+let OV = {};
+let storeMode = "loading"; // loading | db | local
+let cardsCol = null, canWrite = true;
+let prevView = "title";
+const ed = { stage: 0, q: "", sel: null, draft: null, orig: null, msg: "", msgKind: "", pending: null, exportOpen: false, saving: false };
+
+function evStage(id) { if (id[0] === "p") return 0; if (id[0] === "x") return 5; if (id === "grad") return 4; return +id[1]; }
+function evKind(id) {
+  if (FIXED.has(id)) return "固定";
+  const inPool = Object.values(POOLS).some((p) => p.includes(id));
+  return inPool ? (NEED_TEXT[id] ? "隨機・條件" : "隨機") : "條件";
+}
+
+function applyOverrides() {
+  for (const id in BASE) {
+    const src = OV[id] && Array.isArray(OV[id].ch) && OV[id].ch.length ? OV[id] : BASE[id];
+    EV[id] = Object.assign(clone(src), NEEDS[id] ? { need: NEEDS[id] } : {});
+  }
+}
+
+async function initStore() {
+  const useLocal = () => { storeMode = "local"; OV = fetchStore(OV_KEY) || {}; applyOverrides(); afterStore(); };
+  if (!window.claude?.use) return useLocal();
+  let db = null;
+  try { db = await window.claude.use("db"); } catch (e) {}
+  if (!db) return useLocal();
+  storeMode = "db";
+  cardsCol = db.collection("cards");
+  try {
+    const user = await window.claude.use("user");
+    if (user) { const c = await user.can("data.write"); if (c === false) canWrite = false; }
+  } catch (e) {}
+  afterStore();
+  cardsCol.onSnapshot((snap) => {
+    const next = {};
+    snap.docs.forEach((d) => { const v = d.data(); if (v && v.ev && Array.isArray(v.ev.ch)) next[d.id] = clone(v.ev); });
+    OV = next; applyOverrides(); afterStore();
+  }, () => {});
+}
+
+function afterStore() {
+  if (view === "editor") {
+    // 別人儲存了正在編輯的卡片時，沒有未儲存修改就直接換成新版
+    if (ed.sel && !isDirty()) { ed.draft = clone(EV[ed.sel]); delete ed.draft.need; ed.orig = clone(ed.draft); }
+    renderEditorKeepPanel();
+  } else if (view === "event") render(true);
+}
+
+/* --- 路徑工具：data-p="ch.0.chk.ok.e.fit" --- */
+function getP(o, path) { return path.split(".").reduce((a, k) => (a == null ? undefined : a[k]), o); }
+function setP(o, path, v) {
+  const ks = path.split("."); let cur = o;
+  ks.slice(0, -1).forEach((k, i) => { if (cur[k] == null) cur[k] = /^\d+$/.test(ks[i + 1]) ? [] : {}; cur = cur[k]; });
+  const last = ks[ks.length - 1];
+  if (v === undefined) { if (Array.isArray(cur)) cur.splice(+last, 1); else delete cur[last]; } else cur[last] = v;
+}
+function prune(o) {
+  if (Array.isArray(o)) return o.map(prune);
+  if (o && typeof o === "object") {
+    for (const k of Object.keys(o)) {
+      o[k] = prune(o[k]);
+      const v = o[k];
+      if (v === "" || v == null || (Array.isArray(v) && !v.length && k !== "ch") || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length)) delete o[k];
+    }
+  }
+  return o;
+}
+const isDirty = () => ed.sel && JSON.stringify(ed.draft) !== JSON.stringify(ed.orig);
+
+/* --- 效果標籤 --- */
+function fxChips(o, isBase) {
+  if (!o) return "";
+  const out = [];
+  for (const k of STAT_KEYS) if (o.e && o.e[k]) out.push(`<span class="chip ${o.e[k] > 0 ? "up" : "down"}">${STAT_NAME[k]} ${o.e[k] > 0 ? "+" : ""}${o.e[k]}</span>`);
+  for (const k of REC_GOOD) if (o.rec && o.rec[k]) out.push(`<span class="chip rec-ok">${k}×${o.rec[k]}</span>`);
+  for (const k of REC_BAD) if (o.rec && o.rec[k]) out.push(`<span class="chip rec-bad">${k}×${o.rec[k]}</span>`);
+  (o.set || []).forEach((f) => out.push(`<span class="chip flagc">＋${esc(FLAG_INFO[f]?.name || f)}</span>`));
+  (o.unset || []).forEach((f) => out.push(`<span class="chip flagc">－${esc(FLAG_INFO[f]?.name || f)}</span>`));
+  if (o.bonus) out.push(`<span class="chip ${o.bonus > 0 ? "up" : "down"}">特考 ${o.bonus > 0 ? "+" : ""}${o.bonus}</span>`);
+  if (isBase && o.club) out.push(`<span class="chip flagc">加入${CLUB_NAME[o.club]}</span>`);
+  if (isBase && o.end) out.push(`<span class="chip rec-bad">結束遊戲</span>`);
+  return out.join("");
+}
+function choiceFx(c) {
+  if (c.fn) return `<span class="chip">由系統計算</span>`;
+  let h = fxChips(c, true);
+  if (c.chk) {
+    h += `<div class="fx-branch"><span class="fx-tag">判定 ${STAT_NAME[c.chk.s]} 難度 ${c.chk.dc}</span></div>`;
+    h += `<div class="fx-branch"><span class="fx-ok">成功</span>${fxChips(c.chk.ok) || '<span class="fx-none">無變化</span>'}</div>`;
+    h += `<div class="fx-branch"><span class="fx-no">失敗</span>${fxChips(c.chk.no) || '<span class="fx-none">無變化</span>'}</div>`;
+  }
+  return h || '<span class="fx-none">無數值變化</span>';
+}
+function cardHTML(id, ev) {
+  const mod = !!OV[id], sel = ed.sel === id;
+  return `<article class="ecard${sel ? " sel" : ""}${mod ? " mod" : ""}" data-card="${id}" tabindex="0" role="button" aria-pressed="${sel}">
+    <div class="ec-top"><span class="ec-id">${id}</span><span class="ec-kind">${evKind(id)}</span>${NEED_TEXT[id] ? `<span class="ec-need">${NEED_TEXT[id]}</span>` : ""}${mod ? '<span class="ec-mod">已修改</span>' : ""}</div>
+    <div class="ec-when">${esc(ev.when || "")}${ev.where ? "・" + esc(ev.where) : ""}</div>
+    <h3>${esc(ev.title || "（未命名）")}</h3>
+    <p class="ec-text">${esc(ev.text || "")}</p>
+    <ol class="ec-ch">${(ev.ch || []).map((c, i) => `<li><span class="mk">${MARKS[i] || i + 1}</span><div><div class="ec-ct">${esc(c.t || "")}${c.danger ? ` <span class="ec-danger">${esc(c.danger)}</span>` : ""}</div><div class="fx">${choiceFx(c)}</div></div></li>`).join("")}</ol>
+  </article>`;
+}
+function yearEndCard(n) {
+  return `<article class="ecard sys">
+    <div class="ec-top"><span class="ec-id">yend</span><span class="ec-kind">系統</span></div>
+    <div class="ec-when">${STAGES[n]}・學年末</div>
+    <h3>${STAGES[n]}學年考核</h3>
+    <p class="ec-text">由程式計算：課業與體能標準 ${35 + n * 5}、操行標準 30。不及格自動補考，補考未過累計兩次退學。課業 80 以上嘉獎兩次、體能 80 以上嘉獎乙次、學生幹部嘉獎乙次。</p>
+    <p class="fx-none">這張卡不能在這裡修改，要調整標準請告訴開發者。</p>
+  </article>`;
+}
+
+function storeNote() {
+  if (storeMode === "loading") return "正在連線共享資料庫…";
+  if (storeMode === "local") return "本機模式：修改只存在這個瀏覽器，請用「匯出修改」把內容交給開發者。";
+  if (!canWrite) return "你目前只有檢視權限，可以瀏覽卡片但無法儲存修改。";
+  return "修改會同步給所有有權限的人，遊戲下次抽到該卡就會使用新內容。";
+}
+
+function editorView() {
+  const ids = Object.keys(BASE);
+  const nMod = Object.keys(OV).length;
+  const tabs = STAGES.map((n, i) => `<button type="button" class="tab" data-ed-stage="${i}" aria-pressed="${ed.stage === i}">${n}<span>${ids.filter((id) => evStage(id) === i).length}</span></button>`).join("")
+    + `<button type="button" class="tab" data-ed-stage="all" aria-pressed="${ed.stage === "all"}">全部<span>${ids.length}</span></button>`;
+  return `<div class="ed">
+    <div class="ed-bar">
+      <div><h1 class="ed-title">事件卡片編輯器</h1><p class="ed-sub">${storeNote()}</p></div>
+      <div class="row"><span class="ed-count">已修改 <b>${nMod}</b> / ${ids.length} 張</span><button type="button" class="btn line" data-ed="export">匯出修改</button></div>
+    </div>
+    ${ed.exportOpen ? `<div class="ed-export"><p>${nMod ? "以下是所有修改過的卡片（JSON）。已嘗試複製到剪貼簿；若沒有成功，請手動全選複製。" : "目前沒有任何修改。"}</p><textarea id="exportBox" readonly rows="8">${esc(JSON.stringify(OV, null, 2))}</textarea></div>` : ""}
+    <div class="ed-tools"><div class="tabs">${tabs}</div><input id="edSearch" class="text-in" type="search" placeholder="搜尋標題、內容、選項" value="${esc(ed.q)}"></div>
+    <div class="ed-main${ed.sel ? " has-sel" : ""}">
+      <div class="ed-grid" id="edGrid">${gridHTML()}</div>
+      <aside class="ed-panel" id="edPanel">${panelHTML()}</aside>
+    </div>
+  </div>`;
+}
+function gridHTML() {
+  const q = ed.q.trim();
+  const ids = Object.keys(BASE).filter((id) => ed.stage === "all" || evStage(id) === ed.stage).filter((id) => {
+    if (!q) return true;
+    const ev = id === ed.sel ? ed.draft : EV[id];
+    return JSON.stringify([ev.title, ev.text, ev.when, ev.where, (ev.ch || []).map((c) => [c.t, c.r, c.chk && c.chk.ok.r, c.chk && c.chk.no.r])]).includes(q);
+  });
+  let h = ids.map((id) => cardHTML(id, id === ed.sel ? ed.draft : EV[id])).join("");
+  if (!q && ed.stage !== "all" && ed.stage >= 1 && ed.stage <= 4) h += yearEndCard(ed.stage);
+  return h || '<p class="ed-empty">沒有符合的卡片。</p>';
+}
+
+/* --- 編輯面板 --- */
+const statInputs = (prefix, o, keys, names, min) => keys.map((k) => `<label class="num"><span>${names[k] || k}</span><input type="number" step="1" ${min != null ? `min="${min}"` : ""} data-p="${prefix}.${k}" data-t="num" value="${(o && o[k]) || ""}" placeholder="0"></label>`).join("");
+function flagBoxes(path, arr) {
+  return `<div class="flagbox">${EDIT_FLAGS.map((f) => `<label><input type="checkbox" data-arr="${path}" value="${f}" ${(arr || []).includes(f) ? "checked" : ""}>${FLAG_INFO[f].name}</label>`).join("")}</div>`;
+}
+function outcomeHTML(prefix, o, label, isBase) {
+  o = o || {};
+  const recNames = {}; [...REC_GOOD, ...REC_BAD].forEach((k) => (recNames[k] = k));
+  const extra = (o.set || []).length + (o.unset || []).length + (o.bonus ? 1 : 0) + (isBase && (o.club || o.end) ? 1 : 0);
+  return `<div class="oc">
+    <div class="oc-label">${label}</div>
+    <textarea rows="2" data-p="${prefix}.r" placeholder="結果描述（玩家選完後看到的文字）">${esc(o.r || "")}</textarea>
+    <div class="oc-grid">${statInputs(prefix + ".e", o.e, STAT_KEYS, STAT_NAME)}</div>
+    <div class="oc-grid recg">${statInputs(prefix + ".rec", o.rec, [...REC_GOOD, ...REC_BAD], recNames, 0)}</div>
+    <details ${extra ? "open" : ""}><summary>詞條與其他${extra ? `（${extra}）` : ""}</summary>
+      <p class="oc-sub">取得詞條</p>${flagBoxes(prefix + ".set", o.set)}
+      <p class="oc-sub">移除詞條</p>${flagBoxes(prefix + ".unset", o.unset)}
+      <div class="oc-row"><label class="num"><span>特考加分</span><input type="number" step="1" data-p="${prefix}.bonus" data-t="num" value="${o.bonus || ""}" placeholder="0"></label>
+      ${isBase ? `<label class="num wide"><span>加入社團</span><select data-p="${prefix}.club"><option value="">不加入</option>${Object.entries(CLUB_NAME).map(([k, v]) => `<option value="${k}" ${o.club === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="check"><input type="checkbox" data-p="${prefix}.end" data-t="quit" ${o.end ? "checked" : ""}>選了就退訓（結束遊戲）</label>` : ""}</div>
+    </details>
+  </div>`;
+}
+function chanceHint(c) {
+  const at = (v) => clamp(50 + (v - c.chk.dc) * 2, 10, 95);
+  return `能力 30 時 ${at(30)}%・50 時 ${at(50)}%・70 時 ${at(70)}%（不含詞條加成）`;
+}
+function panelHTML() {
+  if (!ed.sel) return `<div class="ep-empty"><b>點一張卡片開始編輯</b><p>可以修改情境、選項文字、能力判定的難度，以及每個結果的數值、獎懲與詞條。</p></div>`;
+  const d = ed.draft, ro = !canWrite;
+  const ch = (d.ch || []).map((c, i) => {
+    const head = `<div class="ep-ch-head"><span class="mk">${MARKS[i]}</span><input class="grow" data-p="ch.${i}.t" value="${esc(c.t || "")}" placeholder="選項文字">
+      <div class="ep-mini"><button type="button" data-ed="up" data-i="${i}" ${i === 0 ? "disabled" : ""} aria-label="上移">↑</button><button type="button" data-ed="down" data-i="${i}" ${i === d.ch.length - 1 ? "disabled" : ""} aria-label="下移">↓</button><button type="button" data-ed="del" data-i="${i}" ${d.ch.length <= 1 || c.fn ? "disabled" : ""} aria-label="刪除選項">✕</button></div></div>`;
+    if (c.fn) return `<fieldset class="ep-ch">${head}<p class="note">這個選項的結果由系統計算（${c.fn === "exam" ? "特考放榜" : "學年考核"}），只能修改文字。</p></fieldset>`;
+    return `<fieldset class="ep-ch">${head}
+      <label class="field"><span>警示標籤（選填，例如「高風險」）</span><input data-p="ch.${i}.danger" value="${esc(c.danger || "")}"></label>
+      ${outcomeHTML(`ch.${i}`, c, c.chk ? "必定發生（判定前）" : "選擇後的結果", true)}
+      <label class="check"><input type="checkbox" data-ed-chk="${i}" ${c.chk ? "checked" : ""}>需要能力判定</label>
+      ${c.chk ? `<div class="chk-row">
+          <label class="num wide"><span>判定能力</span><select data-p="ch.${i}.chk.s">${STAT_KEYS.map((k) => `<option value="${k}" ${c.chk.s === k ? "selected" : ""}>${STAT_NAME[k]}</option>`).join("")}</select></label>
+          <label class="num"><span>難度</span><input type="number" step="5" min="0" max="100" data-p="ch.${i}.chk.dc" data-t="num" data-keep="1" value="${c.chk.dc}"></label>
+          <span class="hint-line" id="chance-${i}">${chanceHint(c)}</span>
+        </div>
+        <div class="branches">${outcomeHTML(`ch.${i}.chk.ok`, c.chk.ok, '<span class="fx-ok">判定成功</span>')}${outcomeHTML(`ch.${i}.chk.no`, c.chk.no, '<span class="fx-no">判定失敗</span>')}</div>` : ""}
+    </fieldset>`;
+  }).join("");
+  const dirty = isDirty();
+  return `<div class="ep${ro ? " ro" : ""}">
+    <div class="ep-head"><span>編輯 <b>${ed.sel}</b>・${evKind(ed.sel)}</span><button type="button" class="ghost" data-ed="close">關閉</button></div>
+    <fieldset class="ep-body" ${ro ? "disabled" : ""}>
+      <label class="field"><span>標題</span><input data-p="title" value="${esc(d.title || "")}"></label>
+      <div class="two"><label class="field"><span>時間</span><input data-p="when" value="${esc(d.when || "")}"></label><label class="field"><span>地點</span><input data-p="where" value="${esc(d.where || "")}"></label></div>
+      <label class="field"><span>情境描述</span><textarea rows="4" data-p="text">${esc(d.text || "")}</textarea></label>
+      <p class="ep-h">選項</p>
+      ${ch}
+      ${d.ch.length < MARKS.length ? `<button type="button" class="btn line" data-ed="add">＋ 新增選項</button>` : ""}
+    </fieldset>
+    <div class="ep-foot">
+      <button type="button" class="btn" data-ed="save" ${ro || !dirty || ed.saving ? "disabled" : ""}>${ed.saving ? "儲存中…" : "儲存"}</button>
+      <button type="button" class="btn line" data-ed="revert" ${!dirty ? "disabled" : ""}>取消變更</button>
+      ${OV[ed.sel] && !ro ? `<button type="button" class="btn line" data-ed="reset">還原為原始內容</button>` : ""}
+      <span class="ep-msg ${ed.msgKind}" id="epMsg">${esc(ed.msg || (dirty ? "有未儲存的修改" : ""))}</span>
+    </div>
+  </div>`;
+}
+
+function renderEditorKeepPanel() {
+  // 只重畫清單與標頭，不動正在輸入的面板
+  if (view !== "editor") return;
+  const panel = document.getElementById("edPanel");
+  const scroll = panel ? panel.scrollTop : 0;
+  const focusP = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.p : null;
+  if (ed.sel && isDirty() && panel) {
+    const grid = document.getElementById("edGrid"); if (grid) grid.innerHTML = gridHTML();
+    const sub = document.querySelector(".ed-sub"); if (sub) sub.textContent = storeNote();
+    return;
+  }
+  render(true);
+  const p2 = document.getElementById("edPanel");
+  if (p2) { p2.scrollTop = scroll; if (focusP) p2.querySelector(`[data-p="${focusP}"]`)?.focus(); }
+}
+function refreshPanel() {
+  const panel = document.getElementById("edPanel"); if (!panel) return;
+  const scroll = panel.scrollTop; panel.innerHTML = panelHTML(); panel.scrollTop = scroll;
+  refreshCard();
+}
+function refreshCard() {
+  const el = document.querySelector(`#edGrid [data-card="${ed.sel}"]`);
+  if (el) el.outerHTML = cardHTML(ed.sel, ed.draft);
+  const foot = document.querySelector(".ep-foot");
+  if (foot) {
+    const dirty = isDirty();
+    foot.querySelector('[data-ed="save"]').disabled = !canWrite || !dirty || ed.saving;
+    foot.querySelector('[data-ed="revert"]').disabled = !dirty;
+    const m = document.getElementById("epMsg"); if (m && !ed.msg) m.textContent = dirty ? "有未儲存的修改" : "";
+  }
+}
+function selectCard(id) {
+  if (id === ed.sel) return;
+  if (isDirty() && ed.pending !== id) { ed.pending = id; ed.msg = "有未儲存的修改，再點一次那張卡片會捨棄修改並切換。"; ed.msgKind = "warn"; refreshPanel(); return; }
+  ed.pending = null; ed.msg = ""; ed.msgKind = "";
+  ed.sel = id; ed.draft = clone(EV[id]); delete ed.draft.need; ed.orig = clone(ed.draft);
+  render(true);
+  if (window.matchMedia("(max-width: 900px)").matches) window.scrollTo(0, 0);
+}
+
+async function saveCard() {
+  const id = ed.sel, d = prune(clone(ed.draft));
+  if (!d.title) return flash("標題不能空白。", "warn");
+  if (!d.ch || !d.ch.length) return flash("至少要有一個選項。", "warn");
+  if (d.ch.some((c) => !c.t)) return flash("每個選項都要有文字。", "warn");
+  d.ch.forEach((c) => { if (c.chk) { c.chk.ok = c.chk.ok || {}; c.chk.no = c.chk.no || {}; } });
+  const same = JSON.stringify(d) === JSON.stringify(prune(clone(BASE[id])));
+  ed.saving = true; refreshCard();
+  try {
+    if (storeMode === "db") {
+      if (same) await cardsCol.doc(id).delete();
+      else await cardsCol.doc(id).set({ ev: d, updatedAt: Date.now() });
+    } else {
+      if (same) delete OV[id]; else OV[id] = d;
+      store(OV_KEY, OV); applyOverrides();
+    }
+    if (same) delete OV[id]; else OV[id] = d;
+    ed.draft = clone(d); ed.orig = clone(d); ed.saving = false;
+    ed.msg = same ? "內容與原始版本相同，已恢復為原始卡片。" : "已儲存。"; ed.msgKind = "ok";
+    render(true);
+  } catch (e) {
+    ed.saving = false;
+    if (e && e.code === "invalid_argument") { canWrite = false; flash("沒有寫入權限，無法儲存。", "warn"); }
+    else flash("儲存失敗，請稍後再試。", "warn");
+  }
+}
+async function resetCard() {
+  const id = ed.sel;
+  try {
+    if (storeMode === "db") await cardsCol.doc(id).delete();
+    else { delete OV[id]; store(OV_KEY, OV); applyOverrides(); }
+    delete OV[id]; applyOverrides();
+    ed.draft = clone(BASE[id]); ed.orig = clone(ed.draft);
+    ed.msg = "已還原為原始內容。"; ed.msgKind = "ok"; render(true);
+  } catch (e) { flash("還原失敗，請稍後再試。", "warn"); }
+}
+function flash(msg, kind) { ed.msg = msg; ed.msgKind = kind; const m = document.getElementById("epMsg"); if (m) { m.textContent = msg; m.className = "ep-msg " + kind; } else refreshPanel(); }
+
+function edAction(a, el) {
+  const d = ed.draft, i = el && el.dataset.i != null ? +el.dataset.i : null;
+  ed.msg = ""; ed.msgKind = "";
+  if (a === "close") { if (isDirty() && ed.pending !== "__close") { ed.pending = "__close"; flash("有未儲存的修改，再按一次「關閉」會捨棄修改。", "warn"); return; } ed.pending = null; ed.sel = null; ed.draft = null; render(true); }
+  else if (a === "export") {
+    ed.exportOpen = !ed.exportOpen;
+    if (ed.exportOpen) { try { navigator.clipboard.writeText(JSON.stringify(OV, null, 2)).catch(() => {}); } catch (e) {} }
+    render(true);
+    document.getElementById("exportBox")?.select();
+  }
+  else if (a === "save") saveCard();
+  else if (a === "revert") { ed.draft = clone(ed.orig); refreshPanel(); }
+  else if (a === "reset") resetCard();
+  else if (a === "add") { d.ch.push({ t: "新選項", r: "" }); refreshPanel(); }
+  else if (a === "del") { d.ch.splice(i, 1); refreshPanel(); }
+  else if (a === "up" || a === "down") { const j = a === "up" ? i - 1 : i + 1; [d.ch[i], d.ch[j]] = [d.ch[j], d.ch[i]]; refreshPanel(); }
+}
+
+function onEdInput(t) {
+  if (t.id === "edSearch") { ed.q = t.value; document.getElementById("edGrid").innerHTML = gridHTML(); return; }
+  if (!ed.draft) return;
+  if (t.dataset.edChk != null) {
+    const c = ed.draft.ch[+t.dataset.edChk];
+    if (t.checked) c.chk = { s: "fit", dc: 50, ok: {}, no: {} }; else delete c.chk;
+    refreshPanel(); return;
+  }
+  if (t.dataset.arr) {
+    const arr = (getP(ed.draft, t.dataset.arr) || []).filter((f) => f !== t.value);
+    if (t.checked) arr.push(t.value);
+    setP(ed.draft, t.dataset.arr, arr.length ? arr : undefined);
+  } else if (t.dataset.p) {
+    let v;
+    if (t.dataset.t === "num") { v = t.value === "" ? 0 : Math.round(+t.value) || 0; if (!v && !t.dataset.keep) v = undefined; }
+    else if (t.dataset.t === "quit") v = t.checked ? "quit" : undefined;
+    else v = t.value === "" && !["title", "text", "when", "where"].includes(t.dataset.p) && !/\.t$/.test(t.dataset.p) ? undefined : t.value;
+    setP(ed.draft, t.dataset.p, v);
+    const m = t.dataset.p.match(/^ch\.(\d+)\.chk\./);
+    if (m) { const h = document.getElementById("chance-" + m[1]); if (h) h.textContent = chanceHint(ed.draft.ch[+m[1]]); }
+  }
+  ed.msg = ""; ed.msgKind = ""; ed.pending = null;
+  refreshCard();
+}
+
+$app.addEventListener("click", (e) => {
+  if (view !== "editor") return;
+  const b = e.target.closest("[data-ed], [data-ed-stage], [data-card]");
+  if (!b || b.disabled) return;
+  if (b.dataset.edStage != null) { ed.stage = b.dataset.edStage === "all" ? "all" : +b.dataset.edStage; render(true); }
+  else if (b.dataset.card) selectCard(b.dataset.card);
+  else edAction(b.dataset.ed, b);
+});
+$app.addEventListener("keydown", (e) => {
+  if (view !== "editor" || (e.key !== "Enter" && e.key !== " ")) return;
+  const c = e.target.closest && e.target.closest("[data-card]");
+  if (c && e.target === c) { e.preventDefault(); selectCard(c.dataset.card); }
+});
+$app.addEventListener("input", (e) => { if (view === "editor" && e.target.type !== "checkbox" && e.target.tagName !== "SELECT") onEdInput(e.target); });
+$app.addEventListener("change", (e) => { if (view === "editor" && (e.target.type === "checkbox" || e.target.tagName === "SELECT")) onEdInput(e.target); });
+$editorBtn.addEventListener("click", () => {
+  if (view === "editor") {
+    if (isDirty() && ed.pending !== "__leave") { ed.pending = "__leave"; flash("有未儲存的修改，再按一次「返回遊戲」會捨棄修改。", "warn"); return; }
+    ed.pending = null; ed.sel = null; ed.draft = null; ed.msg = "";
+    view = prevView === "editor" ? "title" : prevView; render();
+  } else { prevView = view; view = "editor"; render(); }
+});
+
 /* ---------- 啟動 ---------- */
 function start(data) {
-  if (data && data.view) { S = data.S; view = data.view; draft = data.draft; }
+  if (data && data.view) { S = data.S; view = data.view; draft = data.draft; prevView = data.prevView || "title"; }
+  else if (location.hash === "#editor") { prevView = view; view = "editor"; }
   render();
+  initStore();
 }
-window.claude?.hot?.snapshot?.(() => ({ S, view, draft }));
+window.claude?.hot?.snapshot?.(() => ({ S, view, draft, prevView }));
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 </body>
