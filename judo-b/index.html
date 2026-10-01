@@ -234,6 +234,8 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
 .c-body { color: #d5dbe5; }
 .c-body p { margin: 0; }
 .c-body p + p { margin-top: 6px; }
+.c-body ul { margin: 0; padding-left: 1.2em; }
+.c-body li + li { margin-top: 4px; }
 .c-body b { color: var(--gold-hi); }
 .c-body kbd { font: 700 11px/1 var(--f-num); padding: 2px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; background: rgba(255,255,255,.06); }
 #coach.collapsed .c-body { display: none; }
@@ -423,8 +425,8 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
             <ul>
               <li><b>一本</b>：直接獲勝。完美條件的投技（例如返し技＋正確崩勢）或把對手血量打到 0 都算一本。</li>
               <li><b>技有（半勝）</b>：條件好的投技，傷害 ×1.5。累積兩次技有＝<b>合技一本</b>，獲勝。</li>
-              <li><b>一般投技</b>：只造成傷害，不計分。</li>
-              <li><b>指導</b>：25 秒沒有出投技（消極）、防守姿勢超過 3.5 秒，各給一次指導。<b>三次指導＝反則負</b>。</li>
+              <li><b>一般投技</b>：只造成傷害。</li>
+              <li><b>指導</b>：防守姿勢超過 3.5 秒、25 秒沒有出投技（消極，只在正式比賽），各給一次指導。<b>三次指導＝反則負</b>。</li>
               <li><b>時間到</b>：先比技有數；相同時血量差 10 以上判優勢勝；再相同就進入<b>黃金得分</b>，先投成功的人獲勝。</li>
               <li>每次投技結束，主審喊「待て」，兩人回到開始線重新開始。</li>
             </ul>
@@ -1873,8 +1875,13 @@ const LESSONS = [
 <p>擋下後對手會失衡，你也有短暫的反擊機會。防守每秒消耗 9 點體力；正式比賽中防守維持超過 3.5 秒，會被判<b>指導</b>。</p>`,
     goals: [{ text: '對手發光時<b>長按</b> {guard}，擋下他的投技', need: 2, unit: '次', ev: (t, f) => t === 'block' && isP(f), fail: (t, f) => t === 'land' && !isP(f) ? '防守要長按不放，直到對手出招結束' : null }] },
   { title: '計分與規則', cpu: 'idle',
-    body: `<p>一般投技只造成傷害。條件越好，得分越高：<b>正確崩勢</b>、<b>返し技或對手失衡</b>、<b>對手體力低於 25</b>、<b>抓把抓穩超過 1.5 秒</b>都會加分。</p>
-<p>夠好就是<b>技有</b>（傷害 ×1.5），兩次技有＝<b>合技一本</b>獲勝；完美的投技直接<b>一本</b>，血量歸零也算一本。25 秒不出投技、防守太久會被判指導，三次指導就<b>反則負</b>。時間到先比技有，再比血量，平手進入<b>黃金得分</b>。</p>`,
+    body: `<ul>
+<li><b>一般投技</b>：只造成傷害。</li>
+<li><b>技有</b>：條件好的投技，傷害 ×1.5。條件有：正確崩勢、返し技或對手失衡、對手體力低於 25、抓把超過 1.5 秒。累積兩次技有＝<b>合技一本</b>，獲勝。</li>
+<li><b>一本</b>：血量歸零，或完美條件的投技，直接獲勝。</li>
+<li><b>指導</b>：防守超過 3.5 秒、25 秒沒出投技（只在正式比賽），各一次；三次指導＝<b>反則負</b>。</li>
+<li><b>時間到</b>：先比技有，再比血量，平手進入<b>黃金得分</b>，先投成功的人獲勝。</li>
+</ul>`,
     goals: [{ text: '抓穩超過 1.5 秒，再配合正確崩勢，投出一個「技有」', ev: (t, f, d) => t === 'land' && isP(f) && (d.label === 'waza' || d.label === 'ippon'), fail: (t, f, d) => t === 'land' && isP(f) ? '只差一點：抓把後多等一下（超過 1.5 秒），並做出對應的崩勢' : null }] },
 ];
 const TUT = { on: false, i: 0, g: 0, n: 0, done: false, circle: 0, prev: new V3() };
