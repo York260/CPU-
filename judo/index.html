@@ -152,6 +152,44 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .duo-btns button.menu { font-size: 15px; height: 48px; }
 .duo-msg { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(0, 0, 0, .9); white-space: nowrap; opacity: 0; transition: opacity .15s; }
 .duo-msg.on { opacity: 1; }
+/* 雙人比賽 */
+#view { position: fixed; inset: 0; pointer-events: none; }
+#view.flip { transform: rotate(180deg); }
+.duo.pv { height: 29%; grid-template-rows: auto auto 1fr auto; gap: 5px; padding-top: 8px; }
+.pv-sc { flex: 1; min-width: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pv-clock { font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 900; }
+.pv-st { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.pv-st i { display: block; height: 100%; width: 100%; background: #6FB3FF; transition: width .2s; }
+.pv-st.low i { background: var(--red); }
+.pv-hint { font-size: 12px; color: var(--muted); text-align: center; }
+.duo.pv .duo-mid { min-height: 40px; align-content: center; }
+.duo.pv .kb { zoom: .55; }
+.duo-msg[data-k="good"] { color: #8FE3B5; } .duo-msg[data-k="bad"] { color: #FF9C8F; }
+.pv-ctl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: end; }
+.pjoy { position: relative; width: min(104px, 13vh); aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .2); background: rgba(20, 26, 38, .6); pointer-events: auto; touch-action: none; }
+.pjoy i { position: absolute; left: 50%; top: 50%; width: 44%; height: 44%; margin: -22% 0 0 -22%; border-radius: 50%; background: rgba(255, 255, 255, .85); box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
+.duo.pv .duo-btns { gap: 8px; }
+.duo.pv .duo-btns button { height: min(70px, 9.5vh); font-size: 17px; }
+.duo.pv .duo-btns.four button { height: min(52px, 6.6vh); font-size: 14px; }
+.duo-btns button.off { opacity: .4; }
+.duo-btns button.hot { border-color: var(--gold); box-shadow: 0 0 14px rgba(227, 179, 65, .5); }
+.duo-btns button.back { border-color: rgba(61, 190, 122, .6); } .duo-btns button.back.hot { border-color: var(--green); box-shadow: 0 0 14px rgba(61, 190, 122, .6); }
+.duo-btns button.fwd { border-color: rgba(227, 179, 65, .55); }
+.duo-btns button.def { border-color: rgba(127, 168, 255, .6); } .duo-btns button.def.hot { border-color: #7FA8FF; box-shadow: 0 0 16px rgba(127, 168, 255, .7); }
+.duo.pv.min { background: none; }
+.duo.pv.min > :not(.pv-ctl), .duo.pv.min .pjoy { visibility: hidden; }
+.quit.pvq { top: 50%; transform: translateY(-50%); }
+.lobby { position: fixed; inset: 0; z-index: 8; display: grid; grid-template-rows: 1fr 1fr; background: radial-gradient(120% 90% at 50% 50%, rgba(18, 26, 42, .95), rgba(5, 8, 12, .99)); }
+.lob { display: grid; grid-template-rows: auto 1fr auto; gap: 8px; padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px); min-height: 0; }
+.lob.p2 { transform: rotate(180deg); border-bottom: 1px solid var(--line); }
+.lob-h { display: flex; align-items: center; gap: 8px; font-size: 15px; } .lob-h span { margin-left: auto; color: var(--gold); font-weight: 700; }
+.lob.p1 .duo-chip { background: #f3f0e7; } .lob.p2 .duo-chip { background: #2a63d6; }
+.lob-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 8px; align-content: start; overflow: auto; }
+.lob-grid button { display: grid; gap: 3px; justify-items: start; text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(20, 26, 38, .8); color: var(--ink); }
+.lob-grid button[aria-pressed="true"] { border-color: var(--gold); background: rgba(70, 56, 20, .55); }
+.lob-grid button:disabled { opacity: .4; }
+.lob-grid small { font-size: 11px; color: var(--muted); }
+.lob-f { display: flex; gap: 10px; align-items: center; }
 .kb-ch i { display: block; height: 100%; width: 0; background: #FF8A6B; }
 .pad button:active { transform: scale(.95); }
 
@@ -405,6 +443,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 </div>
 <button type="button" class="mash" id="mash" hidden><b>連打掙脫！</b><small>也可以用力搖手機</small><span class="combo" id="mashCombo"></span><span class="fire" id="mashFire"></span></button>
 <button type="button" class="quit" id="quit" aria-label="離開比賽" hidden>✕</button>
+<div class="lobby" id="lobby" hidden><div class="lob p2" id="lobB"></div><div class="lob p1" id="lobW"></div></div>
 <div class="duo p2" id="duoB" hidden></div>
 <div class="duo p1" id="duoW" hidden></div>
 
@@ -424,7 +463,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <div><div class="opt-label">重心計</div><div class="seg" id="optKz"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
       <div><div class="opt-label">震動</div><div class="seg" id="optVib"><button type="button" data-v="1" aria-pressed="true">開</button><button type="button" data-v="0">關</button></div></div>
     </div>
-    <div class="go-row"><button type="button" class="go" id="startBtn">上場</button><button type="button" class="go line" id="duoBtn">雙人寢技（同一支手機）</button></div>
+    <div class="go-row"><button type="button" class="go" id="startBtn">上場</button><button type="button" class="go line" id="pvpBtn">雙人比賽</button><button type="button" class="go line" id="duoBtn">雙人寢技小遊戲</button></div>
     <details class="help">
       <summary>玩法說明</summary>
       <ul>
@@ -434,6 +473,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <li>被丟體、過肩摔、大腰摔成<b>有效</b>時，有時會出現<b>前迴轉</b>的機會：畫面稍微變慢、頭上出現藍色提示時按下，滾翻後不算分，對手也不能壓制。半勝以上來不及滾。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打比快，把計量器的標推到底（被壓時推到底就掙脫）；<b>上四方固</b>比重心：被壓時按住◀或▶蓄力、放開往那邊頂（可以按著一邊再按另一邊換邊騙對手），把重心頂到邊緣就翻開；壓人時按住◀▶把指針拉回綠區，看到對手要頂就先往反方向壓。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
+        <li><b>雙人比賽</b>：手機直放、平放在兩人中間，白方用下半、藍方用上半。先各自選三招，兩人都按「準備好了」才開始。規則和單人相同；被摔時演出會全螢幕轉向施技的人。電腦：白 WASD＋J K L U；藍 方向鍵＋1 2 3 4。</li>
         <li><b>雙人寢技</b>：手機平放在兩人中間，白方用下半、藍方用上半（上半是倒過來給對面看的）。輪流壓制共 4 回合（袈裟固、上四方固各輪一次），比誰壓得久。電腦：白 A／D、S 連打；藍 ←／→、↓ 連打。</li>
         <li>太久不出招、超過 15 秒沒抓把、抓把後 12 秒只防守不進攻、出界，都會被判指導，3 次判負。</li>
         <li>電腦：WASD 移動，J 抓把、K 閃避／防禦，抓把後 1、2、3 出招。</li>
@@ -753,6 +793,8 @@ const HOLD_NAME = { kesa: "袈裟固", kami: "上四方固" };
 /* ---------- UI ---------- */
 let callTimer = 0, toastTimer = 0;
 function call(big, sub, cls = "", dur = 1.4) {
+  // 雙人對戰：投技演出時用全螢幕宣告（畫面轉向施技者），其他時候寫在兩人各自的區域
+  if (G.pvp && G.state !== "throw") { PV.call = { big, sub, t: dur }; $("call").hidden = true; return; }
   const el = $("call");
   $("callBig").textContent = big; $("callSub").textContent = sub;
   el.className = "call pop " + cls; el.hidden = false;
@@ -760,7 +802,17 @@ function call(big, sub, cls = "", dur = 1.4) {
   callTimer = dur;
 }
 function toast(msg, kind = "", dur = 1.1) {
+  if (G.pvp) { pvpMsg(W, msg, kind, dur); pvpMsg(B, msg, kind, dur); return; }
   const el = $("toast"); el.textContent = msg; el.className = "toast " + kind; el.hidden = false; toastTimer = dur;
+}
+// 雙人對戰時誰是真人；單人時只有白
+const human = (f) => f === W || !!G.pvp;
+// 動作者 f 看到 self、對手看到 opp。單人時只顯示給白；雙人時顯示在各自的區域
+function say(f, self, opp, kind = "") {
+  const flip = { good: "bad", bad: "good" }[kind] || "";
+  if (G.pvp) { if (self) pvpMsg(f, self, kind); if (opp) pvpMsg(other(f), opp, flip); return; }
+  if (f === W) { if (self) toast(self, kind); }
+  else if (opp) toast(opp, flip);
 }
 function refGesture(name, dur = 1.4) { REF.tgt = POSE[name]; REF.gestureT = dur; REF.wave = name === "R_TOKETA" ? 1 : 0; }
 
@@ -799,6 +851,12 @@ window.addEventListener("keydown", (e) => {
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
   if (e.repeat) return;
   input.keys.add(k);
+  if (G.pvp) {
+    // 白：WASD 移動、J K L U 對應四顆鍵；藍：方向鍵移動、1 2 3 4
+    const P1 = { j: 0, k: 1, l: 2, u: 3 }, P2 = { 1: 0, 2: 1, 3: 2, 4: 3 };
+    if (k in P1) pvpKey(W, P1[k]); else if (k in P2) pvpKey(B, P2[k]);
+    return;
+  }
   if (G.duo) { if (k === "s" || k === "w") mashBy(W); if (k === "arrowdown" || k === "arrowup") mashBy(B); return; }
   if (G.state === "throw") { if ("jkl ".includes(k)) tryRoll(); return; }
   if (G.state === "osaekomi" && G.hold && G.hold.type === "kesa") { if ("jkl ".includes(k)) mash(); return; }
@@ -918,12 +976,12 @@ function resolveReach(f) {
   const o = other(f);
   if (G.gripped) return;
   const d = dist(f, o);
-  if (d > 1.25) { if (!f.isAI) { toast("距離太遠", "bad"); haptic("gripMiss"); } stagger(f, 0.35); return; }
+  if (d > 1.25) { say(f, "距離太遠", null, "bad"); if (!f.isAI) haptic("gripMiss"); stagger(f, 0.35); return; }
   if (o.act && o.act.type === "dodge" && o.act.t < o.act.iframe) {
     stagger(f, 0.65);
-    toast(f.isAI ? "閃開了！對手露出破綻" : "被閃開了", f.isAI ? "good" : "bad");
+    say(f, "被閃開了", "閃開了！對手露出破綻", "bad");
     if (!f.isAI) haptic("gripMiss");
-    if (f.isAI) W.counterT = 1.0;
+    if (f.isAI || G.pvp) o.counterT = 1.0;
     return;
   }
   let p = 0.75;
@@ -934,11 +992,11 @@ function resolveReach(f) {
     G.initiative = { who: f, t: 3 };
     for (const x of [W, B]) { x.noGrip = 0; x.warnG = false; }
     for (const x of [W, B]) { if (x.act && x.act.type === "reach") x.act = null; x.pushS = 0; x.push = 0; }
-    toast(f.isAI ? "被對手抓住了" : "抓把成功！", f.isAI ? "bad" : "good");
+    say(f, "抓把成功！", "被對手抓住了", "good");
     GC.q = 0.45; clack();
   } else {
     stagger(f, 0.45);
-    toast(f.isAI ? "撥開了對手的手" : "被撥開", f.isAI ? "good" : "bad");
+    say(f, "被撥開", "撥開了對手的手", "bad");
     if (!f.isAI) haptic("gripMiss");
   }
 }
@@ -950,7 +1008,7 @@ function resolveThrow(f) {
     stagger(f, 0.75);
     o.counterT = 1.1;
     o.act = null;
-    toast(f.isAI ? "防住了！反擊機會" : "被對手擋下", f.isAI ? "good" : "bad");
+    say(f, "被對手擋下", "防住了！反擊機會", "bad");
     haptic(f.isAI ? "block" : "blocked");
     return;
   }
@@ -963,6 +1021,13 @@ function resolveThrow(f) {
   // 捨身技失敗：自己倒地，對手可能直接壓制
   if (T.sutemi) {
     stagger(f, 1.2);
+    if (G.pvp) {
+      // 雙人：捨身技失敗，自己倒地，對手可以選壓制
+      say(f, T.fail, "對手倒地了！快壓制", "bad");
+      G.gripped = false; f.act = null; f.tgt = POSE.LYING;
+      G.state = "post"; G.post = { att: o, def: f, t: 0, win: 2.0, aiFollow: false };
+      return;
+    }
     toast(f.isAI ? "對手倒地了！快壓制" : T.fail, f.isAI ? "good" : "bad");
     if (!f.isAI) {
       haptic("fail");
@@ -974,7 +1039,7 @@ function resolveThrow(f) {
     return;
   }
   stagger(f, T.dir === "fwd" ? 0.9 : 0.7);
-  if (f.isAI) { W.counterT = T.risky ? 1.5 : 1.0; toast("對手失手！反擊機會", "good"); return; }
+  if (f.isAI || G.pvp) { o.counterT = T.risky ? 1.5 : 1.0; say(f, T.fail, "對手失手！反擊機會", "bad"); if (G.pvp) haptic("fail"); return; }
   toast(T.fail, "bad");
   haptic("fail");
   const wrongTiming = T.dir === "back" ? o.lean > 0.25 : o.lean < 0.2;
@@ -1087,15 +1152,15 @@ function doRoll() {
   const i = an.keys.findIndex((k) => k.imp), endF = an.keys[i].D.f;
   an.keys[i].D = { f: endF - 0.3, r: 0, yaw: 0, p: "ROLL1" }; an.keys[i].ease = undefined;
   for (let j = i + 1; j < an.keys.length; j++) an.keys[j].D = { f: endF - 0.75, r: 0, yaw: 0, p: "ROLL2" };
-  toast(an.def === W ? "前迴轉倒法！卸掉了力道" : "對手前迴轉倒法卸力！", an.def === W ? "good" : "bad", 1.4);
-  if (an.def === W) haptic("hit");
+  say(an.def, "前迴轉倒法！卸掉了力道", "對手前迴轉倒法卸力！", "good");
+  if (human(an.def)) haptic("hit");
 }
-function tryRoll() {
+function tryRoll(f = W) {
   const an = G.anim;
-  if (!an || an.def !== W || !an.canRoll || an.tried || an.ukemi) return;
+  if (!an || an.def !== f || !human(f) || !an.canRoll || an.tried || an.ukemi) return;
   an.tried = true;
   if (an.t >= an.win0 && an.t <= an.win1) doRoll();
-  else { toast(an.t < an.win0 ? "太早了" : "太晚了", "bad"); haptic("miss"); }
+  else { say(f, an.t < an.win0 ? "太早了" : "太晚了", null, "bad"); haptic("miss"); }
 }
 function placeFromKey(f, k, an, isAtt) {
   const { O, u, right } = an;
@@ -1137,7 +1202,7 @@ function stepThrow(dt) {
   if (cross(an.kake)) { whoosh(an.lv >= 1 ? 0.7 : 1); showTechName(an); if (an.lv >= 1) superFlash(an); }
   if (an.lv >= 1 && cross(an.apex)) startFreeze(an);
   // 前迴轉時機：開啟時小小強調（提示音、玩家頭上的藍色提示、邊緣微光）
-  if (an.def === W && an.canRoll && !an.ukemi && cross(an.win0)) { ping(); }
+  if (human(an.def) && an.canRoll && !an.ukemi && cross(an.win0)) { ping(); }
   if (t >= an.kake - 0.06 && t < an.imp) {
     an.ghostT -= dt;
     if (an.ghostT <= 0) {
@@ -1187,7 +1252,7 @@ function finishThrow() {
   const ends = r === "ippon" || r === "awase" || G.golden;
   if (ends) { endMatch(att, r === "awase" ? "合わせ技一本" : r === "ippon" ? `一本勝（${TECH[tech]}）` : `黃金得分（${TECH[tech]}）`); return; }
   G.state = "post";
-  G.post = { att, def, t: 0, win: 1.3, aiFollow: att.isAI && Math.random() < DIFF.follow };
+  G.post = { att, def, t: 0, win: G.pvp ? 2.0 : 1.3, aiFollow: att.isAI && Math.random() < DIFF.follow };
 }
 function scoreCall(r, f, techName) {
   const cls = f === W ? "" : "blue";
@@ -1379,7 +1444,7 @@ function stepHold(dt) {
     }
   }
   if (h.type === "kami") stepKami(h, dt);
-  if (G.duo) { if (h.t >= 20 || h.esc >= 100) duoRoundEnd(h); return; }
+  if (G.duo && !G.pvp) { if (h.t >= 20 || h.esc >= 100) duoRoundEnd(h); return; }
   const holder = h.holder;
   if (h.t >= 20 || (h.t >= 10 && holder.sc.waza >= 1)) {
     const r = h.t >= 20 ? "ippon" : "awase";
@@ -1430,9 +1495,9 @@ function stepReset(dt) {
   const r = G.reset; r.t += dt;
   const s = smooth(clamp(r.t / 1.3, 0, 1));
   [W, B].forEach((f, i) => {
-    const mx = (f === W ? -2 : 2) * r.side;
-    f.x = lerp(r.from[i].x, mx, s); f.z = lerp(r.from[i].z, 0, s);
-    turnTo(f, (f === W ? PI / 2 : -PI / 2) * r.side, 8, dt);
+    const L = line(f, 2), sd = G.pvp ? 1 : r.side;
+    f.x = lerp(r.from[i].x, L.x * sd, s); f.z = lerp(r.from[i].z, L.z, s);
+    turnTo(f, L.yaw * sd, 8, dt);
     f.tgt = r.t < 1.0 ? POSE.STAND : POSE.READY; f.rate = 6;
     f.moveAmt = r.t < 1.2 ? 0.6 : 0;
   });
@@ -1443,6 +1508,11 @@ function stepReset(dt) {
   }
 }
 
+// 開始線：單人時白在左、藍在右；雙人對戰時鏡頭在正上方，白在畫面下方（+z）、藍在上方
+function line(f, d) {
+  if (G.pvp) return f === W ? { x: 0, z: d, yaw: PI } : { x: 0, z: -d, yaw: 0 };
+  return f === W ? { x: -d, z: 0, yaw: PI / 2 } : { x: d, z: 0, yaw: -PI / 2 };
+}
 /* ---------- 指導 ---------- */
 const SHIDO_NOGRIP = 15, SHIDO_DEF = 12;
 function giveShido(f, why) {
@@ -1462,18 +1532,20 @@ function startMatch() {
   MATCH_TIME = +document.querySelector("#optTime [aria-pressed='true']").dataset.v;
   prefs.kz = +document.querySelector("#optKz [aria-pressed='true']").dataset.v;
   savePrefs(prefs);
-  W.loadout = prefs.loadout.slice();
+  const pvp = PV.starting; PV.starting = false;
+  G.pvp = G.duo = pvp; B.isAI = !pvp; PV.done = false; PV.call = null; PV.cam = null; PV.msg = { W: null, B: null };
+  W.loadout = (pvp ? PV.lo.W : prefs.loadout).slice();
   // AI 隨機帶三招，推的招（前方技）、拉的招（後方技）至少各一
   const backs = TECH_ORDER.filter((t) => TECHS[t].dir === "back"), fwds = TECH_ORDER.filter((t) => TECHS[t].dir === "fwd");
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const aiSet = [pick(backs), pick(fwds)];
   while (aiSet.length < 3) { const t = pick(TECH_ORDER); if (!aiSet.includes(t)) aiSet.push(t); }
-  B.loadout = aiSet;
+  B.loadout = pvp ? PV.lo.B.slice() : aiSet;
   setupTechButtons();
   for (const f of [W, B]) {
     f.sc = { ippon: 0, waza: 0, yuko: 0, shido: 0 };
     f.stamina = 100; f.act = null; f.cool = 0; f.push = f.pushS = f.lean = 0; f.lastAttack = 0; f.counterT = 0; f.noGrip = 0; f.defT = 0; f.warnG = f.warnD = false;
-    f.x = f === W ? -4.6 : 4.6; f.z = 0; f.yaw = f === W ? PI / 2 : -PI / 2;
+    const L0 = line(f, 4.6); f.x = L0.x; f.z = L0.z; f.yaw = L0.yaw;
     f.cur = clonePose(POSE.STAND);
   }
   G.introBow = false;
@@ -1483,6 +1555,15 @@ function startMatch() {
   Object.assign(G, { state: "intro", t: 0, clock: MATCH_TIME, golden: false, gripped: false, initiative: null, anim: null, post: null, hold: null, end: null, pendingEnd: false });
   $("title").hidden = true; $("result").hidden = true;
   for (const id of ["board", "joy", "skills", "quit"]) $(id).hidden = false;
+  if (pvp) {
+    for (const id of ["board", "joy", "skills", "tech", "kz", "warn", "toast", "call", "lobby"]) $(id).hidden = true;
+    if ($("duoW").dataset.mode !== "pvp") { pvpBuild("W"); pvpBuild("B"); }
+    for (const k of ["W", "B"]) PV.z[k].sig = "";
+    $("duoW").hidden = $("duoB").hidden = false;
+    $("quit").classList.add("pvq");
+    // 裁判站在場邊（畫面左側），不擋兩人
+    GC.yaw = GC.yawT = PI / 2; Object.assign(REF, { a: -PI / 2, x: -2.7, z: 0 });
+  }
   renderBoard();
   ensureAudio();
 }
@@ -1490,16 +1571,19 @@ function stepIntro(dt) {
   G.t += dt;
   const t = G.t;
   for (const f of [W, B]) {
-    const mx = f === W ? -2 : 2;
-    const s = smooth(clamp(t / 1.7, 0, 1));
-    f.x = lerp(f === W ? -4.6 : 4.6, mx, s);
+    const s = smooth(clamp(t / 1.7, 0, 1)), L0 = line(f, 4.6), L1 = line(f, 2);
+    f.x = lerp(L0.x, L1.x, s); f.z = lerp(L0.z, L1.z, s);
     f.moveAmt = t < 1.6 ? 0.7 : 0;
     if (t < 1.9) { f.tgt = POSE.STAND; f.rate = 8; }
     else if (t < 3.1) { f.tgt = POSE.BOW; f.rate = 5; }
     else if (t < 3.6) { f.tgt = POSE.STAND; f.rate = 6; }
     else { f.tgt = POSE.READY; f.rate = 6; }
   }
-  if (!G.introBow && t > 1.9) { G.introBow = true; call("礼", "敬禮", "", 1.1); toast("對手的招式：" + B.loadout.map((x) => TECH[x]).join("、"), "", 2.4); }
+  if (!G.introBow && t > 1.9) {
+    G.introBow = true; call("礼", "敬禮", "", 1.1);
+    if (G.pvp) for (const f of [W, B]) pvpMsg(f, "對手帶：" + other(f).loadout.map((x) => TECH[x]).join("、"), "", 2.4);
+    else toast("對手的招式：" + B.loadout.map((x) => TECH[x]).join("、"), "", 2.4);
+  }
   if (t > 4.1) {
     G.introBow = false;
     call("始め", "開始", "", 0.9);
@@ -1539,8 +1623,9 @@ function stepEnd(dt) {
   if (t < 1.6) return; // 留時間看宣告
   const s = smooth(clamp((t - 1.6) / 1.4, 0, 1));
   [W, B].forEach((f, i) => {
-    f.x = lerp(e.from[i].x, f === W ? -2 : 2, s); f.z = lerp(e.from[i].z, 0, s);
-    turnTo(f, f === W ? PI / 2 : -PI / 2, 6, dt);
+    const L = line(f, 2);
+    f.x = lerp(e.from[i].x, L.x, s); f.z = lerp(e.from[i].z, L.z, s);
+    turnTo(f, L.yaw, 6, dt);
     f.moveAmt = t < 2.9 ? 0.6 : 0;
     if (t < 3.2) { f.tgt = POSE.STAND; f.rate = 5; }
     else if (t < 4.3) { f.tgt = POSE.BOW; f.rate = 5; }
@@ -1548,7 +1633,7 @@ function stepEnd(dt) {
   });
   if (!e.bowed && t > 3.2) { e.bowed = true; call("礼", "敬禮", "", 1.0); }
   if (!e.raised && t > 4.5) { e.raised = true; refGesture(e.win === W ? "R_WIN_W" : "R_WIN_B", 99); call(e.win === W ? "白 勝" : "藍 勝", e.how, e.win === W ? "gold" : "blue", 2); }
-  if (t > 6.2 && !e.shown) { e.shown = true; showResult(); }
+  if (t > 6.2 && !e.shown) { e.shown = true; if (G.pvp) PV.done = true; else showResult(); }
 }
 function showResult() {
   const e = G.end;
@@ -1565,7 +1650,7 @@ function toTitle() {
   cineEnd(); CAMX.w = 0;
   duoStop();
   G.state = "title";
-  for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast", "pad", "mash", "tech"]) $(id).hidden = true;
+  for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast", "pad", "mash", "tech", "lobby"]) $(id).hidden = true;
   $("title").hidden = false;
   for (const f of [W, B]) { f.x = f === W ? -2 : 2; f.z = 0; f.yaw = f === W ? PI / 2 : -PI / 2; f.tgt = POSE.STAND; f.act = null; f.cur = clonePose(POSE.STAND); }
   REF.tgt = POSE.R_STAND;
@@ -1760,13 +1845,16 @@ function stepFight(dt) {
     if (f.noGrip > SHIDO_NOGRIP) { if (giveShido(f, "不抓把")) return; }
     if (f.defT > SHIDO_DEF) { if (giveShido(f, "防守過久")) return; }
   }
-  if (W.noGrip > SHIDO_NOGRIP - 4 && !W.warnG) { W.warnG = true; toast("太久沒抓把，快被判指導了", "bad", 1.6); }
-  if (W.defT > SHIDO_DEF - 4 && !W.warnD) { W.warnD = true; toast("一直防守不進攻，快被判指導了", "bad", 1.6); }
+  for (const f of G.pvp ? [W, B] : [W]) {
+    if (f.noGrip > SHIDO_NOGRIP - 4 && !f.warnG) { f.warnG = true; say(f, "太久沒抓把，快被判指導了", null, "bad"); }
+    if (f.defT > SHIDO_DEF - 4 && !f.warnD) { f.warnD = true; say(f, "一直防守不進攻，快被判指導了", null, "bad"); }
+  }
 
-  const mv = camRelative(input.x, input.y);
+  const mv = G.pvp ? pvpMove(W) : camRelative(input.x, input.y);
+  const mvB = G.pvp ? pvpMove(B) : null;
   if (!G.gripped) {
     // 立技・未抓把
-    const aim = aiNeutral(dt);
+    const aim = G.pvp ? mvB : aiNeutral(dt);
     moveFree(W, mv, dt);
     moveFree(B, aim, dt);
     for (const f of [W, B]) { f.lean = damp(f.lean, 0, 5, dt); f.pushS = damp(f.pushS, 0, 6, dt); }
@@ -1782,10 +1870,16 @@ function stepFight(dt) {
     const pIn = W.act && W.act.type === "brace" ? 0 : mv.x * u.x + mv.z * u.z;
     const lIn = mv.x * right.x + mv.z * right.z;
     W.push = clamp(pIn, -1, 1);
-    aiGrip(dt);
+    let lB = 0;
+    if (G.pvp) {
+      // 藍方：往對手推＝推、往後拉＝拉；左右移動也會帶著兩人繞圈
+      const uB = { x: -u.x, z: -u.z }, rB = { x: -uB.z, z: uB.x };
+      B.push = B.act && B.act.type === "brace" ? 0 : clamp(mvB.x * uB.x + mvB.z * uB.z, -1, 1);
+      lB = mvB.x * rB.x + mvB.z * rB.z;
+    } else aiGrip(dt);
     if (!G.gripped) return;
     W.pushS = damp(W.pushS, W.push, 9, dt);
-    B.pushS = damp(B.pushS, B.push, 1 / DIFF.tau, dt);
+    B.pushS = damp(B.pushS, B.push, G.pvp ? 9 : 1 / DIFF.tau, dt);
     for (const f of [W, B]) {
       const o = other(f);
       const brace = f.act && f.act.type === "brace";
@@ -1798,13 +1892,13 @@ function stepFight(dt) {
     const mid = { x: (W.x + B.x) / 2, z: (W.z + B.z) / 2 };
     const v = (W.pushS - B.pushS) * 0.9;
     mid.x += u.x * v * dt; mid.z += u.z * v * dt;
-    const ang = lIn * 1.1 * dt + (B.ai.mode === "drive" ? 0.2 : 0) * dt * Math.sin(G.time);
+    const ang = G.pvp ? (lIn + lB) * 1.1 * dt : lIn * 1.1 * dt + (B.ai.mode === "drive" ? 0.2 : 0) * dt * Math.sin(G.time);
     G.circle = damp(G.circle || 0, Math.min(1, Math.abs(ang / dt) / 1.1), 4, dt);
     const nu = { x: u.x * Math.cos(ang) - u.z * Math.sin(ang), z: u.x * Math.sin(ang) + u.z * Math.cos(ang) };
     W.x = mid.x - nu.x * 0.4; W.z = mid.z - nu.z * 0.4;
     B.x = mid.x + nu.x * 0.4; B.z = mid.z + nu.z * 0.4;
     W.yaw = yawTo(W, B); B.yaw = yawTo(B, W);
-    W.moveAmt = B.moveAmt = Math.min(1, Math.abs(v) + Math.abs(lIn) * 0.5);
+    W.moveAmt = B.moveAmt = Math.min(1, Math.abs(v) + Math.abs(lIn + lB) * 0.5);
   }
   // 場外
   for (const f of [W, B]) if (outOfArea(f)) {
@@ -1960,7 +2054,7 @@ function camRelative(ix, iy) {
   return { x: R.x * ix + F.x * iy, z: R.z * ix + F.z * iy };
 }
 function updateCamera(dt) {
-  if (G.duo) { duoCam(dt); return; }
+  if (G.duo && !G.pvp) { duoCam(dt); return; }
   camera.up.set(0, 1, 0);
   const aspect = camera.aspect;
   const port = Math.max(1, Math.pow(1.25 / aspect, 0.55));
@@ -1969,23 +2063,27 @@ function updateCamera(dt) {
     camT.lerp(new THREE.Vector3(0, 0.9, 0), 1 - Math.exp(-4 * dt));
     camP.lerp(new THREE.Vector3(Math.sin(a) * d, 2.4, Math.cos(a) * d), 1 - Math.exp(-2.5 * dt));
     GC.snap = true;
-  } else updateGameCam(dt);
-  let fov = aspect < 0.8 ? 52 : 40;
+  } else if (G.pvp) pvpGameCam(dt);
+  else updateGameCam(dt);
+  let fov = G.pvp ? 50 : aspect < 0.8 ? 52 : 40;
   if (G.anim) fov -= G.anim.lv === 2 ? 2 : G.anim.lv === 1 ? 1 : 0;
   if (CINE.freeze > 0 && G.anim) fov -= G.anim.lv === 2 ? 3 : 2;
   if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = damp(camera.fov, fov, 3, dt); camera.updateProjectionMatrix(); }
   cineCamera(dt, port);
   // 直式螢幕兩人離很遠時鏡頭會拉得很遠，霧也跟著往後推
-  scene.fog.near = Math.max(13, GC.dist + 3); scene.fog.far = Math.max(30, GC.dist + 18);
+  const fd = G.pvp && PV.cam ? PV.cam.h : GC.dist;
+  scene.fog.near = Math.max(13, fd + 3); scene.fog.far = Math.max(30, fd + 18);
   const w = smooth(clamp(CAMX.w, 0, 1));
   camera.position.lerpVectors(camP, CAMX.pos, w);
   const look = new THREE.Vector3().lerpVectors(camT, CAMX.tgt, w);
   if (shake > 0) { const a = shake * 0.22; camera.position.x += (Math.random() - 0.5) * a; camera.position.y += (Math.random() - 0.5) * a; look.y += (Math.random() - 0.5) * a * 0.5; shake = Math.max(0, shake - dt * 1.4); }
   // 抓把成功的快速晃動（指數衰減，約 0.2 秒消失）
   if (GC.q > 0.005) { const a = GC.q * 0.12; camera.position.x += (Math.random() - 0.5) * a; camera.position.y += (Math.random() - 0.5) * a; GC.q *= Math.exp(-14 * dt); }
+  // 雙人：俯視鏡頭的「上」是場上 -z，演出鏡頭是正常的上，跟著權重轉過去
+  if (G.pvp) { const wu = clamp(w * 1.8, 0, 1); camera.up.set(0, wu, -(1 - wu)).normalize(); }
   camera.lookAt(look);
   // 演出鏡頭期間，遊戲鏡頭的角度跟著實際鏡頭走，交還時不會從另一側穿過角色
-  if (w > 0.01 && G.state !== "title") { GC.yaw = Math.atan2(camera.position.x - GC.tx, camera.position.z - GC.tz); GC.yv *= 1 - w; }
+  if (w > 0.01 && G.state !== "title" && !G.pvp) { GC.yaw = Math.atan2(camera.position.x - GC.tx, camera.position.z - GC.tz); GC.yv *= 1 - w; }
   // 裁判擋在鏡頭和視線目標之間就淡出
   const rx = REF.x - camera.position.x, rz = REF.z - camera.position.z, lx = look.x - camera.position.x, lz = look.z - camera.position.z;
   const ll = Math.hypot(lx, lz) || 1, along = (rx * lx + rz * lz) / ll, perp = Math.abs(rx * lz - rz * lx) / ll;
@@ -2032,7 +2130,7 @@ function showTechName(an) {
   el.style.setProperty("--tc", hexCss(an.color));
   el.querySelector("b").textContent = TECH[an.tech];
   el.querySelector("small").textContent = TECH_ROMA[an.tech] || "";
-  el.className = "tname " + (an.att === W ? "me" : "foe") + (an.lv === 2 ? " lv2" : "");
+  el.className = "tname " + (an.att === W || G.pvp ? "me" : "foe") + (an.lv === 2 ? " lv2" : "");
   el.hidden = false; void el.offsetWidth; el.classList.add("in");
 }
 function hideTechName() { const el = $("tname"); el.classList.remove("in"); el.classList.add("out"); setTimeout(() => { if (el.classList.contains("out")) el.hidden = true; }, 350); }
@@ -2041,7 +2139,7 @@ function targetTs(an) {
   const t = an.t;
   if (an.ukemi || t >= an.imp) return 1;
   // 前迴轉時機開著時：輕微放慢到 0.6 倍，讓玩家感覺得到「現在可以滾」
-  if (an.def === W && an.canRoll && !an.tried && t >= an.win0 && t <= an.win1) return 0.6;
+  if (human(an.def) && an.canRoll && !an.tried && t >= an.win0 && t <= an.win1) return 0.6;
   if (an.lv === 0) return t > an.apex - 0.08 && t < an.apex + 0.06 ? 0.55 : 1;
   if (t < an.slow0) return 1;
   if (!an.frozeDone) return an.slowTs;
@@ -2489,6 +2587,7 @@ const vtmp = new THREE.Vector3();
 function updateHUD(dt) {
   if (callTimer > 0) { callTimer -= dt; if (callTimer <= 0) $("call").hidden = true; }
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $("toast").hidden = true; }
+  if (G.pvp) { pvpHUD(dt); return; }
   if (G.duo) { duoHUD(dt); return; }
   const inMatch = G.state !== "title";
   const showKz = G.state === "fight" && G.gripped && prefs.kz === 1;
@@ -2672,6 +2771,7 @@ const DUO = { round: 0, sc: { W: 0, B: 0 }, T: 0, phase: "", last: null, pad: { 
 const fk = (f) => (f === W ? "W" : "B");
 function duoBuild(key) {
   const el = $("duo" + key);
+  el.dataset.mode = "duo"; el.classList.remove("pv", "min");
   el.innerHTML = `<div class="duo-head"><i class="duo-chip"></i><span class="duo-role"></span><span class="duo-sc"></span></div>
     <div class="duo-mid"><div class="duo-time"><i></i></div><div class="duo-kg" hidden><span class="l"></span><div class="bar"><b class="mk"></b></div><span class="r"></span></div>
     <div class="kb" hidden><div class="kb-dial"><i class="kb-arc"></i><span class="kb-tele l">◀</span><span class="kb-tele r">▶</span><i class="kb-needle"></i><i class="kb-hub"></i></div><div class="kb-ch"><i></i></div></div>
@@ -2714,7 +2814,7 @@ function duoDir(f) {
   const l = f === W ? k.has("a") : k.has("arrowleft"), r = f === W ? k.has("d") : k.has("arrowright");
   return l === r ? 0 : r ? 1 : -1;
 }
-function duoMsg(f, text) { DUO.msg[fk(f)] = { text, t: 0.8 }; }
+function duoMsg(f, text) { if (G.pvp) pvpMsg(f, text, "", 0.8); else DUO.msg[fk(f)] = { text, t: 0.8 }; }
 function mashBy(f) {
   const h = G.hold;
   if (!G.duo || G.state !== "osaekomi" || !h || h.phase !== "on" || h.type !== "kesa") return;
@@ -2724,7 +2824,7 @@ function mashBy(f) {
   DUO.combo[key] = G.time - DUO.lastTap[key] < 0.45 ? DUO.combo[key] + 1 : 1;
   DUO.lastTap[key] = G.time;
   tick2(DUO.combo[key]);
-  const b = DUO.z[key].btns.firstChild;
+  const b = (G.pvp ? PV.z[key] : DUO.z[key]).btns.firstChild;
   if (b && b.classList) { b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); setTimeout(() => b.classList.remove("hit"), 70); }
   shake = Math.max(shake, 0.04);
 }
@@ -2732,7 +2832,7 @@ function duoStart() {
   ensureAudio();
   cineEnd(); CAMX.w = 0;
   G.duo = true;
-  if (!DUO.z.W) { duoBuild("W"); duoBuild("B"); }
+  if (!DUO.z.W || $("duoW").dataset.mode !== "duo") { duoBuild("W"); duoBuild("B"); for (const k of ["W", "B"]) DUO.z[k].mode = ""; }
   for (const id of ["title", "result", "board", "joy", "skills", "tech", "kz", "nw", "pad", "mash", "warn", "call", "toast", "rollcue"]) $(id).hidden = true;
   $("quit").hidden = false;
   $("duoW").hidden = $("duoB").hidden = false;
@@ -2742,10 +2842,12 @@ function duoStart() {
   duoSetup();
 }
 function duoStop() {
+  PV.flip = false; $("view").classList.remove("flip"); $("quit").classList.remove("pvq");
+  B.isAI = true;
   if (!G.duo) return;
-  G.duo = false; G.hold = null;
+  G.duo = false; G.pvp = false; PV.done = false; G.hold = null;
   $("duoW").hidden = $("duoB").hidden = true;
-  for (const k of ["W", "B"]) { DUO.pad[k].length = 0; if (DUO.z[k]) duoButtons(k, ""); }
+  for (const k of ["W", "B"]) { DUO.pad[k].length = 0; if (DUO.z[k] && $("duoW").dataset.mode === "duo") duoButtons(k, ""); }
   camera.up.set(0, 1, 0); GC.snap = true;
 }
 // 每回合開始：被壓者躺在中間（頭朝畫面左邊），壓制者在自己那一側準備
@@ -2812,8 +2914,17 @@ function duoHUD(dt) {
     else if (DUO.phase === "end") { const a = DUO.sc[k], o = DUO.sc[fk(opp)], sub = `<small>${a.toFixed(1)} 秒對 ${o.toFixed(1)} 秒</small>`; big = (Math.abs(a - o) < 0.05 ? "平手" : a > o ? "你贏了" : "你輸了") + sub; }
     z.big.hidden = !big; if (big && z.big.innerHTML !== big) z.big.innerHTML = big;
     const on = live && !big;
-    z.kg.hidden = !(on && h.type === "kesa"); z.kb.hidden = !(on && h.type === "kami");
-    if (on && h.type === "kesa") {
+    if (on) holdView(z, me, h); else { z.kg.hidden = true; z.kb.hidden = true; }
+    const m = DUO.msg[k];
+    if (m) { m.t -= dt; if (m.t <= 0) DUO.msg[k] = null; }
+    z.msg.classList.toggle("on", !!DUO.msg[k]);
+    if (DUO.msg[k] && z.msg.textContent !== m.text) z.msg.textContent = m.text;
+  }
+}
+// 寢技的計量器與重心儀（雙人寢技、雙人比賽共用）
+function holdView(z, me, h) {
+  z.kg.hidden = h.type !== "kesa"; z.kb.hidden = h.type !== "kami";
+    if (h.type === "kesa") {
       // 每個人都往右推：被壓者右端是掙脫；壓制者右端是壓緊、左端是對手掙脫
       const mine = h.held === me ? h.m : -h.m;
       z.kgM.style.left = (50 + mine * 50).toFixed(1) + "%";
@@ -2822,7 +2933,7 @@ function duoHUD(dt) {
       z.kgBar.style.setProperty("--l", h.held === me ? "rgba(42,99,214,.55)" : "rgba(229,72,60,.6)");
       z.kgBar.style.setProperty("--r", h.held === me ? "rgba(61,190,122,.65)" : "rgba(42,99,214,.55)");
     }
-    if (on && h.type === "kami") {
+    if (h.type === "kami") {
       z.kbN.style.transform = `rotate(${(h.n * 90).toFixed(1)}deg)`;
       z.kbCh.style.width = (h.ch * 100).toFixed(0) + "%";
       z.kbTL.style.opacity = h.cdir < 0 ? 0.35 + 0.65 * h.ch : 0;
@@ -2837,11 +2948,6 @@ function duoHUD(dt) {
         const sm = b.querySelector("small"); if (sm.textContent !== t) sm.textContent = t;
       });
     }
-    const m = DUO.msg[k];
-    if (m) { m.t -= dt; if (m.t <= 0) DUO.msg[k] = null; }
-    z.msg.classList.toggle("on", !!DUO.msg[k]);
-    if (DUO.msg[k] && z.msg.textContent !== m.text) z.msg.textContent = m.text;
-  }
 }
 // 正上方的鏡頭：畫面上方是藍方、下方是白方
 function duoCam(dt) {
@@ -2857,6 +2963,194 @@ function duoCam(dt) {
   if (shake > 0) { const a = shake * 0.15; camera.position.x += (Math.random() - 0.5) * a; camera.position.z += (Math.random() - 0.5) * a; shake = Math.max(0, shake - dt * 1.4); }
   camera.lookAt(DUO.cam.x, 0, DUO.cam.z);
   scene.fog.near = H + 3; scene.fog.far = H + 20;
+}
+
+/* ---------- 雙人正式比賽（同一支手機，面對面） ----------
+   版面：白方用畫面下方、藍方用上方（轉 180 度），各有一個搖桿和最多四顆鍵；中間是從正上方看的場地，兩人都看得懂。
+   投技：兩人的區域收起來，演出全螢幕，畫面轉向施技者（藍方施技就整個轉 180 度）；受方能前迴轉時只留那一顆鍵。
+   宣告（始め、待て、指導、得分）與個人提示都寫在各自的區域。壓制沿用雙人寢技的介面。 */
+const PV = { call: null, msg: { W: null, B: null }, z: {}, joy: { W: { x: 0, y: 0, id: null }, B: { x: 0, y: 0, id: null } }, flip: false, done: false, starting: false, cam: null, lo: { W: [], B: [] }, ready: { W: false, B: false } };
+function pvpMsg(f, text, kind = "", dur = 1.1) { PV.msg[fk(f)] = { text, kind, t: dur }; }
+// 搖桿用螢幕方向：往右拖＝場上 +x、往下拖＝場上 +z（從正上方看），所以兩個人推哪裡角色就往哪裡走
+function pvpMove(f) {
+  const j = PV.joy[fk(f)], k = input.keys;
+  let x = j.x, z = j.y;
+  if (f === W) { x += (k.has("d") ? 1 : 0) - (k.has("a") ? 1 : 0); z += (k.has("s") ? 1 : 0) - (k.has("w") ? 1 : 0); }
+  else { x += (k.has("arrowleft") ? 1 : 0) - (k.has("arrowright") ? 1 : 0); z += (k.has("arrowup") ? 1 : 0) - (k.has("arrowdown") ? 1 : 0); }
+  const L = Math.hypot(x, z); if (L > 1) { x /= L; z /= L; }
+  return { x, z };
+}
+function pvpBuild(key) {
+  const el = $("duo" + key);
+  el.dataset.mode = "pvp";
+  el.classList.add("pv");
+  el.innerHTML = `<div class="duo-head"><i class="duo-chip"></i><span class="pv-sc"></span><span class="pv-clock"></span></div>
+    <div class="pv-st"><i></i></div>
+    <div class="duo-mid"><div class="pv-hint"></div><div class="duo-time" hidden><i></i></div><div class="duo-kg" hidden><span class="l"></span><div class="bar"><b class="mk"></b></div><span class="r"></span></div>
+    <div class="kb" hidden><div class="kb-dial"><i class="kb-arc"></i><span class="kb-tele l">◀</span><span class="kb-tele r">▶</span><i class="kb-needle"></i><i class="kb-hub"></i></div><div class="kb-ch"><i></i></div></div>
+    <div class="duo-big" hidden></div><span class="duo-msg"></span></div>
+    <div class="pv-ctl"><div class="pjoy"><i></i></div><div class="duo-btns"></div></div>`;
+  const q = (c) => el.querySelector(c);
+  const z = PV.z[key] = { el, sc: q(".pv-sc"), clock: q(".pv-clock"), st: q(".pv-st i"), hint: q(".pv-hint"), timeBox: q(".duo-time"), time: q(".duo-time i"), kg: q(".duo-kg"), kgL: q(".duo-kg .l"), kgR: q(".duo-kg .r"), kgBar: q(".duo-kg .bar"), kgM: q(".duo-kg .mk"),
+    kb: q(".kb"), kbN: q(".kb-needle"), kbTL: q(".kb-tele.l"), kbTR: q(".kb-tele.r"), kbCh: q(".kb-ch i"), big: q(".duo-big"), msg: q(".duo-msg"), btns: q(".duo-btns"), joy: q(".pjoy"), knob: q(".pjoy i"), sig: "" };
+  // 搖桿：上方的區域是轉過的，所以把手的位置要轉回區域自己的座標
+  const J = PV.joy[key], s = key === "W" ? 1 : -1;
+  const move = (e) => {
+    const r = z.joy.getBoundingClientRect(), R = r.width / 2;
+    let dx = (e.clientX - r.left - R) / R, dy = (e.clientY - r.top - R) / R;
+    const L = Math.hypot(dx, dy); if (L > 1) { dx /= L; dy /= L; }
+    J.x = Math.abs(dx) < 0.12 ? 0 : dx; J.y = Math.abs(dy) < 0.12 ? 0 : dy;
+    z.knob.style.transform = `translate(${(dx * s * R * 0.6).toFixed(1)}px, ${(dy * s * R * 0.6).toFixed(1)}px)`;
+  };
+  z.joy.addEventListener("pointerdown", (e) => { e.preventDefault(); ensureAudio(); J.id = e.pointerId; z.joy.setPointerCapture(e.pointerId); move(e); });
+  z.joy.addEventListener("pointermove", (e) => { if (e.pointerId === J.id) move(e); });
+  const end = (e) => { if (e.pointerId !== J.id) return; J.id = null; J.x = J.y = 0; z.knob.style.transform = ""; };
+  z.joy.addEventListener("pointerup", end); z.joy.addEventListener("pointercancel", end);
+}
+// 這個人現在能按的鍵
+function pvpItems(f) {
+  const st = G.state, o = other(f), ready = !busy(f) && f.cool <= 0;
+  if (st === "fight" && !G.gripped) {
+    const near = dist(f, o) < 1.25;
+    return [{ id: "grip", label: "抓把", sub: near ? "夠近了" : "再靠近", on: ready, hot: ready && near },
+      { id: "dodge", label: "閃避", sub: "躲開抓把", on: ready, hot: !!(o.act && o.act.type === "reach") }];
+  }
+  if (st === "fight" && G.gripped) {
+    return [{ id: "brace", label: "防禦", sub: "擋招", on: !f.act && f.cool <= 0, hot: !!(o.act && o.act.type === "throwWind"), cls: "def" },
+      ...f.loadout.map((t) => { const c = Math.round(throwChance(f, o, t) * 100); return { id: "t:" + t, label: TECH[t], sub: c + "%", on: ready, hot: ready && c >= (t === "ogoshi" ? 18 : 40), cls: TECHS[t].dir }; })];
+  }
+  if (st === "post" && G.post && G.post.att === f) return [{ id: "kesa", label: "袈裟固", sub: "連打比拚", on: true, hot: true }, { id: "kami", label: "上四方固", sub: "重心攻防", on: true, hot: true }];
+  const an = G.anim;
+  if (st === "throw" && an && an.def === f && an.canRoll && !an.tried && !an.ukemi) { const inW = an.t >= an.win0 && an.t <= an.win1; return [{ id: "roll", label: "前迴轉", sub: inW ? "現在！" : "準備", on: true, hot: inW }]; }
+  const h = G.hold;
+  if (st === "osaekomi" && h && h.phase === "on") {
+    return h.type === "kesa" ? [{ id: "mash", kind: "mash", label: "連打！", sub: h.held === f ? "推到右端就掙脫" : "別讓對手推到左端", on: true, cls: "mash" }]
+      : [{ id: "kl", kind: "pad", d: -1, label: "◀", on: true }, { id: "kr", kind: "pad", d: 1, label: "▶", on: true }];
+  }
+  if (st === "end" && PV.done) return [{ id: "again", label: "再來一場", sub: "同樣的招式", on: true }, { id: "lobby", label: "重新選招", sub: "", on: true }, { id: "home", label: "回標題", sub: "", on: true }];
+  return [];
+}
+function pvpPress(f, id) {
+  ensureAudio();
+  if (id === "grip") tryGrip(f);
+  else if (id === "dodge") tryDodge(f);
+  else if (id === "brace") tryBrace(f);
+  else if (id.startsWith("t:")) { if (!busy(f) && f.cool <= 0) haptic("press"); tryThrow(f, id.slice(2)); }
+  else if (id === "kesa" || id === "kami") { if (G.state === "post" && G.post && G.post.att === f) startHold(f, other(f), id); }
+  else if (id === "roll") tryRoll(f);
+  else if (id === "again") { PV.starting = true; startMatch(); }
+  else if (id === "lobby") pvpLobby();
+  else if (id === "home") toTitle();
+}
+function pvpKey(f, i) {
+  const it = pvpItems(f)[i];
+  if (!it || it.on === false || it.kind === "pad") return;
+  if (it.kind === "mash") mashBy(f); else pvpPress(f, it.id);
+}
+// 依目前的鍵換按鈕（只有清單變了才重建）；每幀更新文字與亮起
+function pvpButtons(key, items) {
+  const z = PV.z[key], f = key === "W" ? W : B, box = z.btns;
+  const sig = items.map((it) => it.id).join("|");
+  if (sig !== z.sig) {
+    z.sig = sig; DUO.pad[key].length = 0;
+    box.style.setProperty("--n", items.length >= 3 ? 2 : Math.max(1, items.length));
+    box.classList.toggle("four", items.length >= 3);
+    box.innerHTML = items.map((it) => `<button type="button" data-id="${it.id}"${it.d ? ` data-d="${it.d}"` : ""}>${it.label}<small></small><i></i></button>`).join("");
+    [...box.children].forEach((b, n) => {
+      const it = items[n];
+      if (it.kind === "pad") {
+        const arr = DUO.pad[key];
+        b.addEventListener("pointerdown", (e) => { e.preventDefault(); ensureAudio(); if (!arr.includes(it.d)) arr.push(it.d); });
+        const up = () => { const i = arr.indexOf(it.d); if (i >= 0) arr.splice(i, 1); };
+        b.addEventListener("pointerup", up); b.addEventListener("pointerleave", up); b.addEventListener("pointercancel", up);
+      } else if (it.kind === "mash") b.addEventListener("pointerdown", (e) => { e.preventDefault(); mashBy(f); });
+      else b.addEventListener("pointerdown", (e) => { e.preventDefault(); const cur = pvpItems(f).find((x) => x.id === it.id); if (cur && cur.on !== false) pvpPress(f, it.id); });
+    });
+  }
+  [...box.children].forEach((b, n) => {
+    const it = items[n]; if (!it || it.kind === "pad") return;
+    const cls = [it.cls || "", it.on === false ? "off" : "", it.hot ? "hot" : ""].join(" ").trim();
+    if (b.className !== cls) b.className = cls;
+    const sm = b.querySelector("small"); if (sm.textContent !== (it.sub || "")) sm.textContent = it.sub || "";
+  });
+}
+function pvpHUD(dt) {
+  if (PV.call) { PV.call.t -= dt; if (PV.call.t <= 0) PV.call = null; }
+  // 投技演出時整個畫面轉向施技者；回到俯視鏡頭時再轉回來
+  if (G.state === "throw" && G.anim) PV.flip = G.anim.att === B;
+  else if (PV.flip && CAMX.w < 0.5) PV.flip = false;
+  $("view").classList.toggle("flip", PV.flip);
+  const h = G.hold;
+  for (const key of ["W", "B"]) {
+    const z = PV.z[key], me = key === "W" ? W : B, opp = other(me);
+    z.el.classList.toggle("min", G.state === "throw");
+    const sc = (f) => `半${f.sc.waza} 有${f.sc.yuko}` + (f.sc.shido ? ` 指${f.sc.shido}` : "");
+    const t1 = `你 ${sc(me)}　對手 ${sc(opp)}`; if (z.sc.textContent !== t1) z.sc.textContent = t1;
+    const t2 = G.golden ? "GS " + fmtClock(G.clock) : fmtClock(G.clock); if (z.clock.textContent !== t2) z.clock.textContent = t2;
+    z.st.style.width = me.stamina.toFixed(0) + "%";
+    z.st.parentElement.classList.toggle("low", me.stamina < 30);
+    // 一句提示：這時候該做什麼
+    let hint = "";
+    const st = G.state, live = st === "osaekomi" && h && h.phase === "on";
+    if (st === "fight" && !G.gripped) hint = dist(me, opp) < 1.25 ? "按抓把；對手伸手就閃避" : "用搖桿靠近對手";
+    else if (st === "fight") hint = opp.lean > 0.25 ? "對手後傾！綠色前方技好時機" : opp.lean < -0.45 ? "對手前傾！金色後方技好時機" : "搖桿往前推、往後拉，破壞對手平衡";
+    else if (st === "post") hint = G.post && G.post.att === me ? "對手倒地！快選壓制" : "倒地了…撐住";
+    else if (live) hint = h.type === "kesa" ? "兩邊比連打，標往右推" : h.held === me ? "按住蓄力，放開往那邊頂" : "拉回綠區，看到預兆就反壓";
+    if (z.hint.textContent !== hint) z.hint.textContent = hint;
+    z.timeBox.hidden = !live;
+    if (live) z.time.style.width = clamp(h.t / 20, 0, 1) * 100 + "%";
+    // 大字：結果或宣告
+    let big = "";
+    if (PV.done && G.end) big = (G.end.win === me ? "你贏了" : "你輸了") + `<small>${G.end.win.name}・${G.end.how}</small>`;
+    else if (PV.call) big = PV.call.big + `<small>${PV.call.sub}</small>`;
+    z.big.hidden = !big; if (big && z.big.innerHTML !== big) z.big.innerHTML = big;
+    z.hint.style.visibility = big ? "hidden" : "";
+    if (live && !big) holdView(z, me, h); else { z.kg.hidden = true; z.kb.hidden = true; }
+    const m = PV.msg[key];
+    if (m) { m.t -= dt; if (m.t <= 0) PV.msg[key] = null; }
+    z.msg.classList.toggle("on", !!PV.msg[key]);
+    if (PV.msg[key]) { if (z.msg.textContent !== m.text) z.msg.textContent = m.text; z.msg.dataset.k = m.kind || ""; }
+    z.joy.style.visibility = ["fight", "intro", "reset", "wait"].includes(st) ? "" : "hidden";
+    pvpButtons(key, pvpItems(me));
+  }
+}
+// 正上方的遊戲鏡頭：中間約四成半的畫面要裝下兩人，兩人越遠拉越高；平滑追隨
+function pvpGameCam(dt) {
+  const mx = (W.x + B.x) / 2, mz = (W.z + B.z) / 2, dx = Math.abs(W.x - B.x), dz = Math.abs(W.z - B.z);
+  const tv = Math.tan((50 * PI) / 360), a = camera.aspect;
+  const need = Math.max((dz / 2 + 1.0) / (tv * 0.44), (dx / 2 + 1.0) / (tv * a * 0.92), 4.5);
+  if (!PV.cam) PV.cam = { x: mx, z: mz, h: need, vx: 0, vz: 0, vh: 0 };
+  const c = PV.cam;
+  c.x = sd(c.x, mx, c, "vx", 0.25, dt); c.z = sd(c.z, mz, c, "vz", 0.25, dt); c.h = sd(c.h, need, c, "vh", 0.5, dt);
+  camT.set(c.x, 0, c.z); camP.set(c.x, c.h, c.z);
+}
+// 賽前選招：兩人各選三招，都按「準備好了」就開始
+function pvpLobby() {
+  duoStop();
+  G.state = "title";
+  for (const id of ["title", "result"]) $(id).hidden = true;
+  PV.ready = { W: false, B: false };
+  if (!PV.lo.W.length) { PV.lo.W = prefs.loadout.slice(); PV.lo.B = (prefs.loadout2 && prefs.loadout2.length === 3 ? prefs.loadout2 : prefs.loadout).slice(); }
+  for (const key of ["W", "B"]) renderLobby(key);
+  $("lobby").hidden = false;
+}
+function renderLobby(key) {
+  const el = $("lob" + key), sel = PV.lo[key], ready = PV.ready[key];
+  el.innerHTML = `<div class="lob-h"><i class="duo-chip"></i><b>${key === "W" ? "白方" : "藍方"}・選三招</b><span>${sel.length} / 3</span></div>
+    <div class="lob-grid">${TECH_ORDER.map((id) => { const T = TECHS[id], on = sel.includes(id); return `<button type="button" data-t="${id}" aria-pressed="${on}" ${!on && sel.length >= 3 ? "disabled" : ""}><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "前方技" : "後方技"}</span><small>${TECH_DESC[id][0] || ""}</small></button>`; }).join("")}</div>
+    <div class="lob-f"><button type="button" class="go${ready ? " line" : ""}" data-go ${sel.length !== 3 ? "disabled" : ""}>${ready ? "等對手…" : "準備好了"}</button><button type="button" class="go line" data-back>回標題</button></div>`;
+  el.querySelectorAll("[data-t]").forEach((b) => b.addEventListener("click", () => {
+    if (PV.ready[key]) return;
+    const t = b.dataset.t, i = sel.indexOf(t);
+    if (i >= 0) sel.splice(i, 1); else if (sel.length < 3) sel.push(t);
+    renderLobby(key);
+  }));
+  el.querySelector("[data-go]").addEventListener("click", () => {
+    PV.ready[key] = !PV.ready[key]; ensureAudio(); clack();
+    if (PV.ready.W && PV.ready.B) { $("lobby").hidden = true; prefs.loadout2 = PV.lo.B.slice(); savePrefs(prefs); PV.starting = true; startMatch(); }
+    else renderLobby(key);
+  });
+  el.querySelector("[data-back]").addEventListener("click", () => { $("lobby").hidden = true; toTitle(); });
 }
 
 /* ---------- 封面、結果按鈕 ---------- */
@@ -2886,6 +3180,13 @@ for (const id of ["optDiff", "optTime", "optVib", "optKz"]) {
 }
 $("startBtn").addEventListener("click", () => { askMotion(); startMatch(); });
 $("duoBtn").addEventListener("click", duoStart);
+$("pvpBtn").addEventListener("click", () => { askMotion(); pvpLobby(); });
+// 演出要整個轉向施技者：把畫布和演出層放進同一個容器，轉這個容器就好
+{
+  const view = document.createElement("div"); view.id = "view";
+  $("stage").before(view);
+  for (const id of ["stage", "cine", "spot", "impact", "tname", "call", "rollcue", "rollglow", "flash", "toast", "warn"]) view.appendChild($(id));
+}
 $("againBtn").addEventListener("click", startMatch);
 $("homeBtn").addEventListener("click", toTitle);
 $("quit").addEventListener("click", () => {
