@@ -58,49 +58,51 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .clock.gs b { color: var(--gold); }
 
 /* 裁判宣告 */
-.call { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+.call { position: fixed; left: 50%; top: 34%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
 .call b { display: block; font-family: var(--f-display); font-weight: 900; font-size: clamp(44px, 11vw, 96px); line-height: 1; letter-spacing: .06em; color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, .7); }
 .call span { display: inline-block; margin-top: 8px; font-size: clamp(14px, 3.4vw, 20px); font-weight: 700; padding: 2px 12px; border-radius: 999px; background: rgba(0, 0, 0, .55); letter-spacing: .12em; }
 .call.gold b { color: var(--gold); }
 .call.blue b { color: #7FA8FF; }
 .call.pop { animation: pop .35s cubic-bezier(.2, 1.6, .4, 1) both; }
 @keyframes pop { from { transform: translate(-50%, -50%) scale(.6); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
-.toast { position: fixed; left: 50%; top: 44%; transform: translateX(-50%); font-weight: 700; font-size: 15px; padding: 4px 14px; border-radius: 999px; background: rgba(0, 0, 0, .6); pointer-events: none; white-space: nowrap; }
+.toast { position: fixed; left: 50%; top: 24%; transform: translateX(-50%); font-weight: 700; font-size: 15px; padding: 4px 14px; border-radius: 999px; background: rgba(0, 0, 0, .6); pointer-events: none; white-space: nowrap; }
 .toast.good { color: var(--green); }
 .toast.bad { color: #FF8A80; }
 
-/* 崩し 重心計 */
-.kz { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 86px); left: 50%; transform: translateX(-50%); width: min(420px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px 8px; pointer-events: none; }
-.kz-head { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
-.kz-head b { color: var(--ink); font-size: 12px; }
-.kz-bar { position: relative; height: 14px; margin-top: 4px; border-radius: 3px; background: rgba(255, 255, 255, .07); overflow: hidden; }
+/* 崩し 重心計（只顯示對手） */
+.kz { position: fixed; top: 96px; left: 50%; transform: translateX(-50%); width: min(320px, calc(100vw - 32px)); pointer-events: none; }
+.kz-cap { text-align: center; font-size: 10px; color: var(--muted); letter-spacing: .15em; margin-bottom: 2px; text-shadow: 0 1px 4px #000; }
+.kz-bar { position: relative; height: 20px; border-radius: 5px; background: rgba(10, 14, 22, .7); border: 1px solid var(--line); overflow: hidden; }
 .kz-zone { position: absolute; top: 0; bottom: 0; }
-.kz-zone.back { left: 0; background: rgba(61, 190, 122, .28); }
-.kz-zone.fwd { right: 0; background: rgba(227, 179, 65, .28); }
+.kz-zone.back { left: 0; background: rgba(61, 190, 122, .3); }
+.kz-zone.fwd { right: 0; background: rgba(227, 179, 65, .3); }
 .kz-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .3); }
-.kz-dot { position: absolute; top: 1px; bottom: 1px; width: 6px; margin-left: -3px; border-radius: 2px; background: #fff; box-shadow: 0 0 8px #fff; }
-.kz-dot.me { background: var(--gi-white); box-shadow: none; top: auto; height: 3px; bottom: -0px; opacity: .8; }
-.kz-legend { display: flex; justify-content: space-between; font-size: 11px; margin-top: 3px; }
-.kz-legend .l { color: var(--green); }
-.kz-legend .r { color: var(--gold); }
+.kz-dot { position: absolute; top: 2px; bottom: 2px; width: 6px; margin-left: -3px; border-radius: 2px; background: #fff; box-shadow: 0 0 8px #fff; }
+.kz-lab { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; }
+.kz-lab.l { left: 6px; color: #8FE3B5; }
+.kz-lab.r { right: 6px; color: #F2CF7A; }
 
-/* 寢技提示 */
-.nw { position: fixed; left: 50%; top: 96px; transform: translateX(-50%); width: min(300px, calc(100vw - 32px)); text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px 12px; pointer-events: none; }
-.nw-title { font-weight: 900; font-size: 15px; }
-.nw-title small { font-weight: 500; color: var(--muted); margin-left: 6px; }
-.nw-arrow { font-size: 40px; line-height: 1.1; margin: 2px 0 2px; color: var(--gold); transition: transform .1s; }
-.nw-arrow.hit { color: var(--green); transform: scale(1.2); }
-.nw-arrow.miss { color: var(--red); }
-.nw-win { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .1); overflow: hidden; }
-.nw-win i { display: block; height: 100%; background: var(--gold); }
-.nw-meter { margin-top: 8px; text-align: left; font-size: 11px; color: var(--muted); }
-.nw-track { position: relative; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .08); overflow: hidden; margin-top: 3px; }
+/* 寢技資訊（精簡） */
+.nw { position: fixed; left: 50%; top: 96px; transform: translateX(-50%); width: min(320px, calc(100vw - 32px)); background: rgba(10, 14, 22, .72); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px 7px; pointer-events: none; display: grid; gap: 4px; }
+.nw-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+.nw-row b { font-size: 13px; }
+.nw-row span { font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 700; }
+.nw-track { position: relative; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
 .nw-track i { display: block; height: 100%; }
 .nw-track.time i { background: var(--gold); }
 .nw-track.esc i { background: var(--red); }
-.nw-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .5); }
-.nw-ticks { position: relative; height: 12px; font-size: 9px; }
-.nw-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.nw-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0, 0, 0, .6); }
+.nw-legend { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+
+/* 寢技方向鍵：三鍵等寬平均分布 */
+.pad { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: min(520px, calc(100vw - 32px)); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pad button { position: relative; height: 84px; border-radius: 16px; border: 2px solid rgba(255, 255, 255, .22); background: rgba(20, 26, 38, .85); font-size: 32px; line-height: 1; display: grid; place-content: center; gap: 4px; overflow: hidden; touch-action: none; transition: transform .08s, border-color .1s, background .1s; }
+.pad button small { font-size: 12px; color: var(--muted); }
+.pad button i { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: var(--gold); }
+.pad button.hot { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 22px rgba(227, 179, 65, .55); }
+.pad button.hit { border-color: var(--green); background: rgba(61, 190, 122, .25); color: #fff; }
+.pad button.miss { border-color: var(--red); background: rgba(229, 72, 60, .25); color: #fff; }
+.pad button:active { transform: scale(.95); }
 
 /* 攻擊預兆 */
 .warn { position: fixed; left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 900; font-size: 22px; display: grid; place-items: center; pointer-events: none; box-shadow: 0 0 18px var(--red); animation: blink .18s infinite alternate; }
@@ -165,7 +167,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .sc { font-size: 15px; }
   .clock { min-width: 58px; padding: 0 8px; }
   .clock b { font-size: 19px; }
-  .kz { top: calc(env(safe-area-inset-top, 0px) + 74px); }
+  .call b { font-size: clamp(34px, 11vw, 52px); }
+  .call span { font-size: 13px; }
+  .call { top: 27%; }
+  .toast { top: 21%; font-size: 13px; }
+  .pad button { height: 76px; }
   .joy { width: 120px; height: 120px; }
   .skills { transform: scale(.88); transform-origin: right bottom; }
 }
@@ -185,22 +191,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 </div>
 
 <div class="kz" id="kz" hidden>
-  <div class="kz-head"><b>對手重心</b><span>白線是你的重心</span></div>
-  <div class="kz-bar"><span class="kz-zone back" id="kzBack"></span><span class="kz-zone fwd" id="kzFwd"></span><span class="kz-mid"></span><span class="kz-dot" id="kzDot"></span><span class="kz-dot me" id="kzMe"></span></div>
-  <div class="kz-legend"><span class="l">◀ 後傾：大外割</span><span class="r">前傾：大腰 ▶</span></div>
+  <div class="kz-cap">對手重心</div>
+  <div class="kz-bar"><span class="kz-zone back" id="kzBack"></span><span class="kz-zone fwd" id="kzFwd"></span><span class="kz-mid"></span><span class="kz-lab l">◀ 大外割</span><span class="kz-lab r">大腰 ▶</span><span class="kz-dot" id="kzDot"></span></div>
 </div>
 
 <div class="nw" id="nw" hidden>
-  <div class="nw-title" id="nwTitle">壓制中</div>
-  <div class="nw-arrow" id="nwArrow">▲</div>
-  <div class="nw-win"><i id="nwWin"></i></div>
-  <div class="nw-meter">壓制時間 <span id="nwTime">0.0</span> 秒
-    <div class="nw-track time"><i id="nwTimeBar"></i><span class="nw-tick" style="left:25%"></span><span class="nw-tick" style="left:50%"></span></div>
-    <div class="nw-ticks"><span style="left:25%">5 有效</span><span style="left:50%">10 半勝</span><span style="left:100%;transform:translateX(-100%)">20 一本</span></div>
-  </div>
-  <div class="nw-meter">逃脫進度
-    <div class="nw-track esc"><i id="nwEsc"></i></div>
-  </div>
+  <div class="nw-row"><b id="nwTitle">壓制中</b><span id="nwTime">0.0 秒</span></div>
+  <div class="nw-track time"><i id="nwTimeBar"></i><span class="nw-tick" style="left:25%"></span><span class="nw-tick" style="left:50%"></span></div>
+  <div class="nw-track esc"><i id="nwEsc"></i></div>
+  <div class="nw-legend"><span>5 秒有效・10 秒半勝・20 秒一本</span><span id="nwEscLab">紅條：逃脫</span></div>
+</div>
+<div class="pad" id="pad" hidden>
+  <button type="button" data-dir="left">◀<small>左</small><i></i></button>
+  <button type="button" data-dir="up">▲<small>上</small><i></i></button>
+  <button type="button" data-dir="right">▶<small>右</small><i></i></button>
 </div>
 
 <div class="call" id="call" hidden><b id="callBig"></b><span id="callSub"></span></div>
@@ -589,6 +593,9 @@ document.querySelectorAll(".sk").forEach((b) => {
   b.addEventListener("click", (e) => e.preventDefault());
 });
 
+const padBtns = [...document.querySelectorAll("#pad button")];
+padBtns.forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); onDir(b.dataset.dir); }));
+
 /* ---------- 幾何 ---------- */
 const yawTo = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
 const dist = (a, b) => Math.hypot(b.x - a.x, b.z - a.z);
@@ -811,9 +818,6 @@ function newPrompt() {
   const dir = ["left", "up", "right"][Math.floor(Math.random() * 3)];
   const playerHolds = h.holder === W;
   h.prompt = { dir, t: 0, win: playerHolds ? DIFF.holdWin : 0.95, done: false };
-  const el = $("nwArrow");
-  el.textContent = { left: "◀", up: "▲", right: "▶" }[dir];
-  el.className = "nw-arrow";
 }
 function onDir(dir) {
   if (G.state !== "osaekomi" || !G.hold || G.hold.phase !== "on") return;
@@ -821,8 +825,7 @@ function onDir(dir) {
   if (!p || p.done) return;
   p.done = true;
   const ok = dir === p.dir;
-  const el = $("nwArrow");
-  el.className = "nw-arrow " + (ok ? "hit" : "miss");
+  h.fbk = { dir, ok, t: 0.3 };
   if (h.holder === W) {
     if (ok) h.esc = Math.max(0, h.esc - 6);
     else h.esc += DIFF.holdLoss;
@@ -844,6 +847,7 @@ function stepHold(dt) {
     return;
   }
   h.t += dt;
+  if (h.fbk) { h.fbk.t -= dt; if (h.fbk.t <= 0) h.fbk = null; }
   // 被壓者掙扎
   const wig = Math.sin(G.time * 9) * 0.06 + (h.jolt || 0) * 0.15;
   h.jolt = damp(h.jolt || 0, 0, 6, dt);
@@ -859,7 +863,7 @@ function stepHold(dt) {
       p.t += dt;
       if (p.t >= p.win) {
         p.done = true;
-        $("nwArrow").className = "nw-arrow miss";
+        h.fbk = { dir: p.dir, ok: false, t: 0.3 };
         if (h.holder === W) h.esc += DIFF.holdLoss; // 沒壓住
         h.next = rand(0.3, 0.5);
       }
@@ -1007,7 +1011,7 @@ function endMatch(win, how) {
   G.end = { win, how, t: 0, from: [W, B].map((f) => ({ x: f.x, z: f.z })) };
   G.gripped = false; G.hold = null; G.post = null; G.anim = null;
   for (const f of [W, B]) { f.act = null; f.cur.body[0] = wrap(f.cur.body[0]); f.tgt = clonePose(f.cur); f.moveAmt = 0; }
-  $("kz").hidden = true; $("nw").hidden = true; $("warn").hidden = true;
+  for (const id of ["kz", "nw", "warn", "pad"]) $(id).hidden = true;
 }
 function stepEnd(dt) {
   const e = G.end; e.t += dt;
@@ -1034,12 +1038,12 @@ function showResult() {
   const row = (f) => `<tr><td>${f === W ? "白（你）" : "藍（" + DIFF.name + "）"}</td><td>${f.sc.ippon}</td><td>${f.sc.waza}</td><td>${f.sc.yuko}</td><td>${f.sc.shido}</td></tr>`;
   $("resTable").innerHTML = `<tr><th></th><th>一本</th><th>半勝</th><th>有效</th><th>指導</th></tr>${row(W)}${row(B)}`;
   $("result").hidden = false;
-  for (const id of ["joy", "skills", "quit", "board", "call", "toast"]) $(id).hidden = true;
+  for (const id of ["joy", "skills", "quit", "board", "call", "toast", "pad"]) $(id).hidden = true;
   callTimer = 0;
 }
 function toTitle() {
   G.state = "title";
-  for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast"]) $(id).hidden = true;
+  for (const id of ["board", "joy", "skills", "quit", "kz", "nw", "warn", "result", "call", "toast", "pad"]) $(id).hidden = true;
   $("title").hidden = false;
   for (const f of [W, B]) { f.x = f === W ? -2 : 2; f.z = 0; f.yaw = f === W ? PI / 2 : -PI / 2; f.tgt = POSE.STAND; f.act = null; f.cur = clonePose(POSE.STAND); }
   REF.tgt = POSE.R_STAND;
@@ -1065,10 +1069,7 @@ function computeSlots() {
     s[0] = { id: "grip", label: "抓把", sub: "", on: false, cls: "t-attack" };
     s[1] = { id: "dodge", label: "閃避", sub: "", on: false, cls: "t-def" };
   } else if (st === "osaekomi" && G.hold && G.hold.phase === "on") {
-    const holding = G.hold.holder === W;
-    s[1] = { id: "dl", label: "◀", sub: holding ? "壓左" : "左翻", on: true };
-    s[2] = { id: "du", label: "▲", sub: holding ? "壓上" : "撐橋", on: true };
-    s[0] = { id: "dr", label: "▶", sub: holding ? "壓右" : "右翻", on: true };
+    // 寢技改用下方三個方向鍵
   }
   return s;
 }
@@ -1336,7 +1337,6 @@ function updateHUD(dt) {
     $("kz").style.top = Math.round(bb.bottom + 8) + "px";
     const pos = (k) => 50 + clamp(k, -1.6, 1.6) / 1.6 * 50;
     $("kzDot").style.left = pos(B.lean) + "%";
-    $("kzMe").style.left = pos(W.lean) + "%";
     $("kzBack").style.width = (50 - (0.25 / 1.6) * 50) + "%";
     $("kzFwd").style.width = (50 - (0.45 / 1.6) * 50) + "%";
   }
@@ -1355,14 +1355,25 @@ function updateHUD(dt) {
   const h = G.hold;
   const showNw = G.state === "osaekomi" && h && h.phase === "on";
   $("nw").hidden = !showNw;
+  if (G.state !== "title" && !G.end) {
+    $("pad").hidden = !showNw;
+    $("joy").hidden = showNw;
+    $("skills").hidden = showNw;
+  }
   if (showNw) {
     $("nw").style.top = Math.round($("board").getBoundingClientRect().bottom + 8) + "px";
-    $("nwTitle").innerHTML = h.holder === W ? "袈裟固・壓制中<small>照箭頭方向壓住</small>" : "被壓制！<small>照箭頭方向逃脫</small>";
-    $("nwTime").textContent = h.t.toFixed(1);
+    $("nwTitle").textContent = h.holder === W ? "袈裟固・按亮起的方向壓住" : "被壓制・按亮起的方向逃脫";
+    $("nwTime").textContent = h.t.toFixed(1) + " 秒";
     $("nwTimeBar").style.width = clamp(h.t / 20, 0, 1) * 100 + "%";
     $("nwEsc").style.width = clamp(h.esc, 0, 100) + "%";
     const p = h.prompt;
-    $("nwWin").style.width = p && !p.done ? (1 - p.t / p.win) * 100 + "%" : "0%";
+    padBtns.forEach((b) => {
+      const d = b.dataset.dir, live = p && !p.done && p.dir === d;
+      const fb = h.fbk && h.fbk.dir === d ? (h.fbk.ok ? " hit" : " miss") : "";
+      const cls = (live ? "hot" : "") + fb;
+      if (b.className !== cls) b.className = cls;
+      b.querySelector("i").style.width = live ? (1 - p.t / p.win) * 100 + "%" : "0%";
+    });
   }
   if (inMatch && G.state !== "end") renderSlots();
   if (inMatch) {
