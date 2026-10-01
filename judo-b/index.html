@@ -221,9 +221,35 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
 #pause .sheet { justify-self: center; margin: 0; text-align: center; justify-items: center; }
 #pause .big { font: 900 48px/1 var(--f-display); letter-spacing: .2em; }
 #hud, #movebar, #touch, #labels, #hudBtns { transition: opacity .3s; }
-.hide-ui #hud, .hide-ui #movebar, .hide-ui #touch, .hide-ui #hudBtns, .hide-ui #hint, .hide-ui #trainTip { opacity: 0; pointer-events: none !important; }
+.hide-ui #coach, .hide-ui #hud, .hide-ui #movebar, .hide-ui #touch, .hide-ui #hudBtns, .hide-ui #hint, .hide-ui #trainTip { opacity: 0; pointer-events: none !important; }
 .hide-ui #touch * { pointer-events: none !important; }
 .cine #movebar, .cine #touch, .cine #hint { opacity: 0; }
+#coach { position: absolute; left: 16px; top: calc(env(safe-area-inset-top, 0px) + 112px); width: min(360px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; font-size: 13.5px; line-height: 1.7; transition: opacity .25s; max-height: calc(100vh - 220px); overflow-y: auto; touch-action: pan-y; }
+.c-head { display: flex; align-items: baseline; gap: 10px; cursor: pointer; }
+.c-step { font: 700 11px/1 var(--f-num); letter-spacing: .18em; color: var(--gold); white-space: nowrap; }
+.c-title { font: 900 18px/1.3 var(--f-display); letter-spacing: .04em; }
+.c-tog { margin-left: auto; font-size: 12px; color: var(--muted); }
+.c-body { color: #d5dbe5; }
+.c-body p { margin: 0; }
+.c-body p + p { margin-top: 6px; }
+.c-body b { color: var(--gold-hi); }
+.c-body kbd { font: 700 11px/1 var(--f-num); padding: 2px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; background: rgba(255,255,255,.06); }
+#coach.collapsed .c-body { display: none; }
+.c-goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.c-goals li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: start; padding: 7px 9px; border-radius: 3px; background: rgba(255,255,255,.04); color: var(--muted); font-size: 13px; line-height: 1.5; }
+.c-goals li::before { content: ""; width: 14px; height: 14px; margin-top: 3px; border-radius: 50%; border: 2px solid var(--line); }
+.c-goals li.cur { color: var(--fg); background: rgba(232,181,58,.12); box-shadow: inset 0 0 0 1px rgba(232,181,58,.45); }
+.c-goals li.cur::before { border-color: var(--gold); }
+.c-goals li.done { color: #9fe3c8; }
+.c-goals li.done::before { background: var(--st); border-color: var(--st); }
+.c-goals li em { font: 600 11.5px/1.5 var(--f-num); font-style: normal; color: var(--gold-hi); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.c-foot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.c-foot button { padding: 8px 12px; border-radius: 4px; border: 1px solid var(--line); background: rgba(255,255,255,.05); font: 700 12.5px/1 var(--f-body); cursor: pointer; }
+.c-foot button.go { margin-left: auto; background: var(--gold); border-color: var(--gold); color: #10141c; animation: pulse 1.2s ease-in-out infinite; }
+.c-foot button:disabled { opacity: .35; cursor: default; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(232,181,58,.25); } }
+#coach.clear { border-left-color: var(--st); }
+.cine #coach { opacity: 0; pointer-events: none; }
 #loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); font: 700 14px/1.6 var(--f-body); color: var(--muted); text-align: center; padding: 16px; }
 
 @media (max-width: 760px) {
@@ -255,6 +281,9 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
   .sheet { margin-left: 0; justify-self: center; }
   .opt { grid-template-columns: 1fr; gap: 6px; }
   #hint { bottom: calc(env(safe-area-inset-bottom, 0px) + 240px); font-size: 11.5px; }
+  #coach { left: 10px; right: 10px; width: auto; top: calc(env(safe-area-inset-top, 0px) + 136px); padding: 10px 12px; font-size: 12.5px; line-height: 1.6; max-height: 34vh; gap: 7px; }
+  .c-title { font-size: 15px; }
+  .c-goals li { font-size: 12px; padding: 5px 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   #speed { animation: none; }
@@ -291,6 +320,12 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
   </div>
   <div id="hudBtns"><button id="btnPause" aria-label="暫停">II</button><button id="btnMute" aria-label="靜音">♪</button></div>
   <div id="trainTip" hidden></div>
+  <div id="coach" hidden>
+    <div class="c-head" id="cHead"><span class="c-step" id="cStep"></span><span class="c-title" id="cTitle"></span><span class="c-tog" id="cTog">收合</span></div>
+    <div class="c-body" id="cBody"></div>
+    <ul class="c-goals" id="cGoals"></ul>
+    <div class="c-foot"><button id="cPrev">上一課</button><button id="cRetry">重來</button><button id="cNext">跳過這課</button></div>
+  </div>
   <div id="hint">推著對手走 → <b>大外割 / 捨身小內割</b>　拉著對手走 → <b>單臂過肩摔</b></div>
 
   <div id="banner"><div class="slash"></div><div class="kanji"></div><div class="roma"></div></div>
@@ -324,9 +359,9 @@ h1 .e { font: 700 clamp(18px, 3vw, 24px)/1.2 var(--f-body); letter-spacing: .12e
     <div class="sheet">
       <div class="eyebrow">3D JUDO FIGHTING · 柔道格鬥</div>
       <h1><span class="k">一本</span><span class="e">IPPON 柔道對決</span></h1>
-      <p class="lede">先抓把，再用推拉製造崩勢，看準時機出手。體力不夠就不能出招，招式用得越多，體力回得越慢。</p>
+      <p class="lede">先抓把，再用推拉製造崩勢，看準時機出手。體力不夠就不能出招，招式用得越多，體力回得越慢。第一次玩，建議先選「教學模式」。</p>
       <div class="opts">
-        <div class="opt"><span>模式</span><div class="seg" data-k="mode"><button data-v="match" class="on">正式比賽</button><button data-v="train">練習模式</button></div></div>
+        <div class="opt"><span>模式</span><div class="seg" data-k="mode"><button data-v="tutor">教學模式<small>新手推薦</small></button><button data-v="match" class="on">正式比賽</button><button data-v="train">練習模式</button></div></div>
         <div class="opt"><span>對手段位</span><div class="seg" data-k="lv"><button data-v="1">初段<small>入門</small></button><button data-v="2" class="on">三段<small>標準</small></button><button data-v="3">國手<small>困難</small></button></div></div>
         <div class="opt"><span>比賽時間</span><div class="seg" data-k="time"><button data-v="90">1:30</button><button data-v="120" class="on">2:00</button><button data-v="240">4:00<small>IJF</small></button></div></div>
       </div>
@@ -1033,7 +1068,7 @@ function tryAction(f, act, silent) {
     if (f.moveIn.lengthSq() > 0.09) f.dodgeDir = f.moveIn.clone().normalize();
     else f.dodgeDir = ax.clone().multiplyScalar(-1).addScaledVector(new V3(-ax.z, 0, ax.x), rand(-0.5, 0.5)).normalize();
     if (f.dodgeDir.dot(ax) > 0.3) f.dodgeDir.addScaledVector(ax, -f.dodgeDir.dot(ax) * 1.2).normalize();
-    if (f.grip || o.grip) { f.grip = false; o.grip = false; popup(f, '切手', 'small'); }
+    if (f.grip || o.grip) { tutEvent('cut', f); f.grip = false; o.grip = false; popup(f, '切手', 'small'); }
     sfx.dodge();
     return true;
   }
@@ -1091,6 +1126,7 @@ function resolveGrab(f) {
     if (o.state === 'idle' || o.state === 'guard') { o.state = 'flinch'; o.t = 0; o.dur = 0.2; }
     o.body.getWorldPosition(_v); _v.y += 0.35; sparks.emit(_v, 14, { color: 0xffe9b0, speed: 1.6, up: 1.2, life: [0.15, 0.35] });
     sfx.grip(); popup(o, '-4', 'small', 1.9);
+    tutEvent('grab', f);
     return true;
   }
   return false;
@@ -1109,13 +1145,14 @@ function commitThrow(f) {
     o.counterT = key === 'kouchi' ? 2.0 : 1.3; o.stats.pdodge++;
     popup(o, '閃避成功！返し技機會', 'counter'); flash('#7fb8ff', 0.3); sfx.counter();
     targetTS = 0.35; later(0.35, () => { if (phase === 'fight') targetTS = 1; });
-    whiff(f, key); return;
+    whiff(f, key); tutEvent('pdodge', o); return;
   }
   if (distF(f, o) > 1.5 || o.state === 'fallen' || isThrowState(o)) { popup(f, '落空', 'warn'); whiff(f, key); return; }
   if (o.state === 'guard' && mv.blockable) {
     f.state = 'stagger'; f.t = 0; f.dur = 0.75; f.grip = false; f.stDir = 'back';
     f.st = Math.max(0, f.st - 10); o.st = Math.max(0, o.st - 5); o.counterT = 0.9; o.stats.blocks++;
     popup(o, '防守成功', 'block'); sfx.block(); addShake(0.12);
+    tutEvent('block', o); tutEvent('blocked', f);
     return;
   }
   const { q, tags } = throwQuality(f, o, key);
@@ -1190,7 +1227,7 @@ function onImpact() {
   let label = 'none', dmg = mv.dmg;
   if (q >= 1.0) { label = 'ippon'; dmg = def.hp; }
   else if (q >= 0.7) { label = 'waza'; dmg = Math.round(mv.dmg * 1.5); att.waza++; }
-  if (CFG.mode === 'train' && label === 'waza') att.waza = Math.min(att.waza, 1);
+  if (CFG.mode !== 'match' && label === 'waza') att.waza = Math.min(att.waza, 1);
   def.hp = Math.max(0, def.hp - dmg); def.chipDelay = 0.6; def.st = Math.max(0, def.st - 12); att.stats.dmg += dmg;
   if (CFG.mode === 'match') {
     if (label === 'ippon') { T.win = att; T.reason = '一本'; }
@@ -1215,7 +1252,8 @@ function onImpact() {
   else if (label === 'awase') { call('合技一本', 'WAZA-ARI AWASETE IPPON', 'ippon', 2.4, T.tags); REF.pose = 'ref_ippon'; REF.poseT = 2.5; }
   else if (label === 'waza') { call('技有', 'WAZA-ARI', 'waza', 1.6, T.tags); REF.pose = 'ref_waza'; REF.poseT = 1.6; }
   else if (T.tags.length) call('', '', 'waza', 1.2, T.tags);
-  if (CFG.mode === 'train' && def.hp <= 0) def.hp = 0;
+  if (CFG.mode !== 'match' && def.hp <= 0) def.hp = 0;
+  tutEvent('land', att, { key, tags: T.tags, label, q });
 }
 function endThrow() {
   const T = TD; TD = null; targetTS = 1;
@@ -1237,7 +1275,7 @@ function matte(main = '待て', sub = 'MATTE', cls = 'matte') {
   if (cls === 'matte') { REF.pose = 'ref_matte'; REF.poseT = 1.0; }
   for (const f of F) { f.grip = false; f.moveIn.set(0, 0, 0); f.guardHeld = false; }
   later(0.95, () => $('#wipe').classList.add('on'));
-  later(1.3, () => { resetPositions(); if (CFG.mode === 'train') for (const f of F) if (f.hp <= 0) { f.hp = 100; f.hpChip = 100; } });
+  later(1.3, () => { resetPositions(); if (CFG.mode !== 'match') for (const f of F) if (f.hp <= 0) { f.hp = 100; f.hpChip = 100; } });
   later(1.45, () => $('#wipe').classList.remove('on'));
   later(1.7, () => { call('始め', golden ? 'HAJIME · GOLDEN SCORE' : 'HAJIME', 'hajime', 0.9); REF.pose = 'ref_hajime'; REF.poseT = 0.6; sfx.bell(); });
   later(2.0, () => { if (phase === 'matte') phase = 'fight'; });
@@ -1333,10 +1371,10 @@ function updateFighter(f, dt) {
       if (f.res && f.t >= 0.2 + (f.res === 'hit' ? 0.15 : 0.4)) toIdle(f);
       break;
     case 'startup': {
-      const mv = MOVES[f.move];
-      f.glow = clamp(f.t / mv.startup, 0, 1);
+      const mv = MOVES[f.move], su = mv.startup * (f.suMul || 1);
+      f.glow = clamp(f.t / su, 0, 1);
       if (f.grip && distF(f, o) > 0.85) f.pos.addScaledVector(AX, 0.8 * dt);
-      if (f.t >= mv.startup) commitThrow(f);
+      if (f.t >= su) commitThrow(f);
       break;
     }
     case 'dodge': {
@@ -1531,6 +1569,7 @@ addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (e.code === 'Escape' || e.code === 'KeyP') { togglePause(); e.preventDefault(); return; }
   if (e.code === 'KeyM') { toggleMute(); return; }
+  if (e.code === 'Enter' && TUT.on && TUT.done && !paused) { e.preventDefault(); tutNext(); return; }
   if (KEYMAP[e.code]) { e.preventDefault(); if (!paused) queueAction(F[0], KEYMAP[e.code]); }
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
 });
@@ -1684,7 +1723,7 @@ function updateHUD() {
     if (L.waza !== f.waza) { h.waza.innerHTML = `<span class="pip ${f.waza >= 1 ? 'on' : ''}">W</span><span class="pip ${f.waza >= 2 ? 'on' : ''}">W</span>`; L.waza = f.waza; }
     if (L.shido !== f.shido) { h.shido.innerHTML = Array.from({ length: f.shido }, (_, k) => `<i class="card ${k >= 2 ? 'red' : ''}"></i>`).join(''); L.shido = f.shido; }
   });
-  if (CFG.mode === 'train') { timerEl.textContent = '∞'; clockLbl.textContent = '練習模式'; timerEl.className = ''; }
+  if (CFG.mode !== 'match') { timerEl.textContent = '∞'; clockLbl.textContent = CFG.mode === 'tutor' ? '教學模式' : '練習模式'; timerEl.className = ''; }
   else if (golden) { timerEl.textContent = fmtTime(timeLeft); clockLbl.textContent = 'GOLDEN SCORE'; timerEl.className = 'gs'; }
   else { timerEl.textContent = fmtTime(Math.ceil(timeLeft)); clockLbl.textContent = '比賽時間'; timerEl.className = timeLeft < 15 ? 'low' : ''; }
   // move availability for player
@@ -1727,20 +1766,215 @@ const TIPS = [
 ];
 
 /* =========================================================
+   Tutorial: ten lessons, each with goals checked from game events
+   ========================================================= */
+const isP = (f) => f === F[0];
+const LESSONS = [
+  { title: '站姿與移動', cpu: 'idle',
+    body: `<p>比賽在 8×8 公尺的<b>比賽區</b>（黃色）進行，外圍藍色是安全區。開賽前雙方站上開始線互相行禮（禮），主審喊「始め」才開始。</p>
+<p>用 <kbd>A</kbd> <kbd>D</kbd>（方向鍵或左搖桿）靠近、後退。畫面會一直從側面看兩人，所以「右」永遠是畫面右邊。</p>`,
+    goals: [
+      { text: '走到對手面前（距離 1.2 公尺內）', poll: () => distF(F[0], F[1]) < 1.2 },
+      { text: '再退開（距離 2.5 公尺以上）', poll: () => distF(F[0], F[1]) > 2.5 },
+    ] },
+  { title: '側移繞圈', cpu: 'idle',
+    body: `<p>用 <kbd>W</kbd> <kbd>S</kbd> 繞著對手側移。實戰中側移能改變角度、避開對手的正面力量，也是找出手時機的方法。</p>
+<p>後退比前進稍慢；被抓住或體力低於 20 時，移動也會變慢。</p>`,
+    goals: [{ text: '繞著對手側移', need: 3, unit: '公尺', id: 'circle' }] },
+  { title: '抓把（組手）', cpu: 'idle',
+    body: `<p>柔道從組手開始：右手抓衣領、左手抓袖子。距離 1.2 公尺內按 <kbd>J</kbd> <b>抓把</b>，對手會被扯一下，受到少量傷害。</p>
+<p><b>沒抓把就不能出投技。</b>抓到後名字旁的「組」會亮起。被抓住的一方體力回復慢 40%，所以要學會<b>切手</b>：按 <kbd>Space</kbd> 閃避，就能甩開雙方的手。</p>`,
+    goals: [
+      { text: '按 J 抓把成功', ev: (t, f) => t === 'grab' && isP(f) },
+      { text: '按 Space 閃避，把手切開', ev: (t, f) => t === 'cut' && isP(f) },
+      { text: '再抓一次', ev: (t, f) => t === 'grab' && isP(f) },
+    ] },
+  { title: '體力與疲勞', cpu: 'idle',
+    body: `<p>血條下方的綠色是<b>體力條</b>。每個動作都要花體力，不夠就不能出招，體力條會閃紅。</p>
+<p>每出一招也會累積<b>疲勞</b>：紫色條是體力回復速度，招式用得越多回得越慢，而且疲勞消退得很慢。高手比的不只是技術，還有體力分配。</p>`,
+    goals: [
+      { text: '把體力用到 50 以下（快速連按 Space 閃避）', poll: () => F[0].st <= 50 },
+      { text: '停手，等體力回到 90 以上，同時看紫色條變短了多少', poll: () => F[0].st >= 90 },
+    ] },
+  { title: '崩し：推 → 大外割', cpu: 'idle',
+    body: `<p><b>崩し</b>就是破壞對手的平衡。抓把後<b>按住朝對手的方向往前推</b>，對手被推著後退、重心落到腳跟，這叫「後崩」，對手頭上會亮起提示。</p>
+<p>這時按 <kbd>K</kbd> <b>大外割</b>：左腳踏到對手右側，右腳從後方掃倒他的右腳。</p>`,
+    goals: [
+      { text: '抓把', ev: (t, f) => t === 'grab' && isP(f) },
+      { text: '一邊往前推，一邊用大外割投成（要有「後崩」）', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'osoto' && d.tags.includes('後崩'), fail: (t, f, d) => t === 'land' && isP(f) && d.key === 'osoto' ? '投成了，但沒有「後崩」：出手前要先按住往前推' : null },
+    ] },
+  { title: '拉 → 單臂過肩摔', cpu: 'idle',
+    body: `<p>反過來，抓把後<b>按住遠離對手的方向往後拉</b>，對手會被拉得往前撲，這叫「前崩」。</p>
+<p>按 <kbd>L</kbd> <b>單臂過肩摔</b>：轉身背對、右臂夾住對手右臂，把他從肩上摔過去。傷害最高，但前搖最長、最花體力（30）。</p>`,
+    goals: [
+      { text: '抓把', ev: (t, f) => t === 'grab' && isP(f) },
+      { text: '一邊往後拉，一邊用單臂過肩摔投成（要有「前崩」）', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'seoi' && d.tags.includes('前崩'), fail: (t, f, d) => t === 'land' && isP(f) && d.key === 'seoi' ? '投成了，但沒有「前崩」：出手前要先按住往後拉' : null },
+    ] },
+  { title: '破防：捨身小內割', cpu: 'guard',
+    body: `<p>對手正在<b>沉腰防守</b>。這種姿勢擋得住大外割和過肩摔，被擋的一方會失衡。</p>
+<p>但防守時兩腳張得很開，正好讓你從內側掃腳。按 <kbd>I</kbd> <b>捨身小內割</b>：右腳勾掃對手右腳，用全身重量壓上去。它出招最快，但被閃掉時你會自己倒地。</p>`,
+    goals: [
+      { text: '先抓把，用大外割或過肩摔試一次，感受被擋下', ev: (t, f) => t === 'blocked' && isP(f) },
+      { text: '用捨身小內割破防投成', ev: (t, f, d) => t === 'land' && isP(f) && d.key === 'kouchi' },
+    ] },
+  { title: '閃避與返し技', cpu: 'attack',
+    body: `<p>現在對手會主動抓把、出招。他出招前身上會發光、頭上出現「!」，這段叫<b>前搖</b>（教學中特別放慢）。</p>
+<p>前搖時按 <kbd>Space</kbd> 閃避，就能躲開，並取得<b>返し技</b>（反擊）機會：接下來 1.3 秒內<b>不用抓把</b>就能直接投，得分條件也大幅提高。對手出招落空會往前失衡，這時用過肩摔反擊最有效。</p>`,
+    goals: [
+      { text: '在對手前搖時閃避成功', ev: (t, f) => t === 'pdodge' && isP(f) },
+      { text: '閃避後馬上用任一投技反擊投成', ev: (t, f, d) => t === 'land' && isP(f) && d.tags.includes('返し技'), fail: (t, f, d) => t === 'land' && isP(f) ? '投成了，但超過反擊時間：閃避後要立刻出手' : null },
+    ] },
+  { title: '防守', cpu: 'attack',
+    body: `<p>另一種應對是防守：看到對手大外割或過肩摔的前搖時，<b>按住 <kbd>Shift</kbd></b> 沉腰。擋下後對手會失衡，你也有短暫的反擊機會。</p>
+<p>注意：防守每秒消耗 9 點體力；正式比賽中防守姿勢維持超過 3.5 秒，會被判<b>指導</b>。</p>`,
+    goals: [{ text: '用防守擋下對手的投技', need: 2, unit: '次', ev: (t, f) => t === 'block' && isP(f) }] },
+  { title: '計分與規則', cpu: 'idle',
+    body: `<p>一般投技只造成傷害。條件越好，得分越高：<b>正確崩勢</b>、<b>返し技或對手失衡</b>、<b>對手體力低於 25</b>、<b>抓把抓穩超過 1.5 秒</b>都會加分。</p>
+<p>夠好就是<b>技有</b>（傷害 ×1.5），兩次技有＝<b>合技一本</b>獲勝；完美的投技直接<b>一本</b>，血量歸零也算一本。25 秒不出投技、防守太久會被判指導，三次指導就<b>反則負</b>。時間到先比技有，再比血量，平手進入<b>黃金得分</b>。</p>`,
+    goals: [{ text: '抓穩超過 1.5 秒，再配合正確崩勢，投出一個「技有」', ev: (t, f, d) => t === 'land' && isP(f) && (d.label === 'waza' || d.label === 'ippon'), fail: (t, f, d) => t === 'land' && isP(f) ? '只差一點：抓把後多等一下（超過 1.5 秒），並做出對應的崩勢' : null }] },
+];
+const TUT = { on: false, i: 0, g: 0, n: 0, done: false, circle: 0, prev: new V3() };
+const coachEl = $('#coach');
+class TutorAI {
+  constructor(f) { this.f = f; this.behavior = 'idle'; this.grabCD = 1.2; this.holdT = 0; this.alt = 0; }
+  update(dt) {
+    const f = this.f, o = opp(f);
+    f.st = 100; f.fatigue = 0; f.passive = 0;
+    f.moveIn.set(0, 0, 0);
+    f.guardHeld = this.behavior === 'guard';
+    if (this.behavior !== 'attack' || !f.canAct()) return;
+    const ax = axisTo(f, o, new V3()), d = distF(f, o);
+    if (!f.grip) {
+      this.holdT = 0;
+      if (d > 1.05) f.moveIn.copy(ax);
+      this.grabCD -= dt;
+      if (d < 1.2 && this.grabCD <= 0 && o.canAct()) { tryAction(f, 'grab'); this.grabCD = 1.4; }
+    } else {
+      this.holdT += dt;
+      if (this.holdT > 1.3) { tryAction(f, (this.alt++ % 2) ? 'seoi' : 'osoto'); this.holdT = 0; }
+    }
+  }
+}
+function tutGoal() { return LESSONS[TUT.i].goals[TUT.g]; }
+function tutRender() {
+  const L = LESSONS[TUT.i];
+  $('#cStep').textContent = `第 ${TUT.i + 1} 課 / ${LESSONS.length}`;
+  $('#cTitle').textContent = L.title;
+  $('#cBody').innerHTML = L.body;
+  coachEl.classList.toggle('clear', TUT.done);
+  $('#cGoals').innerHTML = L.goals.map((g, k) => {
+    const cls = k < TUT.g || TUT.done ? 'done' : k === TUT.g ? 'cur' : '';
+    let prog = '';
+    if (g.need > 1) { const v = k < TUT.g || TUT.done ? g.need : k === TUT.g ? TUT.n : 0; prog = `<em>${g.unit === '公尺' ? v.toFixed(1) : Math.floor(v)} / ${g.need} ${g.unit}</em>`; }
+    return `<li class="${cls}"><span>${g.text}</span>${prog}</li>`;
+  }).join('') + (TUT.done ? `<li class="done"><span>完成！${TUT.i < LESSONS.length - 1 ? '按 Enter 或「下一課」繼續' : ''}</span></li>` : '');
+  $('#cPrev').disabled = TUT.i === 0;
+  const nx = $('#cNext');
+  nx.textContent = TUT.done ? (TUT.i < LESSONS.length - 1 ? '下一課 ▶' : '結業 ▶') : '跳過這課';
+  nx.classList.toggle('go', TUT.done);
+}
+function tutAdvanceGoal() {
+  TUT.g++; TUT.n = 0; TUT.circle = 0;
+  if (TUT.g >= LESSONS[TUT.i].goals.length) {
+    TUT.done = true; sfx.counter();
+    popup(F[0], '完成！', 'counter', 2.3);
+  } else sfx.grip();
+  tutRender();
+}
+function tutEvent(type, f, d) {
+  if (!TUT.on || TUT.done) return;
+  const g = tutGoal();
+  if (g.ev && g.ev(type, f, d)) {
+    TUT.n++;
+    if (TUT.n >= (g.need || 1)) tutAdvanceGoal(); else tutRender();
+  } else if (g.fail) {
+    const msg = g.fail(type, f, d);
+    if (msg) later(1.2, () => popup(F[0], msg, 'warn', 2.4));
+  }
+}
+function tutUpdate(dt) {
+  if (!TUT.on) return;
+  const p = F[0];
+  if (!TUT.done && phase === 'fight') {
+    const g = tutGoal();
+    if (g.poll && g.poll()) tutAdvanceGoal();
+    else if (g.id === 'circle') {
+      const ax = axisTo(p, F[1], new V3());
+      const dx = p.pos.x - TUT.prev.x, dz = p.pos.z - TUT.prev.z;
+      const side = Math.abs(dx * -ax.z + dz * ax.x);
+      if (side > 0 && side < 0.5) {
+        TUT.n += side;
+        if (TUT.n >= g.need) tutAdvanceGoal();
+        else if (Math.floor(TUT.n * 10) !== Math.floor((TUT.n - side) * 10)) tutRender();
+      }
+    }
+  }
+  TUT.prev.copy(p.pos);
+}
+function tutGo(i) {
+  TUT.i = clamp(i, 0, LESSONS.length - 1); TUT.g = 0; TUT.n = 0; TUT.done = false;
+  const L = LESSONS[TUT.i];
+  ai.behavior = L.cpu; ai.grabCD = 1.6; ai.holdT = 0;
+  coachEl.classList.remove('collapsed'); $('#cTog').textContent = '收合';
+  tutRender();
+  laterQ = []; TD = null; targetTS = 1;
+  document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
+  phase = 'matte';
+  $('#wipe').classList.add('on');
+  later(0.3, () => {
+    resetPositions();
+    for (const f of F) { f.hp = 100; f.hpChip = 100; f.st = 100; f.fatigue = 0; }
+    TUT.prev.copy(F[0].pos);
+  });
+  later(0.45, () => $('#wipe').classList.remove('on'));
+  later(0.6, () => { call('第 ' + (TUT.i + 1) + ' 課', L.title, 'hajime', 1.3); sfx.bell(); });
+  later(0.9, () => { if (phase === 'matte') phase = 'fight'; });
+}
+function tutNext() {
+  if (TUT.i < LESSONS.length - 1) tutGo(TUT.i + 1);
+  else tutFinish();
+}
+function tutFinish() {
+  TUT.on = false; phase = 'over'; laterQ = [];
+  coachEl.hidden = true; setUI(false);
+  $('#resEyebrow').textContent = '教學完成 · 結業';
+  $('#resBig').textContent = '結業';
+  $('#resBig').className = 'big win';
+  $('#resWhy').textContent = '你已經學會抓把、崩勢、三種投技、閃避反擊、防守與計分規則';
+  $('#resStats').innerHTML = [['學到的技巧', ''], ['推 → 大外割、捨身小內割', '後崩'], ['拉 → 單臂過肩摔', '前崩'], ['前搖時閃避 → 返し技', '反擊'], ['防守擋大外割與過肩摔', '小內割可破防'], ['抓穩 1.5 秒＋崩勢', '技有']]
+    .map((r, i) => `<div class="${i === 0 ? 'h' : ''}">${r[0]}</div><div class="${i === 0 ? 'h' : ''} v"></div><div class="${i === 0 ? 'h' : ''} v">${r[1]}</div>`).join('');
+  $('#again').textContent = '開始正式比賽（三段）';
+  $('#result').hidden = false;
+  TUT.finished = true;
+}
+$('#cPrev').addEventListener('click', () => { if (TUT.i > 0) tutGo(TUT.i - 1); });
+$('#cRetry').addEventListener('click', () => tutGo(TUT.i));
+$('#cNext').addEventListener('click', () => tutNext());
+$('#cHead').addEventListener('click', () => { const c = coachEl.classList.toggle('collapsed'); $('#cTog').textContent = c ? '展開說明' : '收合'; });
+
+/* =========================================================
    Flow: menu, match, pause, result
    ========================================================= */
 document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
   const k = seg.dataset.k; CFG[k] = k === 'mode' ? b.dataset.v : +b.dataset.v;
-  $('#start').textContent = CFG.mode === 'train' ? '開始練習' : '開始比賽';
+  $('#start').textContent = CFG.mode === 'train' ? '開始練習' : CFG.mode === 'tutor' ? '開始教學' : '開始比賽';
 }));
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
   ['t1', 't2', 't3'].forEach(id => { $('#' + id).hidden = id !== b.dataset.tab; });
 }));
 $('#start').addEventListener('click', () => { initAudio(); startMatch(); });
-$('#again').addEventListener('click', () => { initAudio(); startMatch(); });
+$('#again').addEventListener('click', () => {
+  initAudio();
+  if (TUT.finished) { TUT.finished = false; CFG.mode = 'match'; CFG.lv = 2; syncSeg(); }
+  startMatch();
+});
+function syncSeg() {
+  document.querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', String(CFG[seg.dataset.k]) === b.dataset.v)));
+  $('#start').textContent = CFG.mode === 'train' ? '開始練習' : CFG.mode === 'tutor' ? '開始教學' : '開始比賽';
+}
 $('#toMenu').addEventListener('click', toMenu);
 $('#resume').addEventListener('click', togglePause);
 $('#restart').addEventListener('click', () => { togglePause(); startMatch(); });
@@ -1756,6 +1990,7 @@ function togglePause() {
 function setUI(visible) { document.body.classList.toggle('hide-ui', !visible); }
 function toMenu() {
   $('#result').hidden = true; $('#menu').hidden = false; phase = 'title'; TD = null; laterQ = []; targetTS = 1;
+  TUT.on = false; TUT.finished = false; coachEl.hidden = true;
   document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
   setUI(false); resetPositions(); for (const f of F) f.reset(true); camS.snap = false;
 }
@@ -1765,8 +2000,12 @@ function startMatch() {
   laterQ = []; TD = null; golden = false; timeLeft = CFG.time; targetTS = 1; timeScale = 1;
   for (const f of F) f.reset(true);
   resetPositions();
-  ai = new AI(F[1], CFG.lv, CFG.mode === 'train');
-  $('#cpuName').textContent = (CFG.mode === 'train' ? '練習對手 ' : 'CPU ') + AI_LV[CFG.lv].name;
+  $('#resEyebrow').textContent = '比賽結束 · それまで'; $('#again').textContent = '再戰一場'; TUT.finished = false;
+  const tutor = CFG.mode === 'tutor';
+  ai = tutor ? new TutorAI(F[1]) : new AI(F[1], CFG.lv, CFG.mode === 'train');
+  F[1].suMul = tutor ? 2.0 : 1;
+  TUT.on = tutor; coachEl.hidden = !tutor;
+  $('#cpuName').textContent = tutor ? '教練陪練' : (CFG.mode === 'train' ? '練習對手 ' : 'CPU ') + AI_LV[CFG.lv].name;
   $('#trainTip').hidden = CFG.mode !== 'train'; tipIdx = 0; tipT = 0;
   if (CFG.mode === 'train') $('#trainTip').innerHTML = TIPS[0];
   document.body.classList.remove('cine'); $('#letterbox').classList.remove('on');
@@ -1776,6 +2015,7 @@ function startMatch() {
   later(0.25, () => call('禮', 'REI', 'rei', 1.0));
   later(1.5, () => { call('始め', 'HAJIME', 'hajime', 0.9); REF.pose = 'ref_hajime'; REF.poseT = 0.6; sfx.bell(); });
   later(1.8, () => { if (phase === 'intro') phase = 'fight'; });
+  if (tutor) { laterQ = []; for (const f of F) toIdle(f); tutGo(0); }
 }
 function showResult(winner, reason) {
   const youWin = winner === F[0];
@@ -1840,6 +2080,7 @@ function frame(now) {
   if (CFG.mode === 'train' && phase === 'fight') {
     tipT += dtR; if (tipT > 7) { tipT = 0; tipIdx = (tipIdx + 1) % TIPS.length; $('#trainTip').innerHTML = TIPS[tipIdx]; }
   }
+  tutUpdate(dt);
   dust.update(dt); sparks.update(dt); updateRings(dt); updateGhosts(dtR); updateCrowd(dtR);
   updateCamera(dtR);
   REF.root.visible = camera.position.distanceTo(_v.set(REF.pos.x, 1, REF.pos.z)) > 1.3;
@@ -1849,7 +2090,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // debug / test hook
-window.__judo = { set frozen(v) { frozen = v; }, set auto(lv) { ai0 = lv ? new AI(F[0], lv, false) : null; }, scrub(t) { if (!TD) return; TD.t = t; updateThrow(0); camS.snap = true; updateCamera(0.016); updateRings(0); renderer.render(scene, camera); }, F, CFG, get phase() { return phase; }, get TD() { return TD; }, startMatch, tryAction, queueAction, AI_LV, MOVES, get timeScale() { return timeScale; } };
+window.__judo = { TUT, tutGo, set frozen(v) { frozen = v; }, set auto(lv) { ai0 = lv ? new AI(F[0], lv, false) : null; }, scrub(t) { if (!TD) return; TD.t = t; updateThrow(0); camS.snap = true; updateCamera(0.016); updateRings(0); renderer.render(scene, camera); }, F, CFG, get phase() { return phase; }, get TD() { return TD; }, startMatch, tryAction, queueAction, AI_LV, MOVES, get timeScale() { return timeScale; } };
 })();
 </script>
 </body>
