@@ -538,14 +538,6 @@ const EV = {
       { t: "交給區隊長處理", e: { mor: 3 }, r: "程序走完，錢在失物招領處找到了。" },
       { t: "跟著大家一起孤立那位同學", e: { soc: 2, mor: -6 }, r: "後來真相大白，那位同學再也沒跟你說過話。" },
     ] },
-  y1g: { when: "一年級・聯誼", where: "台北市區", title: "交換 IG",
-    need: (s) => !s.flags.partner,
-    text: "系上和附近大學辦聯誼。有位對象跟你聊得很投機，散場前問你要不要交換聯絡方式。",
-    ch: [
-      { t: "交換聯絡方式", e: { men: 6, soc: 3 }, set: ["partner"], r: "你們開始趁放假拿回手機的時候聊天。" },
-      { t: "婉拒，現在想專心適應學校", e: { aca: 3 }, r: "回程的車上你有點後悔，但也鬆了口氣。" },
-      { t: "說平常不能用手機，問對方願不願意寫信", e: { men: 5, mor: 2 }, set: ["partner"], r: "對方笑你老派，隔週卻真的寄來一封信。" },
-    ] },
   y1h: { when: "一年級・服儀檢查前夜", where: "學生寢室", title: "頭髮長了一公分",
     text: "明天服儀檢查，你發現頭髮比規定長了一點，皮鞋也還沒擦。",
     ch: [
@@ -829,13 +821,63 @@ const EV = {
         no: { bonus: -2, r: "時間到了，第三題只寫了一半。" } } },
       { t: "腦袋一片空白", e: { men: -5 }, bonus: -6, r: "你盯著題目直到鐘聲響起。" },
     ] },
+  /* 耶誕期末舞會（一到四年級每年十二月）。〔異〕〔她〕依玩家性別換成異性稱呼，〔年〕換成年級 */
+  xm: { when: "〔年〕・十二月", where: "學生活動中心", title: "耶誕期末舞會",
+    text: "期末考前最後一個週末，學校照例舉辦耶誕期末舞會，還邀請了附近大學的〔異〕來參加。報名表發下來，上面有三個選項。",
+    ch: [
+      { t: "報名配對組：抽籤配舞伴", e: { men: 2 }, next: { if: "partner", then: "xmTempt", else: "xmPair" }, r: "你在「配對組」那欄打了勾，交給區隊長。" },
+      { t: "報名攜伴組：自己邀舞伴", e: { men: 1 }, next: { if: "partner", then: "xmPartner", else: "xmBring" }, r: "你在「攜伴組」那欄打了勾，開始想舞伴的事。" },
+      { t: "當舞會蟑螂：專心吃餐點", e: { men: 5, fit: -2, soc: 1 }, r: "你在自助餐台間來回巡邏，炸雞、烤布丁、提拉米蘇各吃了三輪，還幫區隊打包了兩盒。學長封你為「舞池外最忙碌的人」。" },
+    ] },
+  xmPair: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "抽籤配對",
+    text: "主持人宣布配對組最後兩個名額讓你挑。左邊那位是全場目光焦點的〔異〕，打扮精緻、笑起來很好看；右邊那位穿著樸素、戴著眼鏡，有點緊張地一直整理衣角。",
+    ch: [
+      { t: "選全場目光焦點那位", chk: { s: "soc", dc: 60,
+        ok: { e: { men: 7, soc: 4 }, set: ["partner"], r: "你們連跳了三支舞。散場前〔她〕主動拿出手機：「放假要不要出來？」全區隊都在起鬨。" },
+        no: { e: { men: -4, soc: 1 }, r: "〔她〕跳完一支舞就被別系的學長邀走，整晚沒再回來。你默默走回餐台。" } } },
+      { t: "選有點緊張的那位", chk: { s: "soc", dc: 40,
+        ok: { e: { men: 7, soc: 2 }, set: ["partner"], r: "一開始話很少，聊到推理小說卻停不下來。舞會結束時〔她〕小聲問：「放假……可以再約嗎？」" },
+        no: { e: { men: 4, soc: 2 }, r: "你們聊得很開心，最後成了常傳訊息的朋友。" } } },
+      { t: "把機會讓給旁邊緊張到發抖的〔學弟〕", e: { soc: 5, mor: 2, men: -1 }, r: "〔學弟〕後來真的跟那位〔異〕交往了，每次見到你都喊「恩人」。" },
+    ] },
+  xmBring: { when: "〔年〕・耶誕期末舞會", where: "學生寢室", title: "邀誰當舞伴",
+    text: "攜伴組要自己找舞伴。你翻著放假才拿得到的手機通訊錄，腦中閃過幾個名字。",
+    ch: [
+      { t: "鼓起勇氣邀高中時暗戀的人", chk: { s: "soc", dc: 60,
+        ok: { e: { men: 9, soc: 2 }, set: ["partner"], r: "對方回：「我等這句話等了三年。」舞會那晚你們幾乎沒離開舞池。" },
+        no: { e: { men: -6 }, r: "對方說已經有對象了，還祝你玩得開心。舞會那晚你成了餐台旁最安靜的人。" } } },
+      { t: "找青梅竹馬的好朋友幫忙", e: { men: 5, soc: 2 }, r: "你們跳得亂七八糟，笑到被學長側目。純友誼，卻是最開心的一晚。" },
+      { t: "拜託室友介紹朋友", chk: { s: "soc", dc: 50,
+        ok: { e: { men: 5, soc: 4 }, r: "室友的朋友很健談，整晚氣氛都很好，散場還互加了好友。" },
+        no: { e: { men: -2, soc: 1 }, r: "對方整晚都在跟你室友聊天。你成了全場最貴的電燈泡。" } } },
+    ] },
+  xmPartner: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "一支舞的考驗",
+    text: "你帶著交往對象出席，一進場就被全區隊羨慕。舞會進行到一半，對象去洗手間，一位配對組的〔異〕走過來：「可以跟你跳一支嗎？剛剛一直在看你。」",
+    ch: [
+      { t: "笑著婉拒，說在等舞伴", e: { men: 5, mor: 2 }, r: "對象回來時，你拿著兩杯熱可可在等。「剛剛那位是誰？」「不認識，我在等你。」〔她〕笑了，整晚都牽著你的手。" },
+      { t: "只是一支舞，應該沒關係", chk: { s: "men", dc: 55,
+        ok: { e: { men: 2, soc: 2 }, r: "一支舞跳完你就回到座位，對象什麼也沒發現。那位〔異〕臨走前塞了張紙條給你，你看都沒看就丟了。" },
+        no: { e: { men: -10, soc: -2 }, unset: ["partner"], r: "對象提早回來，正好看到你們跳到最後一個轉圈。〔她〕整晚沒再跟你說話，寒假前傳來一句：「我們先冷靜一下。」" } } },
+      { t: "趁對象不在，偷偷交換 IG", danger: "劈腿", e: { men: -12, mor: -4, soc: -3 }, unset: ["partner"], r: "你以為藏得很好。寒假第一天，對象拿著你的手機，螢幕上是你和那位〔異〕的對話紀錄。紙包不住火。" },
+    ] },
+  xmTempt: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "沒說出口的報名表",
+    text: "你沒告訴交往對象，偷偷報了配對組。抽到的〔異〕意外地聊得來，你們正要跳第二支舞，手機震了一下，是對象傳來的：「舞會好玩嗎？有沒有乖乖吃東西？」",
+    ch: [
+      { t: "老實說自己報了配對組", chk: { s: "soc", dc: 55,
+        ok: { e: { men: 3, mor: 2 }, r: "對象沉默了一下，回：「下次先跟我說。只准跳到十點。」你鬆了一口氣。" },
+        no: { e: { men: -8 }, unset: ["partner"], r: "「所以你有我還去配對？」對話停在已讀。寒假開始前，你們分手了。" } } },
+      { t: "回說自己在當舞會蟑螂", danger: "說謊", chk: { s: "men", dc: 65,
+        ok: { e: { men: 2, mor: -4 }, r: "你拍了一張滿桌炸雞的照片傳過去，對象回了個愛心。謊圓過去了，心裡卻有點悶。" },
+        no: { e: { men: -12, mor: -4, soc: -2 }, unset: ["partner"], r: "同學把你們跳舞的照片上傳限動，還標記了你。十分鐘後，對象封鎖了你。" } } },
+      { t: "立刻離場，打電話給對象", e: { men: 4, mor: 3, soc: -2 }, r: "你向舞伴道歉後提早離場。電話那頭的〔她〕說：「其實我只是想你了。」配對組的同學則說你很掃興。" },
+    ] },
   x4: { when: "特考・放榜日", where: "考選部榜單", title: "放榜",
     text: "早上九點，考選部網站上線。你深吸一口氣，輸入准考證號碼。",
     ch: [ { t: "查看榜單", fn: "exam" } ] },
 };
 
 const POOLS = {
-  1: ["y1a", "y1b", "y1c", "y1d", "y1e", "y1f", "y1g", "y1h", "y1i"],
+  1: ["y1a", "y1b", "y1c", "y1d", "y1e", "y1f", "y1h", "y1i"],
   2: ["y2a", "y2b", "y2c", "y2d", "y2e", "y2f", "y2g", "y2h", "y2i"],
   3: ["y3a", "y3b", "y3c", "y3d", "y3e", "y3f", "y3g", "y3h"],
   4: ["y4a", "y4c", "y4d", "y4e", "y4f", "y4g"],
@@ -896,8 +938,8 @@ function beginStage(n) {
   let q;
   const draw = (pool, k) => shuffle(POOLS[pool].filter((id) => !EV[id].need || EV[id].need(S))).slice(0, k);
   if (n === 0) q = ["p1", "p2", "p3", "p4", "p5", "p6"];
-  else if (n >= 1 && n <= 3) q = [["y1s", "y2s", "y3s"][n - 1], ...draw(n, 4), "yend"];
-  else if (n === 4) q = ["y4s", ...(S.flags.bribe ? ["y4b"] : []), ...draw(4, 4), "yend", "grad"];
+  else if (n >= 1 && n <= 3) { const d = draw(n, 4); q = [["y1s", "y2s", "y3s"][n - 1], ...d.slice(0, 2), "xm", ...d.slice(2), "yend"]; }
+  else if (n === 4) { const d = draw(4, 4); q = ["y4s", ...(S.flags.bribe ? ["y4b"] : []), ...d.slice(0, 2), "xm", ...d.slice(2), "yend", "grad"]; }
   else q = ["x1", "x2", "x3", "x4"];
   S.queue = q;
   S.notice = null;
@@ -935,6 +977,8 @@ function choose(i) {
     if (src.unset) src.unset.forEach((f) => delete S.flags[f]);
     if (src.bonus) S.bonus += src.bonus;
     if (src.r) out.r = src.r;
+    // 後續事件：next 可以是事件代號，或 { if: 詞條, then, else } 依有沒有該詞條決定
+    if (src.next) { const n = typeof src.next === "string" ? src.next : S.flags[src.next.if] ? src.next.then : src.next.else; if (EV[n]) S.queue.splice(S.idx + 1, 0, n); }
   };
   if (c.end) { finish(c.end); return; }
   merge(c);
@@ -1191,8 +1235,14 @@ function mainView() {
 }
 
 const MARKS = ["甲", "乙", "丙", "丁", "戊"];
+// 事件文字代換：〔異〕〔她〕依玩家性別換成異性、〔學弟〕換成同性學弟妹；〔年〕換成目前年級
+function T(str) {
+  if (!str || !S) return str || "";
+  const male = S.gender !== "女";
+  return String(str).replace(/〔異〕/g, male ? "女生" : "男生").replace(/〔她〕/g, male ? "她" : "他").replace(/〔學弟〕/g, male ? "學弟" : "學妹").replace(/〔年〕/g, STAGES[S.stage]);
+}
 function docMeta(ev) {
-  return `<div class="doc-meta"><span>${esc(ev.when)}</span><span>${esc(ev.where || "")}</span></div>`;
+  return `<div class="doc-meta"><span>${esc(T(ev.when))}</span><span>${esc(T(ev.where || ""))}</span></div>`;
 }
 function eventView() {
   const ev = currentEvent();
@@ -1200,13 +1250,13 @@ function eventView() {
   return `<article class="doc">
     ${docMeta(ev)}
     ${S.idx === 0 && S.notice ? `<p class="notice">${esc(S.notice)}</p>` : ""}
-    <h2>${esc(ev.title)}</h2>
-    <p class="body">${esc(ev.text)}</p>
+    <h2>${esc(T(ev.title))}</h2>
+    <p class="body">${esc(T(ev.text))}</p>
     <div class="choices">${ev.ch.map((c, i) => {
       let tag = "";
       if (c.chk) tag = `判定・${STAT_NAME[c.chk.s]} ${chance(c.chk.s, c.chk.dc)}%`;
       if (c.danger) tag = c.danger + (c.chk ? `・${STAT_NAME[c.chk.s]} ${chance(c.chk.s, c.chk.dc)}%` : "");
-      return `<button type="button" class="choice ${c.danger ? "danger" : ""}" data-choice="${i}"><span class="mk">${MARKS[i]}</span><span>${esc(c.t)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
+      return `<button type="button" class="choice ${c.danger ? "danger" : ""}" data-choice="${i}"><span class="mk">${MARKS[i]}</span><span>${esc(T(c.t))}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
     }).join("")}</div>
     <div class="doc-tail">${logView(`${STAGES[S.stage]}・第 ${n} / ${total} 件`)}<button type="button" class="link-btn" data-fb-card>回報這張卡</button></div>
   </article>`;
@@ -1221,10 +1271,10 @@ function resultView() {
   const stamp = o.roll ? `<span class="stamp ${o.roll.ok ? "ok" : ""}">${o.roll.ok ? "判定成功" : "判定失敗"}</span>` : "";
   return `<article class="doc">
     ${docMeta(ev)}
-    <h2>${esc(ev.title)}</h2>
-    <div class="result-head"><span class="you-chose">你選擇：${esc(o.label)}</span>${stamp}</div>
+    <h2>${esc(T(ev.title))}</h2>
+    <div class="result-head"><span class="you-chose">你選擇：${esc(T(o.label))}</span>${stamp}</div>
     ${o.report ? `<div class="report">${o.report.map((l) => `<span>${esc(l)}</span>`).join("")}</div>` : ""}
-    <p class="body">${esc(o.r)}</p>
+    <p class="body">${esc(T(o.r))}</p>
     ${chips.length ? `<div class="deltas">${chips.join("")}</div>` : ""}
     <div class="row between"><button class="btn" data-act="next" type="button">繼續</button><button type="button" class="link-btn" data-fb-card>回報這張卡</button></div>
   </article>`;
@@ -1311,8 +1361,8 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 const NEEDS = {};
 for (const id in EV) if (EV[id].need) NEEDS[id] = EV[id].need;
 const BASE = clone(EV);
-const NEED_TEXT = { y1g: "需沒有交往對象", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
-const FIXED = new Set(["p1", "p2", "p3", "p4", "p5", "p6", "y1s", "y2s", "y3s", "y4s", "grad", "x1", "x2", "x3", "x4"]);
+const NEED_TEXT = { xm: "每年十二月必定出現", xmPair: "舞會選配對組", xmBring: "舞會選攜伴組（沒有交往對象）", xmPartner: "舞會選攜伴組（交往中）", xmTempt: "舞會選配對組（交往中）", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
+const FIXED = new Set(["p1", "p2", "p3", "p4", "p5", "p6", "y1s", "y2s", "y3s", "y4s", "xm", "grad", "x1", "x2", "x3", "x4"]);
 const EDIT_FLAGS = Object.keys(FLAG_INFO).filter((f) => !f.startsWith("club:"));
 const OV_KEY = "cpu-sim-cards-v1";
 const EDITOR_ENABLED = false; // 暫時關閉卡片編輯器入口；改成 true 即恢復
