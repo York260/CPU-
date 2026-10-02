@@ -362,6 +362,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .lo-chips .lo-tag { font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 999px; border: 0; }
 .lo-tag.back { background: rgba(61, 190, 122, .2); color: #8FE3B5; }
 .lo-tag.fwd { background: rgba(227, 179, 65, .2); color: #F2CF7A; }
+.lo-tag.time { background: rgba(127, 140, 255, .22); color: #B8C0FF; }
+.tb.time { border-color: rgba(127, 140, 255, .6); }
+.tb.time.hot { border-color: #7F8CFF; box-shadow: 0 0 16px rgba(127, 140, 255, .7); }
+.tb.time.hot small { color: #C9CFFF; }
+.duo-btns button.time { border-color: rgba(127, 140, 255, .6); } .duo-btns button.time.hot { border-color: #7F8CFF; box-shadow: 0 0 14px rgba(127, 140, 255, .7); }
 .lo-check { flex: none; margin-left: auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 900; }
 .lo-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; align-content: flex-start; }
 .lo-chips span { font-size: 11px; line-height: 18px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; }
@@ -481,6 +486,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <ul>
         <li>靠近按<b>抓把</b>。<b>衝刺</b>往搖桿方向快速移動（有冷卻）：往對手衝接著抓把會更快更準；對手伸手時往旁邊或後面衝可以躲開。</li>
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
+        <li>特殊時機：<b>出足掃</b>趁對手推拉方向一改變（他腳下閃藍圈）出手；<b>肩車</b>在搶到抓把後 3 秒內最強；<b>膝車</b>吃繞圈；<b>巴投</b>專門對付用力往前推的對手。</li>
         <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。但防禦完有一小段時間不能再擋，國手以上會用假動作騙你防禦再出真招。</li>
         <li>被丟體、過肩摔、大腰摔成<b>有效</b>時，有時會出現<b>前迴轉</b>的機會：畫面稍微變慢、頭上出現藍色提示時按下，滾翻後不算分，對手也不能壓制。半勝以上來不及滾。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打比快，把計量器的標推到底（被壓時推到底就掙脫）；<b>上四方固</b>比重心：被壓時按住◀或▶蓄力、放開往那邊頂（可以按著一邊再按另一邊換邊騙對手），把重心頂到邊緣就翻開；壓人時按住◀▶把指針拉回綠區，看到對手要頂就先往反方向壓。</li>
@@ -788,15 +794,35 @@ const TECHS = {
     base: (k) => (k > 0.3 ? Math.min(0.55, 0.05 + (k - 0.3) * 0.55) : 0.04), ideal: (k) => clamp(k - 0.3, 0, 1) },
   ogoshi:    { name: "大腰", short: "大腰", dir: "fwd", cost: 22, wind: 0.36, bias: 0.22, fail: "大腰沒能入身",
     base: (k) => Math.min(0.3, k > 0.45 ? 0.02 + (k - 0.45) * 0.35 : 0.02), ideal: (k) => clamp(k - 0.45, 0, 1) },
+  // 新招
+  uchimata:  { name: "內股", short: "內股", dir: "fwd", cost: 18, wind: 0.32, bias: 0.15, risky: true, fail: "內股被閃開了",
+    base: (k) => (k > 0.2 ? Math.min(0.62, 0.08 + (k - 0.2) * 0.6) : 0.04), ideal: (k) => clamp(k - 0.2, 0, 1) },
+  kataguruma:{ name: "肩車", short: "肩車", dir: "fwd", cost: 20, wind: 0.36, bias: 0.25, sutemi: true, fail: "肩車沒扛起來，自己跪倒了",
+    base: (k, att) => { const ini = G.initiative && G.initiative.t > 0 && G.initiative.who === att; return Math.min(0.6, (k > 0.15 ? 0.05 + (k - 0.15) * 0.5 : 0.03) + (ini ? 0.25 : 0)); },
+    ideal: (k, att) => clamp(k - 0.15 + (G.initiative && G.initiative.who === att ? 0.4 : 0), 0, 1) },
+  hizaguruma:{ name: "膝車", short: "膝車", dir: "fwd", cost: 12, wind: 0.24, bias: -0.15, fail: "膝車沒擋住",
+    base: (k) => Math.min(0.5, (k > 0.05 ? 0.06 + (k - 0.05) * 0.35 : 0.04) + (G.circle || 0) * 0.25), ideal: (k) => clamp(k - 0.05 + (G.circle || 0) * 0.4, 0, 1) },
+  deashi:    { name: "出足掃", short: "出足掃", dir: "time", cost: 8, wind: 0.18, bias: -0.2, fail: "出足掃掃空了",
+    base: (k, att, def) => (def && def.stepT > 0 ? Math.min(0.62, 0.3 + Math.abs(k) * 0.35) : 0.04), ideal: (k, att, def) => (def && def.stepT > 0 ? 0.3 + Math.abs(k) * 0.4 : 0) },
+  tomoe:     { name: "巴投", short: "巴投", dir: "fwd", cost: 20, wind: 0.34, bias: 0.3, sutemi: true, fail: "巴投沒踢起來，自己倒在地上",
+    base: (k, att, def) => { const p = def ? def.pushS : 0; return p > 0.45 ? Math.min(0.65, 0.08 + (p - 0.45) * 0.9 + Math.max(0, k - 0.3) * 0.2) : 0.03; },
+    ideal: (k, att, def) => clamp((def ? def.pushS : 0) - 0.45, 0, 1) },
 };
-const TECH_ORDER = ["kouchi", "osoto", "taiotoshi", "seoi", "ogoshi"];
+const TECH_ORDER = ["kouchi", "osoto", "deashi", "taiotoshi", "hizaguruma", "seoi", "uchimata", "kataguruma", "ogoshi", "tomoe"];
 const TECH_DESC = {
   kouchi: ["好成功", "多半有效", "失敗倒地"],
   osoto: ["主力", "穩定"],
   taiotoshi: ["繞圈加成"],
   seoi: ["易一本"],
   ogoshi: ["極難", "必殺一本"],
+  uchimata: ["主力大招", "易一本"],
+  kataguruma: ["搶把後 3 秒", "失敗跪地"],
+  hizaguruma: ["繞圈", "快"],
+  deashi: ["對手換腳瞬間", "最快"],
+  tomoe: ["對手猛推時", "最華麗", "失敗倒地"],
 };
+const HOT_AT = { ogoshi: 18, kataguruma: 30, tomoe: 30, deashi: 30 };
+const DIR_TAG = { back: "前方技", fwd: "後方技", time: "時機技" };
 const PREF_KEY = "judo-prefs-v1";
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } }
 function savePrefs(p) { try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch (e) {} }
@@ -1128,8 +1154,10 @@ function resolveThrow(f) {
    每招依柔道原理排成「崩し（破壞平衡）→ 作り（入身）→ 掛け（施技）→ 落地」，取與受共用同一條時間軸，每一格互相對應。
    影格之間用 Catmull-Rom 曲線串接，速度連續、不會每格停頓；ease:"in" 的段落（落地前）用加速度直線收尾，撞地停得乾脆；
    ease:"out" 用在落地後的小彈跳與收勢。peak＝最精彩、要放慢的區間；imp＝落地瞬間（停格與衝擊特效）；kake＝施技開始。 */
-const TECH_COLOR = { osoto: 0x3ddc97, kouchi: 0x46c8ff, taiotoshi: 0xff9a3d, seoi: 0xff4d5e, ogoshi: 0xc08bff, gaeshi: 0xdfe6f2, ura: 0xdfe6f2 };
-const TECH_ROMA = { osoto: "OSOTO-GARI", kouchi: "SUTEMI KOUCHI-GARI", taiotoshi: "TAI-OTOSHI", seoi: "IPPON SEOI-NAGE", ogoshi: "O-GOSHI", gaeshi: "KAESHI-WAZA", ura: "KAESHI-WAZA" };
+const TECH_COLOR = { osoto: 0x3ddc97, kouchi: 0x46c8ff, taiotoshi: 0xff9a3d, seoi: 0xff4d5e, ogoshi: 0xc08bff, gaeshi: 0xdfe6f2, ura: 0xdfe6f2,
+  uchimata: 0xffd23d, kataguruma: 0xff6ad5, hizaguruma: 0x9be15d, deashi: 0x7f8cff, tomoe: 0xff3df0 };
+const TECH_ROMA = { osoto: "OSOTO-GARI", kouchi: "SUTEMI KOUCHI-GARI", taiotoshi: "TAI-OTOSHI", seoi: "IPPON SEOI-NAGE", ogoshi: "O-GOSHI", gaeshi: "KAESHI-WAZA", ura: "KAESHI-WAZA",
+  uchimata: "UCHI-MATA", kataguruma: "KATA-GURUMA", hizaguruma: "HIZA-GURUMA", deashi: "DE-ASHI-HARAI", tomoe: "TOMOE-NAGE" };
 const hexCss = (c) => "#" + c.toString(16).padStart(6, "0");
 function V(name, o) { const p = clonePose(POSE[name]); for (const k in o) p[k] = k === "h" ? o[k] : [o[k][0] || 0, o[k][1] || 0, o[k][2] || 0]; return p; }
 Object.assign(POSE, {
@@ -1146,6 +1174,26 @@ Object.assign(POSE, {
   G0: P({ h: 1.0, body: [0.28], spine: [0.15], neck: [-0.15], lSh: [-1.5, 0, 0.1], rSh: [-1.5, 0, -0.1], lEl: [-0.25], rEl: [-0.25], lHip: [0.05], lKnee: [0.15], rHip: [-0.1], rKnee: [0.1] }),
   // 捨身小內割：取壓低重心往前衝
   KO0: P({ h: 0.82, spine: [0.35], neck: [-0.25], lSh: [-1.3, 0, 0.1], lEl: [-0.8], rSh: [-1.3, 0, -0.1], rEl: [-0.8], lHip: [-0.45], lKnee: [0.75], rHip: [-0.35], rKnee: [0.7] }),
+});
+Object.assign(POSE, {
+  // 內股：轉身入身、後腿高高掃起
+  UM1: P({ h: 0.8, spine: [0.45], neck: [-0.15], lSh: [-1.2, 0, 0.4], lEl: [-1.0], rSh: [-1.9, 0, -0.2], rEl: [-1.6], lHip: [-0.6, 0, 0.15], lKnee: [1.0], rHip: [-0.5, 0, -0.15], rKnee: [0.9] }),
+  UM2: P({ h: 0.88, body: [0.55], spine: [1.1], neck: [-0.45], lSh: [-0.6, 0, 0.5], lEl: [-1.5], rSh: [-1.6, 0, -0.2], rEl: [-1.4], lHip: [-0.1], lKnee: [0.15], rHip: [1.95, 0, -0.1], rKnee: [0.1] }),
+  UM3: P({ h: 0.8, body: [0.6], spine: [0.9], neck: [-0.3], lSh: [-0.5, 0, 0.4], lEl: [-1.1], rSh: [-1.0, 0, -0.3], rEl: [-0.9], lHip: [-0.3], lKnee: [0.5], rHip: [1.1, 0, -0.1], rKnee: [0.25] }),
+  // 肩車：鑽到對手身下、扛上肩、往旁邊卸下
+  KG1: P({ h: 0.48, spine: [0.55], neck: [-0.2], lSh: [-1.3, 0, 0.5], lEl: [-0.8], rSh: [-0.7, 0, -0.6], rEl: [-0.4], lHip: [-1.5, 0, 0.3], lKnee: [2.0], rHip: [-1.2, 0, -0.3], rKnee: [1.8] }),
+  KG2: P({ h: 0.86, spine: [0.2], neck: [-0.3], lSh: [-2.6, 0, 0.3], lEl: [-1.0], rSh: [-1.5, 0, -0.9], rEl: [-1.2], lHip: [-0.5, 0, 0.3], lKnee: [0.8], rHip: [-0.4, 0, -0.3], rKnee: [0.7] }),
+  KG3: P({ h: 0.74, body: [0, 0, -0.35], spine: [0.5], neck: [-0.2], lSh: [-1.2, 0, 0.6], lEl: [-0.8], rSh: [-1.0, 0, -0.8], rEl: [-0.6], lHip: [-0.7, 0, 0.3], lKnee: [1.1], rHip: [-0.5, 0, -0.4], rKnee: [0.9] }),
+  // 膝車：腳掌擋住對手膝蓋、身體扭轉
+  HZ1: P({ h: 0.86, spine: [0.15], neck: [-0.2], lSh: [-1.0, 0, 0.4], lEl: [-1.4], rSh: [-1.4, 0, -0.3], rEl: [-0.6], lHip: [-1.25, 0, 0.35], lKnee: [0.35], rHip: [-0.15], rKnee: [0.35] }),
+  HZ2: P({ h: 0.84, spine: [0.45], neck: [-0.3], lSh: [-0.6, 0, 0.7], lEl: [-1.6], rSh: [-1.1, 0, -0.5], rEl: [-1.0], lHip: [-1.05, 0, 0.45], lKnee: [0.25], rHip: [-0.25], rKnee: [0.45] }),
+  // 出足掃：腳掌貼地往側面掃
+  DA1: P({ h: 0.88, spine: [0.15], neck: [-0.15], lSh: [-1.1, 0, 0.3], lEl: [-1.2], rSh: [-1.3, 0, -0.3], rEl: [-0.8], lHip: [-0.3, 0, 0.75], lKnee: [0.1], rHip: [-0.1, 0, -0.1], rKnee: [0.35] }),
+  DA2: P({ h: 0.72, body: [-0.9, 0, 0.5], spine: [0.1], neck: [0.4], lSh: [-0.6, 0, 1.2], rSh: [-0.6, 0, -1.1], lHip: [-1.1, 0, 0.2], lKnee: [0.3], rHip: [-1.35], rKnee: [0.2] }),
+  // 巴投：往後坐倒、腳頂在對手腹部，把對手從頭上拋過去
+  TM1: P({ h: 0.55, body: [-0.35], spine: [0.3], neck: [0.1], lSh: [-1.4, 0, 0.2], lEl: [-0.6], rSh: [-1.4, 0, -0.2], rEl: [-0.6], lHip: [-1.4], lKnee: [1.6], rHip: [-1.6], rKnee: [1.2] }),
+  TM2: P({ h: 0.22, body: [-1.45], spine: [0.35], neck: [0.4], lSh: [-2.4, 0, 0.2], lEl: [-0.5], rSh: [-2.4, 0, -0.2], rEl: [-0.5], lHip: [-1.0], lKnee: [1.4], rHip: [-1.9], rKnee: [0.9] }),
+  TM3: P({ h: 0.18, body: [-1.55], spine: [0.2], neck: [0.4], lSh: [-2.8, 0, 0.3], lEl: [-0.3], rSh: [-2.8, 0, -0.3], rEl: [-0.3], lHip: [-0.9], lKnee: [1.2], rHip: [-2.35], rKnee: [0.1] }),
 });
 POSE.G4 = V("LYING", { body: [PI * 1.5] });
 POSE.G4I = V("LYI", { body: [PI * 1.5] });
@@ -1188,6 +1236,29 @@ const THROWS = {
   seoi: fwdThrow({ a1: "SE1", a2: "SE2", a3: "SE3", d2: "G2H", endF: -0.6 }),
   ogoshi: fwdThrow({ a1: "OG1", a2: "OG2", a3: "OG3", d2: "G2", endF: -0.55 }),
   taiotoshi: fwdThrow({ a1: "TO1", a2: "TO2", a3: "TO2", d2: "G2L", yaw: PI * 0.7, endF: -0.35 }),
+  uchimata: fwdThrow({ a1: "UM1", a2: "UM2", a3: "UM3", d2: "G2H", endF: -0.7 }),
+  kataguruma: fwdThrow({ a1: "KG1", a2: "KG2", a3: "KG3", d2: "G2", yaw: PI * 0.5, endF: -0.4 }),
+  hizaguruma: fwdThrow({ a1: "HZ1", a2: "HZ2", a3: "HZ2", d2: "G2L", yaw: PI * 0.35, endF: -0.1 }),
+  deashi: { kake: 0.2, peak: [0.22, 0.42], apex: 0.32, keys: [
+    { t: 0, A: kf(0, 0, 0, "GRIP"), D: kf(0.8, 0, 0, "GRIP") },
+    { t: 0.12, A: kf(0.02, -0.04, -0.15, "PULL"), D: kf(0.82, 0.05, 0.1, "D0") },
+    { t: 0.24, A: kf(0.05, -0.06, -0.35, "DA1"), D: kf(0.86, 0.18, 0.25, "D1") },
+    { t: 0.36, A: kf(0.08, -0.06, -0.45, "DA1"), D: kf(0.92, 0.42, 0.4, "DA2") },
+    { t: 0.48, A: kf(0.1, -0.05, -0.4, "GRIP"), D: kf(1.0, 0.75, 0.5, "LYI"), ease: "in", imp: true },
+    { t: 0.6, A: kf(0.1, -0.05, -0.35, "READY"), D: kf(1.0, 0.78, 0.5, "LYING"), ease: "out" },
+    { t: 1.05, A: kf(0.1, -0.05, -0.35, "READY"), D: kf(1.0, 0.78, 0.5, "LYING"), ease: "out" },
+  ] },
+  tomoe: { kake: 0.46, peak: [0.48, 0.84], apex: 0.62, keys: [
+    { t: 0, A: kf(0, 0, 0, "GRIP"), D: kf(0.8, 0, 0, "GRIP") },
+    { t: 0.16, A: kf(-0.05, 0, 0, "TM1"), D: kf(0.72, 0, 0, "G0") },
+    { t: 0.32, A: kf(-0.22, 0, 0, "TM2"), D: kf(0.52, 0, 0, "G1") },
+    { t: 0.46, A: kf(-0.3, 0, 0, "TM2"), D: kf(0.12, 0, 0, "G2") },
+    { t: 0.62, A: kf(-0.3, 0, 0, "TM3"), D: kf(-0.38, 0, 0, "G2H") },
+    { t: 0.78, A: kf(-0.3, 0, 0, "TM3"), D: kf(-0.95, 0, 0, "G3") },
+    { t: 0.9, A: kf(-0.3, 0, 0, "TM3"), D: kf(-1.3, 0, 0, "G4I"), ease: "in", imp: true },
+    { t: 1.02, A: kf(-0.3, 0, 0, "TM3"), D: kf(-1.3, 0, 0, "G4"), ease: "out" },
+    { t: 1.45, A: kf(-0.3, 0, 0, "TM3"), D: kf(-1.3, 0, 0, "G4"), ease: "out" },
+  ] },
 };
 
 function startThrow(att, def, tech, result) {
@@ -1826,7 +1897,7 @@ function renderTech() {
     if (!id) return {};
     if (id === "brace") return W.revT > 0 ? { id, on: !busy(W), hot: true, rev: true } : { id, on: !busy(W), hot: !!(B.act && B.act.type === "throwWind") };
     const c = Math.round(throwChance(W, B, id) * 100);
-    const hotAt = id === "ogoshi" ? 18 : 40;
+    const hotAt = HOT_AT[id] || 40;
     return { id, on: ready, hot: c >= hotAt, c };
   });
   const sig = JSON.stringify(parts);
@@ -2024,6 +2095,9 @@ function stepFight(dt) {
     for (const f of [W, B]) {
       const o = other(f);
       const brace = f.act && f.act.type === "brace";
+      // 換腳步：推拉方向突然改變的 0.3 秒內，出足掃最容易掃到
+      const dv = Math.abs(f.pushS - (f.pPush || 0)) / dt; f.pPush = f.pushS;
+      f.stepT = dv > 2.5 ? 0.3 : Math.max(0, (f.stepT || 0) - dt);
       // 抓把後不出招就累積「防守時間」，按防禦擋招算更多
       f.defT += dt * (brace ? 1.8 : 1);
       f.lean = clamp((f.pushS - o.pushS) * (brace ? 0.3 : 1), -1.6, 1.6);
@@ -2110,7 +2184,24 @@ const teleRings = [W, B].map(() => {
   const r = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.52, 48), m);
   r.rotation.x = -PI / 2; r.visible = false; scene.add(r); return r;
 });
+// 出足掃的時機提示：對手換腳步的 0.3 秒內，他腳下閃一圈藍光（只給帶了出足掃的真人看）
+const stepRings = [W, B].map(() => {
+  const m = new THREE.Mesh(new THREE.RingGeometry(0.22, 0.3, 32), new THREE.MeshBasicMaterial({ color: 0x7f8cff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+  m.rotation.x = -PI / 2; m.visible = false; scene.add(m); return m;
+});
+function updateStepRings() {
+  [W, B].forEach((f, i) => {
+    const r = stepRings[i], o = other(f);
+    const on = G.state === "fight" && G.gripped && f.stepT > 0 && human(o) && o.loadout && o.loadout.includes("deashi");
+    r.visible = !!on;
+    if (!on) return;
+    r.position.set(f.x, 0.03, f.z);
+    r.material.opacity = 0.9 * (f.stepT / 0.3);
+    r.scale.setScalar(1 + (0.3 - f.stepT) * 2);
+  });
+}
 function updateTele() {
+  updateStepRings();
   [W, B].forEach((f, i) => {
     const r = teleRings[i], a = f.act;
     const on = G.state === "fight" && a && a.type === "throwWind";
@@ -3162,7 +3253,7 @@ function pvpItems(f) {
   }
   if (st === "fight" && G.gripped) {
     return [f.revT > 0 ? { id: "rev", label: "反摔", sub: "現在！", on: !busy(f), hot: true, cls: "def" } : { id: "brace", label: "防禦", sub: "長按切把", on: !f.act && f.cool <= 0, hot: !!(o.act && o.act.type === "throwWind"), cls: "def" },
-      ...f.loadout.map((t) => { const c = Math.round(throwChance(f, o, t) * 100); return { id: "t:" + t, label: TECH[t], sub: c + "%", on: ready, hot: ready && c >= (t === "ogoshi" ? 18 : 40), cls: TECHS[t].dir }; })];
+      ...f.loadout.map((t) => { const c = Math.round(throwChance(f, o, t) * 100); return { id: "t:" + t, label: TECH[t], sub: c + "%", on: ready, hot: ready && c >= (HOT_AT[t] || 40), cls: TECHS[t].dir }; })];
   }
   if (st === "post" && G.post && G.post.att === f) return [{ id: "kesa", label: "袈裟固", sub: "連打比拚", on: true, hot: true }, { id: "kami", label: "上四方固", sub: "重心攻防", on: true, hot: true }];
   const an = G.anim;
@@ -3299,7 +3390,7 @@ function pvpLobby() {
 function renderLobby(key) {
   const el = $("lob" + key), sel = PV.lo[key], ready = PV.ready[key];
   el.innerHTML = `<div class="lob-h"><i class="duo-chip"></i><b>${key === "W" ? "白方" : "藍方"}・選三招</b><span>${sel.length} / 3</span></div>
-    <div class="lob-grid">${TECH_ORDER.map((id) => { const T = TECHS[id], on = sel.includes(id); return `<button type="button" data-t="${id}" aria-pressed="${on}" ${!on && sel.length >= 3 ? "disabled" : ""}><b>${T.name}</b><span class="lo-tag ${T.dir}">${T.dir === "back" ? "前方技" : "後方技"}</span><small>${TECH_DESC[id][0] || ""}</small></button>`; }).join("")}</div>
+    <div class="lob-grid">${TECH_ORDER.map((id) => { const T = TECHS[id], on = sel.includes(id); return `<button type="button" data-t="${id}" aria-pressed="${on}" ${!on && sel.length >= 3 ? "disabled" : ""}><b>${T.name}</b><span class="lo-tag ${T.dir}">${DIR_TAG[T.dir]}</span><small>${TECH_DESC[id][0] || ""}</small></button>`; }).join("")}</div>
     <div class="lob-f"><button type="button" class="go${ready ? " line" : ""}" data-go ${sel.length !== 3 ? "disabled" : ""}>${ready ? "等對手…" : "準備好了"}</button><button type="button" class="go line" data-back>回標題</button></div>`;
   el.querySelectorAll("[data-t]").forEach((b) => b.addEventListener("click", () => {
     if (PV.ready[key]) return;
@@ -3320,7 +3411,7 @@ function renderLoadout() {
   const box = $("loadout");
   box.innerHTML = TECH_ORDER.map((id) => {
     const T = TECHS[id], on = prefs.loadout.includes(id), full = prefs.loadout.length >= 3 && !on;
-    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips"><span class="lo-tag ${T.dir}">${T.dir === "back" ? "前方技" : "後方技"}</span>${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
+    return `<button type="button" class="lo" data-lo="${id}" aria-pressed="${on}" ${full ? "disabled" : ""}><div class="lo-top"><b>${T.name}</b><span class="lo-check">${on ? prefs.loadout.indexOf(id) + 1 : ""}</span></div><div class="lo-chips"><span class="lo-tag ${T.dir}">${DIR_TAG[T.dir]}</span>${TECH_DESC[id].map((t) => `<span>${t}</span>`).join("")}</div></button>`;
   }).join("");
   $("loadCount").textContent = prefs.loadout.length + " / 3";
   $("startBtn").disabled = prefs.loadout.length !== 3;
