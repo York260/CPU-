@@ -469,7 +469,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <ul>
         <li>靠近按<b>抓把</b>；對手伸手時按<b>閃避</b>。</li>
         <li>抓把後推拉搖桿：<span class="g">推</span>→對手後傾→<span class="g">綠色招</span>；<span class="y">推完突然放開或拉回</span>→對手前傾→<span class="y">金色招</span>。</li>
-        <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。</li>
+        <li>對手頭上出現 <b>!</b> 就按<b>防禦</b>。但防禦完有一小段時間不能再擋，國手以上會用假動作騙你防禦再出真招。</li>
         <li>被丟體、過肩摔、大腰摔成<b>有效</b>時，有時會出現<b>前迴轉</b>的機會：畫面稍微變慢、頭上出現藍色提示時按下，滾翻後不算分，對手也不能壓制。半勝以上來不及滾。</li>
         <li>摔倒對手後選壓制：<b>袈裟固</b>連打比快，把計量器的標推到底（被壓時推到底就掙脫）；<b>上四方固</b>比重心：被壓時按住◀或▶蓄力、放開往那邊頂（可以按著一邊再按另一邊換邊騙對手），把重心頂到邊緣就翻開；壓人時按住◀▶把指針拉回綠區，看到對手要頂就先往反方向壓。</li>
         <li>一本直接贏，兩個半勝也算一本。壓制 5 秒有效、10 秒半勝、20 秒一本。</li>
@@ -518,10 +518,13 @@ if (!window.THREE) {
 $("loading").hidden = true;
 
 /* ---------- 難度 ---------- */
+// AI 強度：不靠作弊倍率，而是反應時間、讀崩し、擋招、反擊與寢技的熟練度
+// react：看到玩家動作到反應的時間；braceP／dodgeP：看到後擋招／閃抓把的機率；tau：推拉跟上的時間常數
+// atk：出招門檻（成功率高於這個才出手）；read：會不會讀玩家推拉、反向製造崩し；mirror：防守時跟著玩家推拉的程度
 const DIFFS = [
-  { name: "新手", tau: 0.62, braceP: 0.15, dodgeP: 0.12, wind: 0.6, aggr: 0.6, follow: 0.45, mult: 0.75, kReact: 0.5, kMiss: 0.4, kFeint: 0, kGap: 1.5, aiTap: 4.2, ukemi: 0.3 },
-  { name: "國手", tau: 0.44, braceP: 0.3, dodgeP: 0.25, wind: 0.48, aggr: 0.9, follow: 0.65, mult: 1, kReact: 0.34, kMiss: 0.22, kFeint: 0.25, kGap: 1.1, aiTap: 5.2, ukemi: 0.45 },
-  { name: "世界冠軍", tau: 0.3, braceP: 0.45, dodgeP: 0.38, wind: 0.38, aggr: 1.15, follow: 0.8, mult: 1.2, kReact: 0.22, kMiss: 0.1, kFeint: 0.45, kGap: 0.8, aiTap: 6.2, ukemi: 0.6 },
+  { name: "新手", react: 0.4, tau: 0.25, braceP: 0.4, dodgeP: 0.25, wind: 0.42, aggr: 0.9, atk: 0.5, read: 1, recover: 0.9, turtle: 0.15, feint: 0.4, mirror: 0.9, follow: 0.6, mult: 0.9, kReact: 0.45, kMiss: 0.3, kFeint: 0.25, kGap: 1.3, aiTap: 5.6, ukemi: 0.4 },
+  { name: "國手", react: 0.16, tau: 0.09, braceP: 0.92, dodgeP: 0.55, wind: 0.3, aggr: 1.2, atk: 0.55, read: 1, recover: 0.6, turtle: 0.55, feint: 0.9, mirror: 1, follow: 0.92, mult: 1, kReact: 0.26, kMiss: 0.12, kFeint: 0.7, kGap: 0.9, aiTap: 7.6, ukemi: 0.8 },
+  { name: "世界冠軍", react: 0.12, tau: 0.07, braceP: 0.97, dodgeP: 0.7, wind: 0.27, aggr: 1.2, atk: 0.55, read: 1, recover: 0.45, turtle: 0.8, feint: 0.9, mirror: 1, follow: 0.98, mult: 1.1, kReact: 0.18, kMiss: 0.05, kFeint: 0.85, kGap: 0.7, aiTap: 8.5, ukemi: 0.9 },
 ];
 let DIFF = DIFFS[1];
 let MATCH_TIME = 90;
@@ -948,7 +951,7 @@ function tryGrip(f) {
   f.noGrip = 0; f.warnG = false;
   setAct(f, "reach", f.isAI ? DIFF.wind * 0.65 : 0.26);
   const o = other(f);
-  if (o.isAI && !busy(o) && Math.random() < DIFF.dodgeP && dist(f, o) < 1.4) o.ai.dodgeAt = DIFF.tau * 0.45;
+  if (o.isAI && !busy(o) && Math.random() < DIFF.dodgeP && dist(f, o) < 1.4) o.ai.dodgeAt = DIFF.react * rand(0.8, 1.25);
 }
 function tryDodge(f) {
   if (busy(f) || f.cool > 0) return;
@@ -968,7 +971,7 @@ function tryThrow(f, tech) {
   const wind = f.isAI ? DIFF.wind : TECHS[tech].wind;
   setAct(f, "throwWind", wind, { tech });
   const o = other(f);
-  if (o.isAI && !busy(o) && Math.random() < DIFF.braceP) o.ai.braceAt = Math.min(DIFF.tau * 0.7, wind - 0.05);
+  if (o.isAI && Math.random() < DIFF.braceP) o.ai.braceAt = Math.min(DIFF.react * rand(0.8, 1.3), wind - 0.06);
 }
 function stagger(f, d = 0.7) { setAct(f, "stagger", d); f.cool = 0.2; }
 
@@ -1001,13 +1004,22 @@ function resolveReach(f) {
   }
 }
 
+function tryFeint(f, tech) {
+  if (busy(f) || f.cool > 0 || !G.gripped) return;
+  spend(f, 4);
+  f.lastAttack = 0; f.defT = 0;
+  setAct(f, "throwWind", DIFF.wind * rand(0.75, 0.95), { tech, feint: true });
+}
 function resolveThrow(f) {
+  if (f.act.feint) { f.act = null; f.cool = 0; if (f.ai) f.ai.combo = { t: 0 }; return; }
   const o = other(f), tech = f.act.tech;
   f.act = null;
+  // 高手出招失敗後恢復得比較快（recover）
+  const rec = f.isAI ? DIFF.recover : 1;
   if (o.act && o.act.type === "brace") {
-    stagger(f, 0.75);
+    stagger(f, 0.75 * rec);
     o.counterT = 1.1;
-    o.act = null;
+    o.act = null; o.cool = 0;
     say(f, "被對手擋下", "防住了！反擊機會", "bad");
     haptic(f.isAI ? "block" : "blocked");
     return;
@@ -1038,7 +1050,7 @@ function resolveThrow(f) {
     }
     return;
   }
-  stagger(f, T.dir === "fwd" ? 0.9 : 0.7);
+  stagger(f, (T.dir === "fwd" ? 0.9 : 0.7) * rec);
   if (f.isAI || G.pvp) { o.counterT = T.risky ? 1.5 : 1.0; say(f, T.fail, "對手失手！反擊機會", "bad"); if (G.pvp) haptic("fail"); return; }
   toast(T.fail, "bad");
   haptic("fail");
@@ -1252,7 +1264,9 @@ function finishThrow() {
   const ends = r === "ippon" || r === "awase" || G.golden;
   if (ends) { endMatch(att, r === "awase" ? "合わせ技一本" : r === "ippon" ? `一本勝（${TECH[tech]}）` : `黃金得分（${TECH[tech]}）`); return; }
   G.state = "post";
-  G.post = { att, def, t: 0, win: G.pvp ? 2.0 : 1.3, aiFollow: att.isAI && Math.random() < DIFF.follow };
+  // 高手被摔後會很快翻身趴下（防守姿勢），對手要在那之前選好壓制
+  const turtle = def.isAI && !G.pvp && Math.random() < DIFF.turtle ? rand(0.28, 0.5) : null;
+  G.post = { att, def, t: 0, win: G.pvp ? 2.0 : 1.3, aiFollow: att.isAI && Math.random() < DIFF.follow, turtle };
 }
 function scoreCall(r, f, techName) {
   const cls = f === W ? "" : "blue";
@@ -1352,11 +1366,23 @@ function stepKami(h, dt) {
   if (human(h.held)) held = h.cool > 0 ? 0 : dirOf(h.held);
   else {
     // AI：等一下 → 選邊蓄力 → （難度高時中途換邊）→ 放開
-    if (h.aiDir === 0) { h.aiT -= dt; if (h.aiT <= 0 && h.cool <= 0) { h.aiDir = Math.random() < 0.5 ? -1 : 1; h.aiCh = rand(0.25, 0.95); h.aiFeint = Math.random() < DIFF.kFeint ? rand(0.6, 0.9) : 0; } }
+    if (h.aiDir === 0) { h.aiT -= dt; if (h.aiT <= 0 && h.cool <= 0) { h.aiDir = Math.random() < 0.5 ? -1 : 1; h.aiCh = rand(0.25, 0.95); h.aiFeint = Math.random() < DIFF.kFeint ? rand(0.6, 0.9) : 0; if (h.aiFeint && DIFF.read) h.aiCh = rand(0.85, 1); } }
+    // 高手會看壓制者往哪邊壓（有反應時間）：對方已經往反方向擋 → 換邊馬上頂；對方往同方向壓 → 立刻放
+    h.hfSeen = damp(h.hfSeen || 0, h.hf, 1 / DIFF.kReact, dt);
+    if (h.aiDir && DIFF.read) {
+      const against = -h.hfSeen * h.aiDir;
+      h.aiFeint = 0;
+      if (!h.aiSw && against > 0.5) {
+        // 對方已經往反方向壓：不往擋住的地方頂；繼續蓄力（對方的力把重心帶往另一邊），蓄夠了就換邊立刻頂
+        if (h.ch > 0.8 || h.n * h.aiDir < -0.25) { h.aiDir = -h.aiDir; h.aiSw = true; h.aiCh = h.ch * 0.45 + rand(0.13, 0.21); }
+        else h.aiCh = Math.max(h.aiCh, h.ch + 0.05);
+      } else if (!h.aiSw && against > 0.2 && h.ch >= h.aiCh - 0.02) h.aiCh = h.ch + 0.05;
+      else if (against < -0.4 && h.ch > 0.3) h.aiCh = Math.min(h.aiCh, h.ch);
+    }
     if (h.aiDir) {
-      if (h.aiFeint && h.ch > h.aiCh * h.aiFeint) { h.aiDir = -h.aiDir; h.aiFeint = 0; h.aiCh = Math.max(h.aiCh, h.ch + 0.3); }
-      held = h.ch >= h.aiCh ? 0 : h.aiDir;
-      if (!held) { h.aiDir = 0; h.aiT = rand(0.5, 1.3) * DIFF.kGap; }
+      if (h.aiFeint && h.ch > h.aiCh * h.aiFeint) { h.aiDir = -h.aiDir; h.aiFeint = 0; h.aiCh = h.ch * 0.45 + (DIFF.read ? 0.27 : 0.3); }
+      held = h.cdir && h.aiDir !== h.cdir ? h.aiDir : h.ch >= h.aiCh ? 0 : h.aiDir; // 換邊的那一幀不放
+      if (!held) { h.aiDir = 0; h.aiSw = false; h.aiT = rand(0.5, 1.3) * DIFF.kGap; }
     }
   }
   if (held) { if (h.cdir && held !== h.cdir) h.ch *= 0.45; h.cdir = held; h.ch = Math.min(1, h.ch + dt / 0.9); }
@@ -1579,11 +1605,7 @@ function stepIntro(dt) {
     else if (t < 3.6) { f.tgt = POSE.STAND; f.rate = 6; }
     else { f.tgt = POSE.READY; f.rate = 6; }
   }
-  if (!G.introBow && t > 1.9) {
-    G.introBow = true; call("礼", "敬禮", "", 1.1);
-    if (G.pvp) for (const f of [W, B]) pvpMsg(f, "對手帶：" + other(f).loadout.map((x) => TECH[x]).join("、"), "", 2.4);
-    else toast("對手的招式：" + B.loadout.map((x) => TECH[x]).join("、"), "", 2.4);
-  }
+  if (!G.introBow && t > 1.9) { G.introBow = true; call("礼", "敬禮", "", 1.1); }
   if (t > 4.1) {
     G.introBow = false;
     call("始め", "開始", "", 0.9);
@@ -1772,46 +1794,92 @@ function askMotion() {
 /* ---------- AI ---------- */
 function aiNeutral(dt) {
   const f = B, o = W, ai = f.ai;
-  if (ai.dodgeAt != null) { ai.dodgeAt -= dt; if (ai.dodgeAt <= 0) { ai.dodgeAt = null; if (!busy(f)) tryDodge(f); } }
+  if (ai.dodgeAt != null) { ai.dodgeAt -= dt; if (ai.dodgeAt <= 0) { ai.dodgeAt = null; if (!busy(f) && f.cool <= 0) tryDodge(f); } }
   if (busy(f)) return { x: 0, z: 0 };
   const d = dist(f, o), u = axis(f, o);
-  const want = 1.15 + Math.sin(G.time * 0.6) * 0.25;
-  let mx = u.x * (d - want) * 1.6, mz = u.z * (d - want) * 1.6;
+  // 距離控制：高手在抓把距離外游走，等對手露出破綻（硬直、冷卻、剛被閃開）才踏進去抓
+  const open = (o.act && (o.act.type === "stagger" || o.act.type === "reach")) || o.cool > 0.1;
+  const urgent = f.noGrip > SHIDO_NOGRIP - 6;
+  const want = DIFF.read && !open && !urgent ? 1.32 + Math.sin(G.time * 0.7) * 0.12 : 1.0;
+  let mx = u.x * (d - want) * 1.8, mz = u.z * (d - want) * 1.8;
   const lat = Math.sin(G.time * 0.8 + 1.3) * 0.55;
   mx += -u.z * lat; mz += u.x * lat;
   // 避免出界
   if (Math.abs(f.x) > 2.8) mx -= Math.sign(f.x) * 1.2;
   if (Math.abs(f.z) > 2.8) mz -= Math.sign(f.z) * 1.2;
-  // 快被判「不抓把」時主動靠近抓
-  if (f.noGrip > SHIDO_NOGRIP - 6 && d > 1.0) { mx += u.x * 0.8; mz += u.z * 0.8; }
+  if (urgent && d > 1.0) { mx += u.x * 0.8; mz += u.z * 0.8; }
   const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
   ai.gripT -= dt;
-  if (d < (f.noGrip > SHIDO_NOGRIP - 6 ? 1.25 : 1.15) && ai.gripT <= 0 && f.cool <= 0) {
-    if (Math.random() < dt * 1.3 * DIFF.aggr || (o.act && o.act.type === "stagger")) { tryGrip(f); ai.gripT = rand(0.6, 1.4); }
+  if (d < 1.22 && ai.gripT <= 0 && f.cool <= 0) {
+    const p = open ? (DIFF.read ? 9 : 2) : 1.3 * DIFF.aggr * (DIFF.read ? 0.5 : 1);
+    if (Math.random() < dt * p || (urgent && Math.random() < dt * 3)) { tryGrip(f); ai.gripT = rand(0.5, 1.2) / DIFF.aggr; }
   }
   return { x: mx, z: mz };
 }
+// 抓把中（高手）：平常跟著對手推拉穩住重心；假動作引對手防禦，趁他防禦後的硬直推拉崩し再出真招（連絡技）；
+// 對手硬直、失誤時立刻出手；成功率不夠高就不出手（失敗會被反擊）
 function aiGrip(dt) {
   const f = B, o = W, ai = f.ai;
-  ai.modeT -= dt;
-  if (ai.modeT <= 0) {
-    const r = Math.random();
-    ai.mode = r < 0.55 ? "resist" : r < 0.8 ? "drive" : "pull";
-    ai.modeT = ai.mode === "resist" ? rand(1.4, 3) : rand(0.6, 1.2);
+  // 假動作可以隨時收手改成防禦
+  if (ai.braceAt != null) { ai.braceAt -= dt; if (ai.braceAt <= 0) { ai.braceAt = null; if ((!f.act || f.act.feint) && f.cool <= 0.05) { f.act = null; f.cool = 0; tryBrace(f); } } }
+  const ready = !busy(f) && f.cool <= 0 && f.stamina > 22;
+  const has = (dir) => f.loadout.some((t) => TECHS[t].dir === dir);
+  let threat = 0; for (const t of o.loadout) threat = Math.max(threat, throwChance(o, f, t));
+  // 對手現在沒辦法反應（硬直、防禦中或防禦後的硬直）
+  const oStuck = (o.act && o.act.type !== "throwWind") || o.cool > 0.12;
+  const oBrace = o.act && o.act.type === "brace";
+  if (ai.combo) { ai.combo.t += dt; if (ai.combo.t > 1.3) ai.combo = null; }
+  let target;
+  if (!DIFF.read) {
+    ai.modeT -= dt;
+    if (ai.modeT <= 0) { const r = Math.random(); ai.mode = r < 0.55 ? "resist" : r < 0.8 ? "drive" : "pull"; ai.modeT = ai.mode === "resist" ? rand(1.4, 3) : rand(0.6, 1.2); }
+    target = o.pushS * 0.95 + (ai.mode === "drive" ? 0.8 : ai.mode === "pull" ? -0.8 : 0);
+  } else if (f.act && f.act.type === "throwWind" && !f.act.feint && ai.commit) {
+    // 出招中：繼續往崩的方向推拉，不能半途回去防守
+    target = ai.commit;
+  } else if (f.act && f.act.feint) {
+    target = o.pushS; // 假動作時把重心穩住
+  } else if ((ai.combo || oStuck) && ready) {
+    // 對手沒辦法反應：往我有招的方向崩（推＝對手後傾用前方技，拉＝對手前傾用後方技）
+    // 推（對手後傾）還是拉（對手前傾）：看對手現在怎麼施力，選我帶的招成功率最高的方向
+    const val = (dir) => Math.max(...f.loadout.map((t) => TECHS[t].base(o.pushS - dir * 0.95, f, o)));
+    ai.plan = val(1) >= val(-1) ? 1 : -1;
+    target = ai.plan; ai.mode = "set";
+  } else {
+    ai.plan = null;
+    ai.modeT -= dt;
+    if (ai.modeT <= 0) { ai.mode = ai.mode === "probe+" ? "probe-" : "probe+"; ai.modeT = rand(0.5, 1.1); }
+    // 試探前先算：這樣推拉會不會讓自己被崩（我的 lean＝我的推力－對手推力）；有風險就不試探，跟著對手穩住
+    const probe = o.pushS * 0.7 + (ai.mode === "probe-" ? -0.35 : 0.35);
+    const risk = Math.max(...o.loadout.map((t) => TECHS[t].base(probe - o.pushS, o, f)));
+    target = threat > 0.18 || risk > 0.15 ? o.pushS * DIFF.mirror : probe;
   }
-  let target = o.pushS * 0.95;
-  if (ai.mode === "drive") target += 0.8;
-  if (ai.mode === "pull") target -= 0.8;
   if (f.stamina < 25) target *= 0.6;
   f.push = clamp(target, -1, 1);
-  if (ai.braceAt != null) { ai.braceAt -= dt; if (ai.braceAt <= 0) { ai.braceAt = null; if (!f.act) tryBrace(f); } }
-  if (busy(f) || f.cool > 0) return;
   let best = f.loadout[0], bc = 0;
   for (const t of f.loadout) { const c = throwChance(f, o, t); if (c > bc) { bc = c; best = t; } }
+  // 快被判消極：高手先做假動作（也算進攻），不硬出低成功率的招
+  if (DIFF.read && !busy(f) && f.cool <= 0 && (f.defT > SHIDO_DEF - 3.5 || f.lastAttack > 24)) { tryFeint(f, best); return; }
+  if (!ready) return;
+  if (DIFF.read) {
+    // 真招要在對手防禦結束之後才落下，否則會被擋
+    // 對手正在出招時不跟他比快（該擋）；真招要在對手防禦結束之後才落下，否則會被擋
+    const oWind = o.act && o.act.type === "throwWind";
+    const lands = !oWind && (oBrace ? o.act.t + DIFF.wind > o.act.dur + 0.02 : true);
+    const thr = f.counterT > 0 || oStuck ? DIFF.atk * 0.75 : DIFF.atk;
+    if (bc > thr && lands) { ai.atkT = (ai.atkT || 0) + dt; if (ai.atkT >= (oStuck ? 0.03 : DIFF.react * 0.5)) { const cb = !!ai.combo || oStuck; ai.atkT = 0; ai.combo = null; ai.plan = null;
+      // 往讓對手更崩的方向繼續施力：對手後傾（lean<0）就推，前傾就拉
+      ai.commit = o.lean < 0 ? 1 : -1;
+      tryThrow(f, best); if (f.act) f.act.combo = cb; return; } }
+    else ai.atkT = 0;
+    // 沒有好機會：偶爾假動作引對手防禦
+    if (!ai.combo && !oStuck && threat < 0.2 && Math.random() < dt * DIFF.feint * DIFF.aggr) { tryFeint(f, best); return; }
+  } else if (bc > DIFF.atk && Math.random() < dt * 2.6 * DIFF.aggr) { tryThrow(f, best); return; }
   const pass = f.lastAttack > 20 || f.defT > SHIDO_DEF - 5 ? 0.45 : 0;
-  if (bc > 0.32 && Math.random() < dt * 2.6 * DIFF.aggr) tryThrow(f, best);
-  else if (Math.random() < dt * (0.07 + pass) * DIFF.aggr) tryThrow(f, f.loadout[Math.floor(Math.random() * f.loadout.length)]);
-  else if (Math.random() < dt * 0.05) { G.gripped = false; toast("對手切開了抓把"); }
+  if (Math.random() < dt * ((DIFF.read ? 0.01 : 0.07) + pass) * DIFF.aggr) { if (DIFF.read && bc < 0.2) tryFeint(f, best); else tryThrow(f, best); }
+  else if (!DIFF.read && Math.random() < dt * 0.05) { G.gripped = false; toast("對手切開了抓把"); }
+  // 高手：被崩得很危險時，乾脆切開抓把
+  else if (DIFF.read && threat > 0.45 && Math.random() < dt * 1.5) { G.gripped = false; toast("對手切開了抓把"); }
 }
 
 /* ---------- 每幀更新 ---------- */
@@ -1833,7 +1901,7 @@ function stepFight(dt) {
         const a = f.act;
         if (a.type === "reach") { f.act = null; resolveReach(f); }
         else if (a.type === "throwWind") { resolveThrow(f); if (G.state !== "fight") return; }
-        else { f.act = null; if (a.type === "dodge" || a.type === "stagger") f.cool = 0.15; }
+        else { f.act = null; if (a.type === "dodge" || a.type === "stagger") f.cool = 0.15; if (a.type === "brace") f.cool = 0.4; }
       }
     }
   }
@@ -1892,7 +1960,7 @@ function stepFight(dt) {
     const mid = { x: (W.x + B.x) / 2, z: (W.z + B.z) / 2 };
     const v = (W.pushS - B.pushS) * 0.9;
     mid.x += u.x * v * dt; mid.z += u.z * v * dt;
-    const ang = G.pvp ? (lIn + lB) * 1.1 * dt : lIn * 1.1 * dt + (B.ai.mode === "drive" ? 0.2 : 0) * dt * Math.sin(G.time);
+    const ang = G.pvp ? (lIn + lB) * 1.1 * dt : lIn * 1.1 * dt + (B.ai.mode === "drive" || B.ai.mode === "probe+" ? 0.2 : 0) * dt * Math.sin(G.time);
     G.circle = damp(G.circle || 0, Math.min(1, Math.abs(ang / dt) / 1.1), 4, dt);
     const nu = { x: u.x * Math.cos(ang) - u.z * Math.sin(ang), z: u.x * Math.sin(ang) + u.z * Math.cos(ang) };
     W.x = mid.x - nu.x * 0.4; W.z = mid.z - nu.z * 0.4;
@@ -2745,6 +2813,7 @@ function tick(dt) {
     case "post": {
       const p = G.post; p.t += dt;
       if (p.aiFollow && p.t > 0.45) { startHold(B, W, Math.random() < 0.5 ? "kesa" : "kami"); break; }
+      if (p.turtle && p.t > p.turtle) { G.post = null; toast("對手翻身趴下了", "bad", 1.0); matte(0.2); break; }
       if (p.t > p.win) { G.post = null; matte(0.1); }
       break;
     }
