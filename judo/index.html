@@ -190,6 +190,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .lob-grid button:disabled { opacity: .4; }
 .lob-grid small { font-size: 11px; color: var(--muted); }
 .lob-f { display: flex; gap: 10px; align-items: center; }
+/* 雙人比賽結果：上下各一半，按鈕又大又在中間 */
+.pvend .lob { grid-template-rows: 1fr auto auto; align-items: center; justify-items: center; text-align: center; }
+.end-big { font-family: var(--f-display); font-size: clamp(30px, 6vh, 46px); font-weight: 900; }
+.end-big.win { color: var(--gold); }
+.end-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.end-sc { font-size: 13px; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.end-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: min(420px, 100%); }
+.end-btns button { min-height: 52px; padding: 8px 4px; border-radius: 12px; font-size: 15px; font-weight: 900; border: 1px solid var(--line); background: rgba(20, 26, 38, .9); color: var(--ink); touch-action: manipulation; }
+.end-btns button.main { background: var(--gold); color: #1a1406; border-color: var(--gold); }
+@media (max-height: 640px) { .duo.pv { height: 31%; } .duo.pv .duo-mid { min-height: 22px; } .pv-hint { font-size: 11px; } }
 .kb-ch i { display: block; height: 100%; width: 0; background: #FF8A6B; }
 .pad button:active { transform: scale(.95); }
 
@@ -443,6 +453,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 </div>
 <button type="button" class="mash" id="mash" hidden><b>連打掙脫！</b><small>也可以用力搖手機</small><span class="combo" id="mashCombo"></span><span class="fire" id="mashFire"></span></button>
 <button type="button" class="quit" id="quit" aria-label="離開比賽" hidden>✕</button>
+<div class="lobby pvend" id="pvEnd" hidden><div class="lob p2" id="endB"></div><div class="lob p1" id="endW"></div></div>
 <div class="lobby" id="lobby" hidden><div class="lob p2" id="lobB"></div><div class="lob p1" id="lobW"></div></div>
 <div class="duo p2" id="duoB" hidden></div>
 <div class="duo p1" id="duoW" hidden></div>
@@ -1655,7 +1666,7 @@ function stepEnd(dt) {
   });
   if (!e.bowed && t > 3.2) { e.bowed = true; call("礼", "敬禮", "", 1.0); }
   if (!e.raised && t > 4.5) { e.raised = true; refGesture(e.win === W ? "R_WIN_W" : "R_WIN_B", 99); call(e.win === W ? "白 勝" : "藍 勝", e.how, e.win === W ? "gold" : "blue", 2); }
-  if (t > 6.2 && !e.shown) { e.shown = true; if (G.pvp) PV.done = true; else showResult(); }
+  if (t > (G.pvp ? 3.6 : 6.2) && !e.shown) { e.shown = true; if (G.pvp) pvpEnd(); else showResult(); }
 }
 function showResult() {
   const e = G.end;
@@ -2911,6 +2922,7 @@ function duoStart() {
   duoSetup();
 }
 function duoStop() {
+  $("pvEnd").hidden = true;
   PV.flip = false; $("view").classList.remove("flip"); $("quit").classList.remove("pvq");
   B.isAI = true;
   if (!G.duo) return;
@@ -3096,7 +3108,6 @@ function pvpItems(f) {
     return h.type === "kesa" ? [{ id: "mash", kind: "mash", label: "連打！", sub: h.held === f ? "推到右端就掙脫" : "別讓對手推到左端", on: true, cls: "mash" }]
       : [{ id: "kl", kind: "pad", d: -1, label: "◀", on: true }, { id: "kr", kind: "pad", d: 1, label: "▶", on: true }];
   }
-  if (st === "end" && PV.done) return [{ id: "again", label: "再來一場", sub: "同樣的招式", on: true }, { id: "lobby", label: "重新選招", sub: "", on: true }, { id: "home", label: "回標題", sub: "", on: true }];
   return [];
 }
 function pvpPress(f, id) {
@@ -3182,6 +3193,20 @@ function pvpHUD(dt) {
     z.joy.style.visibility = ["fight", "intro", "reset", "wait"].includes(st) ? "" : "hidden";
     pvpButtons(key, pvpItems(me));
   }
+}
+// 雙人比賽結束：全螢幕結果畫面，兩人各一半，按鈕在中間
+function pvpEnd() {
+  PV.done = true;
+  $("duoW").hidden = $("duoB").hidden = true;
+  const e = G.end;
+  for (const key of ["W", "B"]) {
+    const me = key === "W" ? W : B, opp = other(me), win = e.win === me;
+    const sc = (f) => `半勝 ${f.sc.waza}・有效 ${f.sc.yuko}・指導 ${f.sc.shido}`;
+    $("end" + key).innerHTML = `<div><div class="end-big${win ? " win" : ""}">${win ? "你贏了" : "你輸了"}</div><div class="end-sub">${e.win.name}・${e.how}</div><div class="end-sc">你　${sc(me)}<br>對手 ${sc(opp)}</div></div>
+      <div class="end-btns"><button type="button" class="main" data-a="again">再來一場</button><button type="button" data-a="lobby">重新選招</button><button type="button" data-a="home">回標題</button></div><div></div>`;
+    $("end" + key).querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", () => { $("pvEnd").hidden = true; pvpPress(me, b.dataset.a); }));
+  }
+  $("pvEnd").hidden = false;
 }
 // 正上方的遊戲鏡頭：中間約四成半的畫面要裝下兩人，兩人越遠拉越高；平滑追隨
 function pvpGameCam(dt) {
