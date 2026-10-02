@@ -821,24 +821,35 @@ const EV = {
         no: { bonus: -2, r: "時間到了，第三題只寫了一半。" } } },
       { t: "腦袋一片空白", e: { men: -5 }, bonus: -6, r: "你盯著題目直到鐘聲響起。" },
     ] },
-  /* 耶誕期末舞會（一到四年級每年十二月）。〔異〕〔她〕依玩家性別換成異性稱呼，〔年〕換成年級 */
+  /* 耶誕期末舞會（一到四年級每年十二月；交往中沒有舞會，改成劈腿考驗）。
+     〔異〕〔她〕〔暱稱〕〔學弟〕依玩家性別換字，〔年〕換成年級 */
   xm: { when: "〔年〕・十二月", where: "學生活動中心", title: "耶誕期末舞會",
+    alt: { if: "partner", then: ["cheatA", "cheatB"] },
     text: "期末考前最後一個週末，學校照例舉辦耶誕期末舞會，還邀請了附近大學的〔異〕來參加。報名表發下來，上面有三個選項。",
     ch: [
-      { t: "報名配對組：抽籤配舞伴", e: { men: 2 }, next: { if: "partner", then: "xmTempt", else: "xmPair" }, r: "你在「配對組」那欄打了勾，交給區隊長。" },
-      { t: "報名攜伴組：自己邀舞伴", e: { men: 1 }, next: { if: "partner", then: "xmPartner", else: "xmBring" }, r: "你在「攜伴組」那欄打了勾，開始想舞伴的事。" },
+      { t: "報名配對組：抽籤隨機配舞伴", e: { men: 2 }, next: ["xmPairHot", "xmPairSorry"], r: "你在「配對組」那欄打了勾。抽籤結果舞會當天揭曉。" },
+      { t: "報名攜伴組：自己邀舞伴", e: { men: 1 }, next: "xmBring", r: "你在「攜伴組」那欄打了勾，開始想要邀誰。" },
       { t: "當舞會蟑螂：專心吃餐點", e: { men: 5, fit: -2, soc: 1 }, r: "你在自助餐台間來回巡邏，炸雞、烤布丁、提拉米蘇各吃了三輪，還幫區隊打包了兩盒。學長封你為「舞池外最忙碌的人」。" },
     ] },
-  xmPair: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "抽籤配對",
-    text: "主持人宣布配對組最後兩個名額讓你挑。左邊那位是全場目光焦點的〔異〕，打扮精緻、笑起來很好看；右邊那位穿著樸素、戴著眼鏡，有點緊張地一直整理衣角。",
+  xmPairHot: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "抽到〔暱稱〕",
+    text: "主持人念出你的號碼，全場一陣騷動。你的舞伴是隔壁大學出了名的「〔暱稱〕」，進場時好幾個區隊的人都在偷看。〔她〕朝你走過來，笑著伸出手。",
     ch: [
-      { t: "選全場目光焦點那位", chk: { s: "soc", dc: 60,
-        ok: { e: { men: 7, soc: 4 }, set: ["partner"], r: "你們連跳了三支舞。散場前〔她〕主動拿出手機：「放假要不要出來？」全區隊都在起鬨。" },
-        no: { e: { men: -4, soc: 1 }, r: "〔她〕跳完一支舞就被別系的學長邀走，整晚沒再回來。你默默走回餐台。" } } },
-      { t: "選有點緊張的那位", chk: { s: "soc", dc: 40,
-        ok: { e: { men: 7, soc: 2 }, set: ["partner"], r: "一開始話很少，聊到推理小說卻停不下來。舞會結束時〔她〕小聲問：「放假……可以再約嗎？」" },
-        no: { e: { men: 4, soc: 2 }, r: "你們聊得很開心，最後成了常傳訊息的朋友。" } } },
-      { t: "把機會讓給旁邊緊張到發抖的〔學弟〕", e: { soc: 5, mor: 2, men: -1 }, r: "〔學弟〕後來真的跟那位〔異〕交往了，每次見到你都喊「恩人」。" },
+      { t: "使出渾身解數陪〔她〕聊天", chk: { s: "soc", dc: 60,
+        ok: { e: { men: 8, soc: 4 }, set: ["partner"], r: "你們連跳了三支舞。散場前〔她〕主動拿出手機：「放假要不要出來？」全區隊都在起鬨。" },
+        no: { e: { men: -3, soc: 1 }, r: "〔她〕禮貌地陪你跳完一支，就被朋友拉走了。你默默走回餐台，炸雞特別鹹。" } } },
+      { t: "緊張到同手同腳，硬著頭皮跳", chk: { s: "men", dc: 50,
+        ok: { e: { men: 6, soc: 3 }, set: ["partner"], r: "你踩了〔她〕三次腳，〔她〕笑到停不下來：「你們警大的都這麼可愛嗎？」散場前你們交換了 IG。" },
+        no: { e: { men: -2, soc: 3 }, r: "你踩了〔她〕三次腳。〔她〕很有禮貌地說沒關係，但跳完就去冰敷了。" } } },
+      { t: "找話題，聊起刑法總則", e: { aca: 2, men: -2, soc: -1 }, r: "你從「未必故意」講到「不能未遂」，〔她〕禮貌地點頭，說要去洗手間，就再也沒回來。" },
+    ] },
+  xmPairSorry: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "抽籤……有點抱歉",
+    text: "主持人念出你的號碼。你的舞伴走過來，嗯……該怎麼說呢，有點抱歉。〔她〕自我介紹的時候，你還在努力調整臉上的表情。旁邊的同學已經憋笑憋到發抖。",
+    ch: [
+      { t: "保持風度，好好陪〔她〕跳完", e: { soc: 4, mor: 2, men: 3 }, r: "沒想到〔她〕超會跳舞，一路帶著你轉圈，還拿下當晚的「最佳舞伴獎」。剛剛憋笑的同學都安靜了。" },
+      { t: "說要去拿飲料，溜去餐台當蟑螂", e: { men: 3, soc: -3, mor: -1 }, r: "你在餐台躲了一整晚，被同區隊的人看到。從此你的綽號叫「飲料」。" },
+      { t: "偷偷跟同學換舞伴", chk: { s: "soc", dc: 55,
+        ok: { e: { men: 3, soc: -1 }, r: "同學很講義氣地換了。後來聽說他們聊得超開心，還交換了 IG。你有點說不出的滋味。" },
+        no: { e: { men: -4, soc: -4 }, r: "交換的時候被〔她〕聽到了，全場都在看你。那一晚很長。" } } },
     ] },
   xmBring: { when: "〔年〕・耶誕期末舞會", where: "學生寢室", title: "邀誰當舞伴",
     text: "攜伴組要自己找舞伴。你翻著放假才拿得到的手機通訊錄，腦中閃過幾個名字。",
@@ -846,30 +857,29 @@ const EV = {
       { t: "鼓起勇氣邀高中時暗戀的人", chk: { s: "soc", dc: 60,
         ok: { e: { men: 9, soc: 2 }, set: ["partner"], r: "對方回：「我等這句話等了三年。」舞會那晚你們幾乎沒離開舞池。" },
         no: { e: { men: -6 }, r: "對方說已經有對象了，還祝你玩得開心。舞會那晚你成了餐台旁最安靜的人。" } } },
-      { t: "找青梅竹馬的好朋友幫忙", e: { men: 5, soc: 2 }, r: "你們跳得亂七八糟，笑到被學長側目。純友誼，卻是最開心的一晚。" },
+      { t: "隨便邀個同班同學湊數", e: { men: 5, soc: 4 }, r: "你們兩個都穿著制服進場，被主持人當成儀隊表演，硬是被拱上台跳了三次。同學說：「明年打死我都不跟你組了。」隔年還是一起報名。" },
       { t: "拜託室友介紹朋友", chk: { s: "soc", dc: 50,
         ok: { e: { men: 5, soc: 4 }, r: "室友的朋友很健談，整晚氣氛都很好，散場還互加了好友。" },
         no: { e: { men: -2, soc: 1 }, r: "對方整晚都在跟你室友聊天。你成了全場最貴的電燈泡。" } } },
     ] },
-  xmPartner: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "一支舞的考驗",
-    text: "你帶著交往對象出席，一進場就被全區隊羨慕。舞會進行到一半，對象去洗手間，一位配對組的〔異〕走過來：「可以跟你跳一支嗎？剛剛一直在看你。」",
+  /* 劈腿考驗（交往中時取代舞會）：對方是校外〔異〕，不知道你已經有對象 */
+  cheatA: { when: "〔年〕・放假", where: "台北・咖啡廳", title: "隔壁桌借充電線",
+    text: "放假在咖啡廳讀書，隔壁桌的〔異〕跟你借充電線，一聊發現是附近大學的學生，話題一個接一個。要走之前，〔她〕把手機遞過來：「給個 IG 吧？」〔她〕不知道你已經有對象了。",
     ch: [
-      { t: "笑著婉拒，說在等舞伴", e: { men: 5, mor: 2 }, r: "對象回來時，你拿著兩杯熱可可在等。「剛剛那位是誰？」「不認識，我在等你。」〔她〕笑了，整晚都牽著你的手。" },
-      { t: "只是一支舞，應該沒關係", chk: { s: "men", dc: 55,
-        ok: { e: { men: 2, soc: 2 }, r: "一支舞跳完你就回到座位，對象什麼也沒發現。那位〔異〕臨走前塞了張紙條給你，你看都沒看就丟了。" },
-        no: { e: { men: -10, soc: -2 }, unset: ["partner"], r: "對象提早回來，正好看到你們跳到最後一個轉圈。〔她〕整晚沒再跟你說話，寒假前傳來一句：「我們先冷靜一下。」" } } },
-      { t: "趁對象不在，偷偷交換 IG", danger: "劈腿", e: { men: -12, mor: -4, soc: -3 }, unset: ["partner"], r: "你以為藏得很好。寒假第一天，對象拿著你的手機，螢幕上是你和那位〔異〕的對話紀錄。紙包不住火。" },
+      { t: "笑著說自己有對象了", e: { men: 2, mor: 3 }, r: "〔她〕愣了一下，笑說：「你對象很幸福耶。」你把這段對話講給對象聽，對方開心了一整個週末。" },
+      { t: "給 IG，但不說自己有對象", danger: "劈腿", chk: { s: "men", dc: 65,
+        ok: { e: { men: 3, mor: -5 }, r: "你們偶爾傳訊息，對象沒有發現。只是每次手機亮起來，你都會先看一下螢幕是誰。" },
+        no: { e: { men: -12, mor: -4, soc: -3 }, unset: ["partner"], r: "〔她〕在限動標記你「今天遇到的警大〔帥〕」。對象看到了，傳來最後一句：「祝你們幸福。」" } } },
+      { t: "說手機不能用，委婉帶過", e: { men: 1 }, r: "〔她〕說：「警大這麼慘喔？」你笑著點頭，收拾東西離開。" },
     ] },
-  xmTempt: { when: "〔年〕・耶誕期末舞會", where: "學生活動中心・舞池", title: "沒說出口的報名表",
-    text: "你沒告訴交往對象，偷偷報了配對組。抽到的〔異〕意外地聊得來，你們正要跳第二支舞，手機震了一下，是對象傳來的：「舞會好玩嗎？有沒有乖乖吃東西？」",
+  cheatB: { when: "〔年〕・收假客運上", where: "國道客運", title: "旁邊的位子",
+    text: "收假的客運上，坐你旁邊的〔異〕看到你的大盤帽，好奇問了一路警大的生活。下車前〔她〕說：「下週我們系上有活動，你要不要來？我傳地址給你。」〔她〕不知道你已經有對象了。",
     ch: [
-      { t: "老實說自己報了配對組", chk: { s: "soc", dc: 55,
-        ok: { e: { men: 3, mor: 2 }, r: "對象沉默了一下，回：「下次先跟我說。只准跳到十點。」你鬆了一口氣。" },
-        no: { e: { men: -8 }, unset: ["partner"], r: "「所以你有我還去配對？」對話停在已讀。寒假開始前，你們分手了。" } } },
-      { t: "回說自己在當舞會蟑螂", danger: "說謊", chk: { s: "men", dc: 65,
-        ok: { e: { men: 2, mor: -4 }, r: "你拍了一張滿桌炸雞的照片傳過去，對象回了個愛心。謊圓過去了，心裡卻有點悶。" },
-        no: { e: { men: -12, mor: -4, soc: -2 }, unset: ["partner"], r: "同學把你們跳舞的照片上傳限動，還標記了你。十分鐘後，對象封鎖了你。" } } },
-      { t: "立刻離場，打電話給對象", e: { men: 4, mor: 3, soc: -2 }, r: "你向舞伴道歉後提早離場。電話那頭的〔她〕說：「其實我只是想你了。」配對組的同學則說你很掃興。" },
+      { t: "直接說有對象，下次帶對象一起去", e: { men: 2, mor: 3, soc: 1 }, r: "〔她〕大方地說：「好啊，歡迎一起來！」那次活動你和對象都玩得很開心。" },
+      { t: "答應赴約，不提對象", danger: "劈腿", chk: { s: "men", dc: 65,
+        ok: { e: { men: 4, mor: -6 }, r: "活動很好玩，對象完全不知道。但回程的路上，你一直不敢看對象傳來的訊息。" },
+        no: { e: { men: -12, mor: -4 }, unset: ["partner"], r: "活動合照上了〔她〕們系的粉專，對象的朋友剛好按了讚。紙包不住火。" } } },
+      { t: "說收假後都在學校出不來", e: { men: 1, soc: -1 }, r: "這倒也不是謊話。〔她〕說了聲可惜，在下一站下車了。" },
     ] },
   x4: { when: "特考・放榜日", where: "考選部榜單", title: "放榜",
     text: "早上九點，考選部網站上線。你深吸一口氣，輸入准考證號碼。",
@@ -977,8 +987,8 @@ function choose(i) {
     if (src.unset) src.unset.forEach((f) => delete S.flags[f]);
     if (src.bonus) S.bonus += src.bonus;
     if (src.r) out.r = src.r;
-    // 後續事件：next 可以是事件代號，或 { if: 詞條, then, else } 依有沒有該詞條決定
-    if (src.next) { const n = typeof src.next === "string" ? src.next : S.flags[src.next.if] ? src.next.then : src.next.else; if (EV[n]) S.queue.splice(S.idx + 1, 0, n); }
+    // 後續事件：next 可以是事件代號、代號陣列（隨機挑一個），或 { if: 詞條, then, else } 依有沒有該詞條決定
+    if (src.next) { const n = pickId(typeof src.next === "string" || Array.isArray(src.next) ? src.next : S.flags[src.next.if] ? src.next.then : src.next.else); if (EV[n]) S.queue.splice(S.idx + 1, 0, n); }
   };
   if (c.end) { finish(c.end); return; }
   merge(c);
@@ -1038,10 +1048,16 @@ function exam() {
   finish(score >= 58 ? "pass" : "failExam");
 }
 
+const pickId = (x) => (Array.isArray(x) ? x[Math.floor(Math.random() * x.length)] : x);
+function resolveAlt() {
+  const ev = EV[S.queue[S.idx]];
+  if (ev && ev.alt && S.flags[ev.alt.if]) S.queue[S.idx] = pickId(ev.alt.then);
+}
 function continueOn() {
   S.result = null;
   if (checkFatal()) return;
   S.idx++;
+  if (S.idx < S.queue.length) resolveAlt();
   if (S.idx >= S.queue.length) { view = "stageEnd"; }
   else view = "event";
   save(); render();
@@ -1235,11 +1251,11 @@ function mainView() {
 }
 
 const MARKS = ["甲", "乙", "丙", "丁", "戊"];
-// 事件文字代換：〔異〕〔她〕依玩家性別換成異性、〔學弟〕換成同性學弟妹；〔年〕換成目前年級
+// 事件文字代換：〔異〕〔她〕〔暱稱〕依玩家性別換成異性、〔學弟〕換成同性學弟妹；〔年〕換成目前年級
 function T(str) {
   if (!str || !S) return str || "";
   const male = S.gender !== "女";
-  return String(str).replace(/〔異〕/g, male ? "女生" : "男生").replace(/〔她〕/g, male ? "她" : "他").replace(/〔學弟〕/g, male ? "學弟" : "學妹").replace(/〔年〕/g, STAGES[S.stage]);
+  return String(str).replace(/〔異〕/g, male ? "女生" : "男生").replace(/〔她〕/g, male ? "她" : "他").replace(/〔學弟〕/g, male ? "學弟" : "學妹").replace(/〔暱稱〕/g, male ? "小壽司" : "小歐巴").replace(/〔帥〕/g, male ? "帥哥" : "正妹").replace(/〔年〕/g, STAGES[S.stage]);
 }
 function docMeta(ev) {
   return `<div class="doc-meta"><span>${esc(T(ev.when))}</span><span>${esc(T(ev.where || ""))}</span></div>`;
@@ -1361,7 +1377,7 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 const NEEDS = {};
 for (const id in EV) if (EV[id].need) NEEDS[id] = EV[id].need;
 const BASE = clone(EV);
-const NEED_TEXT = { xm: "每年十二月必定出現", xmPair: "舞會選配對組", xmBring: "舞會選攜伴組（沒有交往對象）", xmPartner: "舞會選攜伴組（交往中）", xmTempt: "舞會選配對組（交往中）", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
+const NEED_TEXT = { xm: "每年十二月；交往中改為劈腿考驗", xmPairHot: "舞會配對組（隨機）", xmPairSorry: "舞會配對組（隨機）", xmBring: "舞會選攜伴組", cheatA: "交往中的十二月（隨機）", cheatB: "交往中的十二月（隨機）", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
 const FIXED = new Set(["p1", "p2", "p3", "p4", "p5", "p6", "y1s", "y2s", "y3s", "y4s", "xm", "grad", "x1", "x2", "x3", "x4"]);
 const EDIT_FLAGS = Object.keys(FLAG_INFO).filter((f) => !f.startsWith("club:"));
 const OV_KEY = "cpu-sim-cards-v1";
