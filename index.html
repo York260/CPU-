@@ -400,6 +400,8 @@ const FLAG_INFO = {
   phone: { name: "私藏手機", d: "報到時藏下的舊手機，熄燈後的小小喘息。", fx: "每個階段開始時心情 +2", men: 2 },
   front: { name: "志在外勤", d: "你告訴督導，畢業後想去最辛苦的第一線。", fx: "行政警察學系分發改為保安警察大隊" },
   staff: { name: "志在幕僚", d: "你想走專業幕僚，學會寫簽呈是第一步。", fx: "行政警察學系分發改為警政署" },
+  chicken: { name: "雞排〔哥〕", d: "晚上九點，你把鬆餅留給自己、雞排給了〔學妹〕。隔天全區隊都知道了。", fx: "稱號；獲得時人緣 -10" },
+  kuei: { name: "不然就虧了", d: "成就：朋友的買一送一，送的那杯是你的。冷氣卡、自助餐的 2 公克，你一樣都沒虧。", fx: "成就稱號，沒有數值效果" },
   "club:martial": { name: "柔道隊", d: "代表學校出賽的柔道隊，每天清晨和晚上在警技館練摔技與寢技。", fx: "體能判定成功率 +5%", mod: { fit: 5 } },
   "club:honor": { name: "儀隊", d: "校慶與典禮的門面，操槍練到手起水泡。", fx: "操行判定成功率 +5%", mod: { mor: 5 } },
   "club:band": { name: "熱音社", d: "社辦裡的鼓聲是你釋放壓力的地方。", fx: "每個階段開始時心情 +3", men: 3 },
@@ -821,6 +823,46 @@ const EV = {
         no: { bonus: -2, r: "時間到了，第三題只寫了一半。" } } },
       { t: "腦袋一片空白", e: { men: -5 }, bonus: -6, r: "你盯著題目直到鐘聲響起。" },
     ] },
+  /* 追求〔學妹〕（二、三年級隨機；沒有交往對象時） */
+  crush: { when: "〔年〕・晚上九點", where: "學生寢室走廊", title: "追求喜歡的〔學妹〕",
+    need: (s) => !s.flags.partner,
+    text: "你注意同社團的〔學妹〕很久了。晚自習剛下課，〔她〕傳訊息說肚子好餓。你手邊剛好有一份鬆餅和一份雞排。",
+    ch: [
+      { t: "我想吃鬆餅，請〔學妹〕吃雞排好了", e: { soc: -10, men: -3 }, set: ["chicken"], r: "〔學妹〕看著油滋滋的雞排，又看看你手上的鬆餅，沉默了三秒：「……謝謝〔學長〕。」你在〔她〕心中的排名降到最末，還喜提稱號「雞排〔哥〕」。" },
+      { t: "把鬆餅給〔學妹〕，自己吃雞排", chk: { s: "soc", dc: 50,
+        ok: { e: { men: 8, soc: 3 }, set: ["partner"], r: "〔學妹〕眼睛一亮：「〔學長〕怎麼知道我喜歡鬆餅！」你們在走廊邊吃邊聊到熄燈前，之後放假都約一起出去。" },
+        no: { e: { men: 2, soc: 2 }, r: "〔學妹〕開心地收下，說了聲謝謝，就拿回寢室跟室友分著吃了。" } } },
+      { t: "兩份都切一半，一起分著吃", chk: { s: "soc", dc: 55,
+        ok: { e: { men: 7, soc: 4 }, set: ["partner"], r: "你們一人一半，鹹的甜的輪流吃。〔學妹〕說：「這樣最好，兩種都吃到。」那晚你笑到睡不著。" },
+        no: { e: { men: -2, soc: 1 }, r: "〔學妹〕說最近在減肥，只吃了一口鬆餅。剩下的你一個人吃完了。" } } },
+      { t: "兩份都給〔學妹〕，自己餓著", e: { soc: 3, men: -2 }, r: "〔學妹〕收下兩份宵夜，真誠地說：「〔學長〕人真的好好喔，好像我〔哥哥〕。」你收到了一張好人卡。" },
+    ] },
+  /* 自助餐連鎖事件：不然就虧了 */
+  buffet: { when: "〔年〕・午餐", where: "學生餐廳", title: "多了 2 公克",
+    text: "自助餐秤重計價。你的餐盤停在 102 公克，阿姨說：「超過 100 公克，多收 5 塊喔。」後面還排了一整排人。",
+    ch: [
+      { t: "夾一點回去", e: { men: 2, soc: -2 }, next: "stingyAC", r: "你當著全隊的面，把一塊滷豆干夾回去。秤上跳到 98 公克，你滿意地點點頭。後面的學長在笑，你覺得他們不懂。" },
+      { t: "付錢，5 塊而已", e: { men: 1 }, r: "你掏出 5 塊。阿姨多舀了一匙滷汁給你：「同學辛苦了。」" },
+      { t: "跟阿姨撒嬌拜託一下", chk: { s: "soc", dc: 50,
+        ok: { e: { soc: 2, men: 2 }, r: "阿姨笑著揮揮手：「好啦，下次不行喔。」" },
+        no: { e: { men: -2 }, r: "阿姨：「規定就是規定。」後面的人開始催，你只好付錢。" } } },
+    ] },
+  stingyAC: { when: "〔年〕・週末", where: "學生寢室", title: "冷氣卡",
+    text: "你準備出門，發現寢室只剩一個室友在睡覺。冷氣開著，但冷氣費是全寢室一起分擔的。",
+    ch: [
+      { t: "拔掉冷氣卡，不然就虧了", e: { soc: -4, men: 2 }, next: "stingyDrink", r: "你輕輕拔掉冷氣卡，關門出去。兩小時後室友熱醒，傳了一張滿身是汗的自拍給你，配文：「？」" },
+      { t: "讓他睡吧，不差這一點", e: { soc: 2, men: 1 }, r: "你輕輕關上門。室友醒來在群組說：「誰出門沒關冷氣？謝了。」" },
+      { t: "把溫度調高兩度再出門", e: { soc: 1, aca: 1 }, r: "28 度，省電又不會熱醒。你覺得自己是個懂得權衡的人。" },
+    ] },
+  stingyDrink: { when: "〔年〕・週末", where: "手搖飲料店", title: "買一送一",
+    text: "你和朋友出去買飲料。朋友結完帳才發現，自己手機裡有一張買一送一的禮券。",
+    ch: [
+      { t: "說服店員：朋友買一，我拿送一", e: { men: 5, soc: -3 }, set: ["kuei"], r: "店員愣了三秒，竟然真的答應了。你拿著免費的那杯，朋友看你的眼神很複雜。獲得成就「不然就虧了」。" },
+      { t: "自己乖乖買兩杯", e: { soc: 3, men: -1 }, r: "你買了兩杯，一杯遞給朋友：「這杯我請。」朋友說下次換他。" },
+      { t: "說服店員讓朋友補用禮券，兩人平分", chk: { s: "soc", dc: 50,
+        ok: { e: { soc: 3, men: 2 }, r: "店員破例讓你們補用。省下的錢你們一人一半，朋友說你很會談判。" },
+        no: { e: { soc: 1 }, r: "店員說禮券只能結帳前出示。朋友聳聳肩：「算了啦，下次記得。」" } } },
+    ] },
   /* 耶誕期末舞會（一到四年級每年十二月；交往中沒有舞會，改成劈腿考驗）。
      〔異〕〔她〕〔暱稱〕〔學弟〕依玩家性別換字，〔年〕換成年級 */
   xm: { when: "〔年〕・十二月", where: "學生活動中心", title: "耶誕期末舞會",
@@ -887,9 +929,9 @@ const EV = {
 };
 
 const POOLS = {
-  1: ["y1a", "y1b", "y1c", "y1d", "y1e", "y1f", "y1h", "y1i"],
-  2: ["y2a", "y2b", "y2c", "y2d", "y2e", "y2f", "y2g", "y2h", "y2i"],
-  3: ["y3a", "y3b", "y3c", "y3d", "y3e", "y3f", "y3g", "y3h"],
+  1: ["y1a", "y1b", "y1c", "y1d", "y1e", "y1f", "y1h", "y1i", "buffet"],
+  2: ["y2a", "y2b", "y2c", "y2d", "y2e", "y2f", "y2g", "y2h", "y2i", "crush", "buffet"],
+  3: ["y3a", "y3b", "y3c", "y3d", "y3e", "y3f", "y3g", "y3h", "crush"],
   4: ["y4a", "y4c", "y4d", "y4e", "y4f", "y4g"],
 };
 
@@ -1219,7 +1261,7 @@ function idCard() {
   const d = dept(), net = netDemerit(S.rec), left = EXPEL_AT - net;
   const af = activeFlags();
   if (openFlag && !af.includes(openFlag)) openFlag = null;
-  const flags = af.map((f) => `<button type="button" class="flag" data-flag="${f}" aria-expanded="${openFlag === f}">${FLAG_INFO[f].name}</button>`);
+  const flags = af.map((f) => `<button type="button" class="flag" data-flag="${f}" aria-expanded="${openFlag === f}">${esc(T(FLAG_INFO[f].name))}</button>`);
   const info = openFlag ? FLAG_INFO[openFlag] : null;
   return `<aside class="idcard">
     <div class="id-band"><span>學生證</span><span>CPU</span></div>
@@ -1237,7 +1279,7 @@ function idCard() {
         <div class="recs">${REC_GOOD.map((k) => `<div class="rec ok"><span>${k}</span><b>${S.rec[k]}</b></div>`).join("")}${REC_BAD.map((k) => `<div class="rec bad"><span>${k}</span><b>${S.rec[k]}</b></div>`).join("")}</div>
         <p class="meter-note ${left <= 9 ? "warn" : ""}">${net > 0 ? `功過相抵後仍有 ${net} 點，距離三大過還差 ${left} 點` : "功過相抵後沒有懲處"}${S.strikes ? `・補考未過 ${S.strikes} 次` : ""}</p>
       </div>
-      ${flags.length ? `<div><p class="section-label">狀態<span class="hint">點擊查看說明</span></p><div class="flags">${flags.join("")}</div>${info ? `<div class="flag-info" role="note"><b>${info.name}</b><p>${info.d}</p><p class="fx">效果：${info.fx}</p></div>` : ""}</div>` : ""}
+      ${flags.length ? `<div><p class="section-label">狀態<span class="hint">點擊查看說明</span></p><div class="flags">${flags.join("")}</div>${info ? `<div class="flag-info" role="note"><b>${esc(T(info.name))}</b><p>${esc(T(info.d))}</p><p class="fx">效果：${info.fx}</p></div>` : ""}</div>` : ""}
     </div>
   </aside>`;
 }
@@ -1255,7 +1297,7 @@ const MARKS = ["甲", "乙", "丙", "丁", "戊"];
 function T(str) {
   if (!str || !S) return str || "";
   const male = S.gender !== "女";
-  return String(str).replace(/〔異〕/g, male ? "女生" : "男生").replace(/〔她〕/g, male ? "她" : "他").replace(/〔學弟〕/g, male ? "學弟" : "學妹").replace(/〔暱稱〕/g, male ? "小壽司" : "小歐巴").replace(/〔帥〕/g, male ? "帥哥" : "正妹").replace(/〔年〕/g, STAGES[S.stage]);
+  return String(str).replace(/〔異〕/g, male ? "女生" : "男生").replace(/〔她〕/g, male ? "她" : "他").replace(/〔學弟〕/g, male ? "學弟" : "學妹").replace(/〔學妹〕/g, male ? "學妹" : "學弟").replace(/〔哥〕/g, male ? "哥" : "姐").replace(/〔學長〕/g, male ? "學長" : "學姐").replace(/〔哥哥〕/g, male ? "哥哥" : "姐姐").replace(/〔暱稱〕/g, male ? "小壽司" : "小歐巴").replace(/〔帥〕/g, male ? "帥哥" : "正妹").replace(/〔年〕/g, STAGES[S.stage]);
 }
 function docMeta(ev) {
   return `<div class="doc-meta"><span>${esc(T(ev.when))}</span><span>${esc(T(ev.where || ""))}</span></div>`;
@@ -1377,7 +1419,7 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 const NEEDS = {};
 for (const id in EV) if (EV[id].need) NEEDS[id] = EV[id].need;
 const BASE = clone(EV);
-const NEED_TEXT = { xm: "每年十二月；交往中改為劈腿考驗", xmPairHot: "舞會配對組（隨機）", xmPairSorry: "舞會配對組（隨機）", xmBring: "舞會選攜伴組", cheatA: "交往中的十二月（隨機）", cheatB: "交往中的十二月（隨機）", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
+const NEED_TEXT = { xm: "每年十二月；交往中改為劈腿考驗", crush: "需沒有交往對象", stingyAC: "自助餐選夾回去", stingyDrink: "拔掉冷氣卡後", xmPairHot: "舞會配對組（隨機）", xmPairSorry: "舞會配對組（隨機）", xmBring: "舞會選攜伴組", cheatA: "交往中的十二月（隨機）", cheatB: "交往中的十二月（隨機）", y2f: "需交往中", y2g: "需沒有交往對象", y4b: "收過紅包時必定出現" };
 const FIXED = new Set(["p1", "p2", "p3", "p4", "p5", "p6", "y1s", "y2s", "y3s", "y4s", "xm", "grad", "x1", "x2", "x3", "x4"]);
 const EDIT_FLAGS = Object.keys(FLAG_INFO).filter((f) => !f.startsWith("club:"));
 const OV_KEY = "cpu-sim-cards-v1";
